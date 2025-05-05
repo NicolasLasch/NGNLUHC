@@ -1,0 +1,73 @@
+name: NoGameNoLifeUHC
+main: be.thespattt.ngnl.NoGameNoLife
+version: 1.0.0
+api-version: 1.21
+author: TheSpatt
+description: A UHC plugin inspired by the anime No Game No Life
+website: https://github.com/TheSpatt/NoGameNoLifeUHC
+
+commands:
+  ngnl:
+    description: Main command for NoGameNoLife UHC
+    usage: /ngnl <start|stop|roles|settings|arena>
+    permission: ngnl.admin
+
+  challenge:
+    description: Challenge another player to a game
+    usage: /challenge <player> <wager>
+    permission: ngnl.player
+
+  duo:
+    description: Send a message to your duo partner
+    usage: /duo <message>
+    permission: ngnl.player
+
+  alliance:
+    description: Form an alliance with another solo player
+    usage: /alliance <player>
+    permission: ngnl.player
+
+  pledge:
+    description: Create a binding pledge with another player
+    usage: /pledge <player> <terms>
+    permission: ngnl.player
+
+  heal:
+    description: Transfer health to your partner (Riku only)
+    usage: /heal
+    permission: ngnl.player
+
+  rite:
+    description: Perform a rite (Think only)
+    usage: /rite <number>
+    permission: ngnl.player
+
+  forest:
+    description: Access forest inventory (Kainas only)
+    usage: /forest
+    permission: ngnl.player
+
+  teleport:
+    description: Exchange the position of two players (Holou only)
+    usage: /teleport <player1> <player2>
+    permission: ngnl.player
+
+  ngnladmin:
+    description: No Game No Life UHC admin commands
+    usage: /ngnladmin <subcommand>
+    permission: ngnl.admin
+    aliases: [ ngadmin ]
+
+  rps:
+    description: Rock Paper Scissors command
+    usage: /rps <player> <wager>
+    # Add other commands here
+
+permissions:
+  ngnl.admin:
+    description: Allows access to admin commands
+    default: op
+
+  ngnl.player:
+    description: Allows access to player commands
+    default: true
