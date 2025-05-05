@@ -63,7 +63,7 @@ public abstract class Role {
         String factionName = (faction != null) ? faction.getColoredName() : "Unknown";
 
         // Send header
-        MessageUtil.sendMessage(player,"&7——————————————————————————————————————————————————");
+        MessageUtil.sendMessage(player,"&7———————————————————————————————————");
         MessageUtil.sendMessage(player,"");
         MessageUtil.sendMessage(player, "&7Your Are: &5&l" + getDisplayName());
         MessageUtil.sendMessage(player,"");
@@ -76,7 +76,7 @@ public abstract class Role {
             MessageUtil.sendMessage(player, "&f" + line);
         }
         MessageUtil.sendMessage(player,"");
-        MessageUtil.sendMessage(player,"&7——————————————————————————————————————————————————");
+        MessageUtil.sendMessage(player,"&7———————————————————————————————————");
     }
 
     /**

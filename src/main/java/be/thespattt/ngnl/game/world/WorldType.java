@@ -18,5 +18,7 @@ public enum WorldType {
     /**
      * Arena/final phase world
      */
-    ARENA
+    ARENA,
+
+    MINIGAME
 }

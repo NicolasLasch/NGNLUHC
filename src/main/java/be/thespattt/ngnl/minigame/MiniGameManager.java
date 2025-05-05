@@ -513,7 +513,7 @@ public class MiniGameManager {
 
 
     public void teleportToMiniGameRoom(Player killer, Player victim) {
-        World world = Bukkit.getWorld("arena_minigame");
+        World world = Bukkit.getWorld("ngnl_minigame");
         if (world == null) {
             MessageUtil.sendMessage(killer, "&c[Error] Mini-game world not found.");
             return;
