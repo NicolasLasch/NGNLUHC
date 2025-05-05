@@ -8,14 +8,13 @@ import be.thespattt.ngnl.game.GameState;
 import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.util.MessageUtil;
 
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.WorldLoadEvent;
@@ -603,4 +602,24 @@ public class GameListener implements Listener {
         // For now, just log the exact location
         MessageUtil.logInfo("Aka Si Anse spawned at: X: " + x + ", Y: " + y + ", Z: " + z);
     }
+
+    @EventHandler
+    public void onDamageByPlayer(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player victim && event.getDamager() instanceof Player damager) {
+            plugin.getCombatTracker().setLastDamager(victim.getUniqueId(), damager.getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onMiniGameRoomCombat(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player victim && event.getDamager() instanceof Player)) return;
+
+        Location loc = victim.getLocation();
+        World world = Bukkit.getWorld("arena_minigame");
+
+        if (world != null && loc.getWorld().equals(world) && loc.getY() >= 70 && loc.getY() <= 75) {
+            event.setCancelled(true);
+        }
+    }
+
 }

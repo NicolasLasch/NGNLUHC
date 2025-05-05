@@ -1,302 +1,57 @@
-[18:34:48] [ServerMain/INFO]: [bootstrap] Running Java 21 (OpenJDK 64-Bit Server VM 21.0.4+7-LTS; Eclipse Adoptium Temurin-21.0.4+7) on Mac OS X 14.5 (aarch64)
-[18:34:48] [ServerMain/INFO]: [bootstrap] Loading Purpur 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) for Minecraft 1.21.4
-[18:34:49] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
-[18:34:49] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar'...
-[18:34:50] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar' in 626ms.
-[18:34:50] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
-[18:34:50] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
+[23:36:12] [ServerMain/INFO]: [bootstrap] Running Java 21 (OpenJDK 64-Bit Server VM 21.0.4+7-LTS; Eclipse Adoptium Temurin-21.0.4+7) on Mac OS X 14.5 (aarch64)
+[23:36:12] [ServerMain/INFO]: [bootstrap] Loading Purpur 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) for Minecraft 1.21.4
+[23:36:13] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
+[23:36:13] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar'...
+[23:36:13] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar' in 608ms.
+[23:36:13] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
+[23:36:13] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
  - NoGameNoLifeUHC (1.0.0)
-[18:34:56] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
-[18:34:57] [ServerMain/INFO]: Loaded 1370 recipes
-[18:34:57] [ServerMain/INFO]: Loaded 1481 advancements
-[18:34:57] [ServerMain/INFO]: [MCTypeRegistry] Initialising converters for DataConverter...
-[18:34:57] [ServerMain/INFO]: [MCTypeRegistry] Finished initialising converters for DataConverter in 398,7ms
-[18:34:58] [Server thread/INFO]: Starting minecraft server version 1.21.4
-[18:34:58] [Server thread/INFO]: Loading properties
-[18:34:58] [Server thread/INFO]: This server is running Purpur version 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) (Implementing API version 1.21.4-R0.1-SNAPSHOT)
-[18:34:58] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
-[18:34:58] [Server thread/INFO]: Using 4 threads for Netty based IO
-[18:34:58] [Server thread/INFO]: Server Ping Player Sample Count: 12
-[18:35:01] [Server thread/INFO]: [MoonriseCommon] Paper is using 2 worker threads, 1 I/O threads
-[18:35:01] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using population gen parallelism: true
-[18:35:02] [Server thread/INFO]: Default game type: SURVIVAL
-[18:35:02] [Server thread/INFO]: Generating keypair
-[18:35:02] [Server thread/INFO]: Starting Minecraft server on *:25565
-[18:35:02] [Server thread/INFO]: Using default channel type
-[18:35:02] [Server thread/INFO]: Paper: Using libdeflate (macOS ARM64 / Apple Silicon) compression from Velocity.
-[18:35:02] [Server thread/INFO]: Paper: Using native (macOS ARM64 / Apple Silicon) cipher from Velocity.
-[18:35:03] [Server thread/INFO]: [NoGameNoLifeUHC] Loading server plugin NoGameNoLifeUHC v1.0.0
-[18:35:03] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
-[18:35:03] [Server thread/INFO]: Preparing level "world"
-[18:35:03] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
-[18:35:04] [Server thread/INFO]: Preparing spawn area: 0%
-[18:35:04] [Server thread/INFO]: Preparing spawn area: 6%
-[18:35:05] [Server thread/INFO]: Preparing spawn area: 63%
-[18:35:05] [Server thread/INFO]: Time elapsed: 1450 ms
-[18:35:05] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
-[18:35:05] [Server thread/INFO]: Preparing spawn area: 0%
-[18:35:05] [Server thread/INFO]: Time elapsed: 177 ms
-[18:35:05] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
-[18:35:05] [Server thread/INFO]: Preparing spawn area: 0%
-[18:35:05] [Server thread/INFO]: Time elapsed: 155 ms
-[18:35:05] [Server thread/INFO]: [NoGameNoLifeUHC] Enabling NoGameNoLifeUHC v1.0.0
-[18:35:06] [Server thread/INFO]: [NoGameNoLifeUHC] All commands registered
-[18:35:06] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration loaded successfully
-[18:35:06] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations loaded
-[18:35:06] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 7 factions
-[18:35:06] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 29 roles
-[18:35:06] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 15 mini-games
-[18:35:06] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 13 special items
-[18:35:06] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_waiting
-[18:35:06] [Server thread/ERROR]: No key layers in MapLike[{}]
-[18:35:08] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_waiting
-[18:35:08] [Server thread/INFO]: Preparing spawn area: 0%
-[18:35:08] [Server thread/INFO]: Time elapsed: 191 ms
-[18:35:08] [Server thread/INFO]: [NoGameNoLifeUHC] Worlds initialized
-[18:35:08] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been enabled!
-[18:35:08] [Server thread/INFO]: [spark] Starting background profiler...
-[18:35:10] [Server thread/INFO]: Done preparing level "world" (7.255s)
-[18:35:10] [Server thread/INFO]: Running delayed init tasks
-[18:35:10] [Server thread/INFO]: Done (26.026s)! For help, type "help"
-[18:39:15] [Server thread/INFO]: --------- Help: Index ---------------------------
-[18:39:15] [Server thread/INFO]: Use /help [n] to get page n of help.
-[18:39:15] [Server thread/INFO]: Aliases: Lists command aliases
-[18:39:15] [Server thread/INFO]: Bukkit: All commands for Bukkit
-[18:39:15] [Server thread/INFO]: Minecraft: All commands for Minecraft
-[18:39:15] [Server thread/INFO]: NoGameNoLifeUHC: All commands for NoGameNoLifeUHC
-[18:39:15] [Server thread/INFO]: /advancement: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /alliance: Form an alliance with another solo player
-[18:39:15] [Server thread/INFO]: /attribute: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /ban: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /ban-ip: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /banlist: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /bossbar: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /callback: ClickEvent callback
-[18:39:15] [Server thread/INFO]: /challenge: Challenge another player to a game
-[18:39:15] [Server thread/INFO]: /clear: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /clone: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /compass: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /credits: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /damage: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /data: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /datapack: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /debug: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /defaultgamemode: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /demo: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /deop: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /difficulty: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /duo: Send a message to your duo partner
-[18:39:15] [Server thread/INFO]: /effect: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /enchant: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /execute: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /experience: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /fill: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /fillbiome: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /forceload: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /forest: Access forest inventory (Kainas only)
-[18:39:15] [Server thread/INFO]: /function: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /gamemode: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /gamerule: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /give: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /heal: Transfer health to your partner (Riku only)
-[18:39:15] [Server thread/INFO]: /help: Shows the help menu
-[18:39:15] [Server thread/INFO]: /item: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /jfr: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /kick: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /kill: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /list: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /locate: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /loot: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /me: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:advancement: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:attribute: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:ban: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:ban-ip: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:banlist: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:bossbar: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:clear: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:clone: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:compass: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:credits: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:damage: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:data: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:datapack: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:debug: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:defaultgamemode: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:demo: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:deop: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:difficulty: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:effect: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:enchant: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:execute: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:experience: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:fill: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:fillbiome: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:forceload: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:function: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:gamemode: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:gamerule: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:give: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:help: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:item: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:jfr: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:kick: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:kill: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:list: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:locate: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:loot: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:me: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:msg: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:op: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:pardon: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:pardon-ip: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:particle: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:perf: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:ping: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:place: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:playsound: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:ram: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:rambar: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:random: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:recipe: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:reload: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:return: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:ride: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:rotate: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:save-all: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:save-off: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:save-on: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:say: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:schedule: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:scoreboard: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:seed: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:setblock: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:setidletimeout: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:setworldspawn: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:spawnpoint: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:spectate: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:spreadplayers: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:stop: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:stopsound: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:summon: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:tag: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:team: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:teammsg: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:teleport: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:tell: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:tellraw: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:tick: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:time: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:title: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:tm: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:tp: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:tpsbar: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:transfer: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:trigger: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:uptime: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:w: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:weather: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:whitelist: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:worldborder: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /minecraft:xp: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /msg: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /mspt: View server tick times
-[18:39:15] [Server thread/INFO]: /ngnl: Main command for NoGameNoLife UHC
-[18:39:15] [Server thread/INFO]: /ngnladmin: No Game No Life UHC admin commands
-[18:39:15] [Server thread/INFO]: /op: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /paper: Paper related commands
-[18:39:15] [Server thread/INFO]: /paper:spark: 
-[18:39:15] [Server thread/INFO]: /pardon: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /pardon-ip: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /particle: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /perf: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /ping: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /place: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /playsound: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /pledge: Create a binding pledge with another player
-[18:39:15] [Server thread/INFO]: /plugins: Gets a list of plugins running on the server
-[18:39:15] [Server thread/INFO]: /purpur: Purpur related commands
-[18:39:15] [Server thread/INFO]: /ram: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /rambar: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /random: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /recipe: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /reload: Reloads the server configuration and plugins
-[18:39:15] [Server thread/INFO]: /restart: Restarts the server
-[18:39:15] [Server thread/INFO]: /return: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /ride: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /rite: Perform a rite (Think only)
-[18:39:15] [Server thread/INFO]: /rotate: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /rps: Rock Paper Scissors command
-[18:39:15] [Server thread/INFO]: /save-all: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /save-off: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /save-on: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /say: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /schedule: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /scoreboard: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /seed: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /setblock: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /setidletimeout: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /setworldspawn: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /spark: 
-[18:39:15] [Server thread/INFO]: /spawnpoint: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /spectate: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /spigot: Spigot related commands
-[18:39:15] [Server thread/INFO]: /spreadplayers: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /stop: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /stopsound: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /summon: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /tag: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /team: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /teammsg: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /teleport: Exchange the position of two players (Holou only)
-[18:39:15] [Server thread/INFO]: /tell: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /tellraw: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /tick: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /time: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /timings: Manages Spigot Timings data to see performance of the server.
-[18:39:15] [Server thread/INFO]: /title: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /tm: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /tp: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /tps: Gets the current ticks per second for the server
-[18:39:15] [Server thread/INFO]: /tpsbar: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /transfer: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /trigger: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /uptime: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /version: Gets the version of this server including any plugins in use
-[18:39:15] [Server thread/INFO]: /w: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /weather: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /whitelist: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /worldborder: A Mojang provided command.
-[18:39:15] [Server thread/INFO]: /xp: A Mojang provided command.
-[18:40:28] [Server thread/INFO]: Stopping server
-[18:40:28] [Server thread/INFO]: [NoGameNoLifeUHC] Disabling NoGameNoLifeUHC v1.0.0
-[18:40:28] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration saved successfully
-[18:40:28] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations saved
-[18:40:28] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been disabled!
-[18:40:28] [Server thread/INFO]: Saving players
-[18:40:28] [Server thread/INFO]: Saving worlds
-[18:40:28] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 7 entity chunks, 0 poi chunks in world 'world' in 0,03s
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'world'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'world'
-[18:40:28] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_nether]'/minecraft:the_nether
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_nether'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_nether'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_nether'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 1 entity chunks, 0 poi chunks in world 'world_nether' in 0,01s
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'world_nether'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'world_nether'
-[18:40:28] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_the_end]'/minecraft:the_end
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_the_end'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_the_end'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_the_end'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 10 entity chunks, 0 poi chunks in world 'world_the_end' in 0,05s
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'world_the_end'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'world_the_end'
-[18:40:28] [Server thread/INFO]: Saving chunks for level 'ServerLevel[ngnl_waiting]'/minecraft:ngnl_waiting
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'ngnl_waiting'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'ngnl_waiting'
-[18:40:28] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'ngnl_waiting'
+[23:36:17] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[23:36:19] [ServerMain/INFO]: Loaded 1370 recipes
+[23:36:19] [ServerMain/INFO]: Loaded 1481 advancements
+[23:36:19] [ServerMain/INFO]: [MCTypeRegistry] Initialising converters for DataConverter...
+[23:36:19] [ServerMain/INFO]: [MCTypeRegistry] Finished initialising converters for DataConverter in 461,2ms
+[23:36:19] [Server thread/INFO]: Starting minecraft server version 1.21.4
+[23:36:19] [Server thread/INFO]: Loading properties
+[23:36:19] [Server thread/INFO]: This server is running Purpur version 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) (Implementing API version 1.21.4-R0.1-SNAPSHOT)
+[23:36:19] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[23:36:20] [Server thread/INFO]: Server Ping Player Sample Count: 12
+[23:36:20] [Server thread/INFO]: Using 4 threads for Netty based IO
+[23:36:21] [Server thread/INFO]: [MoonriseCommon] Paper is using 2 worker threads, 1 I/O threads
+[23:36:21] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using population gen parallelism: true
+[23:36:21] [Server thread/INFO]: Default game type: SURVIVAL
+[23:36:21] [Server thread/INFO]: Generating keypair
+[23:36:21] [Server thread/INFO]: Starting Minecraft server on *:25565
+[23:36:21] [Server thread/INFO]: Using default channel type
+[23:36:21] [Server thread/INFO]: Paper: Using libdeflate (macOS ARM64 / Apple Silicon) compression from Velocity.
+[23:36:21] [Server thread/INFO]: Paper: Using native (macOS ARM64 / Apple Silicon) cipher from Velocity.
+[23:36:21] [Server thread/INFO]: [NoGameNoLifeUHC] Loading server plugin NoGameNoLifeUHC v1.0.0
+[23:36:21] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[23:36:21] [Server thread/INFO]: Preparing level "world"
+[23:36:22] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
+[23:36:22] [Server thread/INFO]: Preparing spawn area: 0%
+[23:36:23] [Server thread/INFO]: Preparing spawn area: 59%
+[23:36:23] [Server thread/INFO]: Preparing spawn area: 59%
+[23:36:23] [Server thread/INFO]: Time elapsed: 1008 ms
+[23:36:23] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
+[23:36:23] [Server thread/INFO]: Preparing spawn area: 0%
+[23:36:23] [Server thread/INFO]: Time elapsed: 130 ms
+[23:36:23] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
+[23:36:23] [Server thread/INFO]: Preparing spawn area: 0%
+[23:36:23] [Server thread/INFO]: Time elapsed: 83 ms
+[23:36:23] [Server thread/INFO]: [NoGameNoLifeUHC] Enabling NoGameNoLifeUHC v1.0.0
+[23:36:23] [Server thread/INFO]: [NoGameNoLifeUHC] All commands registered
+[23:36:23] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration loaded successfully
+[23:36:23] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations loaded
+[23:36:23] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 7 factions
+[23:36:23] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 29 roles
+[23:36:23] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 15 mini-games
+[23:36:23] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 13 special items
+[23:36:23] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_waiting
+[23:36:24] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_waiting
+[23:36:24] [Server thread/INFO]: Preparing spawn area: 0%
+[23:36:24] [Server thread/INFO]: Time elapsed: 85 ms
+[23:36:24] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_mining
+[23:36:24] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_mining
+[23:36:24] [Server thread/INFO]: Preparing spawn area: 0%
+[23:36:24] [Server thread/INFO]: Time elapsed: 376 ms

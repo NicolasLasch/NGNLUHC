@@ -39,7 +39,6 @@ public class GameManager {
             MessageUtil.broadcast("&cNot enough players to start the game! Minimum: " + minPlayers);
             return false;
         }
-
         // Start the game
         game.startGame();
         return true;

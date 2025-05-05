@@ -4,6 +4,7 @@ import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.game.GameState;
 import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.player.NGNLPlayer;
+import be.thespattt.ngnl.player.faction.FactionType;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
@@ -58,19 +59,24 @@ public abstract class Role {
      * @param player The player
      */
     protected void sendRoleInfo(Player player) {
-        // Send header
-        MessageUtil.sendMessage(player, "&6======== Your Role: &e" + getDisplayName() + " &6========");
+        FactionType faction = getNGNLPlayer().getFaction();
+        String factionName = (faction != null) ? faction.getColoredName() : "Unknown";
 
-        // Send description
+        // Send header
+        MessageUtil.sendMessage(player,"&7——————————————————————————————————————————————————");
+        MessageUtil.sendMessage(player,"");
+        MessageUtil.sendMessage(player, "&7Your Are: &5&l" + getDisplayName());
+        MessageUtil.sendMessage(player,"");
+        MessageUtil.sendMessage(player, "&7Objective: &f" + getObjective());
+        MessageUtil.sendMessage(player,"");
+        MessageUtil.sendMessage(player, "&7Faction: &5" + factionName);
+        MessageUtil.sendMessage(player,"");
+
         for (String line : getDescription()) {
             MessageUtil.sendMessage(player, "&f" + line);
         }
-
-        // Send objective
-        MessageUtil.sendMessage(player, "&6Objective: &f" + getObjective());
-
-        // Send footer
-        MessageUtil.sendMessage(player, "&6==============================================");
+        MessageUtil.sendMessage(player,"");
+        MessageUtil.sendMessage(player,"&7——————————————————————————————————————————————————");
     }
 
     /**
@@ -89,12 +95,12 @@ public abstract class Role {
             return;
         }
 
-        // Send arena phase information
-        MessageUtil.sendMessage(player, "&c======== Arena Phase Abilities ========");
+        MessageUtil.sendMessage(player,"&7——————————————————————————————————————————————————");
+        MessageUtil.sendMessage(player, "&fArena Phase Abilities");
         for (String line : getArenaPhaseDescription()) {
             MessageUtil.sendMessage(player, "&f" + line);
         }
-        MessageUtil.sendMessage(player, "&c=======================================");
+        MessageUtil.sendMessage(player,"&7——————————————————————————————————————————————————");
 
         // Give arena phase items
         giveArenaPhaseItems(player);
@@ -119,7 +125,14 @@ public abstract class Role {
      * @param isWinner True if this player won the mini-game
      */
     public void onMiniGameEnd(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        // Default empty implementation - to be overridden by specific roles
+        Player self = getPlayer();
+        if (self == null) return;
+
+        if (!isWinner) {
+            self.setHealth(0); // Le joueur perd => mort définitive
+        } else {
+            //plugin.getGameManager().teleportBackToGame(self); // méthode à créer
+        }
     }
 
     /**

@@ -93,6 +93,23 @@ public class PlayerListener implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerShouldDie(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Player victim)) return;
+        if (event.isCancelled()) return;
+
+        double finalHealth = victim.getHealth() - event.getFinalDamage();
+        if (finalHealth <= 0) {
+            UUID killerId = plugin.getCombatTracker().getLastDamager(victim.getUniqueId());
+            if (killerId != null) {
+                Player killer = Bukkit.getPlayer(killerId);
+                event.setCancelled(true);
+                victim.setHealth(1);
+                plugin.getMiniGameManager().startMiniGameDuel(killer, victim);
+            }
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();

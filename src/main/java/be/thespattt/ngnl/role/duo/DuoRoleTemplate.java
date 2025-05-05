@@ -6,9 +6,12 @@ import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
 
+import com.mojang.brigadier.Message;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -28,7 +31,7 @@ public class DuoRoleTemplate extends DuoRole {
     private static final int ABILITY_DURATION = 30; // 30 seconds
 
     // Define partner proximity settings if applicable
-    private static final int PARTNER_PROXIMITY_RANGE = 25; // 25 blocks
+    private static final int PARTNER_PROXIMITY_RANGE = 15; // 25 blocks
 
     // Ability usage tracking
     private long lastAbilityUsage = 0;
@@ -103,78 +106,37 @@ public class DuoRoleTemplate extends DuoRole {
      * Check proximity to partner and apply effects
      */
     private void checkPartnerProximity() {
+        // N'applique plus d'effet, juste pour logique éventuelle
         Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
+        if (player == null) return;
 
         Player partner = Bukkit.getPlayer(getPartnerUUID());
         if (partner == null || !plugin.getGameManager().isPlayerAlive(getPartnerUUID())) {
-            // Apply negative effects if partner is offline or dead
-            applyPartnerAbsentEffects(player);
-            return;
+            // rien de spécial ici car effets gérés par onDamage
         }
+    }
 
-        // Check distance to partner
-        double distance = player.getLocation().distance(partner.getLocation());
+    @EventHandler
+    public void onDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player damager)) return;
 
-        if (distance <= PARTNER_PROXIMITY_RANGE) {
-            // Apply positive effects when close to partner
-            applyPartnerNearbyEffects(player);
+        Player self = getPlayer();
+        if (self == null || !damager.getUniqueId().equals(self.getUniqueId())) return;
+
+        Player partner = Bukkit.getPlayer(getPartnerUUID());
+        if (partner != null && partner.isOnline() && plugin.getGameManager().isPlayerAlive(partner.getUniqueId())) {
+            double distance = damager.getLocation().distance(partner.getLocation());
+            if (distance <= PARTNER_PROXIMITY_RANGE) {
+                event.setDamage(event.getDamage() * 1.15); // proche → bonus dégâts
+                MessageUtil.sendMessage(self, "+15% de dégats");
+            } else {
+                event.setDamage(event.getDamage() * 0.85); // loin → malus dégâts
+                MessageUtil.sendMessage(self, "-15% de dégats");
+            }
         } else {
-            // Apply negative effects when far from partner
-            applyPartnerDistantEffects(player);
-        }
-    }
-
-    /**
-     * Apply effects when partner is offline or dead
-     *
-     * @param player The player
-     */
-    protected void applyPartnerAbsentEffects(Player player) {
-        // Remove positive effects
-        player.removePotionEffect(PotionEffectType.SPEED);
-        player.removePotionEffect(PotionEffectType.RESISTANCE);
-
-        // Apply negative effects
-        if (!player.hasPotionEffect(PotionEffectType.WEAKNESS)) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, false, false));
-        }
-    }
-
-    /**
-     * Apply effects when partner is nearby
-     *
-     * @param player The player
-     */
-    protected void applyPartnerNearbyEffects(Player player) {
-        // Remove negative effects
-        player.removePotionEffect(PotionEffectType.WEAKNESS);
-
-        // Apply positive effects
-        if (!player.hasPotionEffect(PotionEffectType.SPEED)) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
-        }
-
-        if (!player.hasPotionEffect(PotionEffectType.RESISTANCE)) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, Integer.MAX_VALUE, 0, false, false));
-        }
-    }
-
-    /**
-     * Apply effects when partner is distant
-     *
-     * @param player The player
-     */
-    protected void applyPartnerDistantEffects(Player player) {
-        // Remove positive effects
-        player.removePotionEffect(PotionEffectType.SPEED);
-        player.removePotionEffect(PotionEffectType.RESISTANCE);
-
-        // Apply negative or reduced effects
-        if (!player.hasPotionEffect(PotionEffectType.WEAKNESS)) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, false, false));
+            // partenaire mort/offline → malus dégâts
+            event.setDamage(event.getDamage() * 0.85);
+            MessageUtil.sendMessage(self, "-15% de dégats");
         }
     }
 

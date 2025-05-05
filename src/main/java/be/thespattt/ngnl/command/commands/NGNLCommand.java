@@ -205,6 +205,7 @@ public class NGNLCommand implements CommandExecutor, TabCompleter {
         if (sender instanceof Player && args.length == 1) {
             // TODO: Implement settings GUI
             MessageUtil.sendMessage(sender, "&aOpening settings GUI...");
+
             return true;
         }
 

@@ -3,14 +3,19 @@ package be.thespattt.ngnl.event.listener;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.event.custom.MiniGameEndEvent;
 import be.thespattt.ngnl.event.custom.MiniGameStartEvent;
+import be.thespattt.ngnl.minigame.MiniGameSessionManager;
 import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.UUID;
@@ -388,4 +393,38 @@ public class MiniGameListener implements Listener {
         // For now, just notify the player
         MessageUtil.sendMessage(player, "&aYou received a random reward book!");
     }
+
+    @EventHandler
+    public void onMiniGameSelectionClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!ChatColor.stripColor(event.getView().getTitle()).equalsIgnoreCase("Choose a Mini-Game")) return;
+
+        event.setCancelled(true);
+
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || clicked.getType() == Material.AIR) return;
+
+        MiniGameSessionManager manager = plugin.getMiniGameSessionManager();
+        UUID victimId = manager.getPendingVictim(player.getUniqueId());
+        if (victimId == null) {
+            player.closeInventory();
+            return;
+        }
+
+        String display = ChatColor.stripColor(clicked.getItemMeta().getDisplayName());
+        MiniGameType selected = MiniGameType.getByName(display);
+
+        if (selected != null) {
+            Player victim = Bukkit.getPlayer(victimId);
+            if (victim != null) {
+                manager.clearPending(player.getUniqueId());
+                MessageUtil.sendMessage(victim, "Playing Minigame : " + selected);
+                MessageUtil.sendMessage(player, "Playing Minigame : " + selected);
+                // plugin.getMiniGameEngine().startGame(selected, player, victim); // à adapter selon ton moteur
+            }
+        }
+
+        player.closeInventory();
+    }
+
 }

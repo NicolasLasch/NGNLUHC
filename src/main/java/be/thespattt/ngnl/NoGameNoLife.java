@@ -2,6 +2,7 @@ package be.thespattt.ngnl;
 
 import be.thespattt.ngnl.command.CommandManager;
 import be.thespattt.ngnl.config.ConfigManager;
+import be.thespattt.ngnl.event.listener.CombatTracker;
 import be.thespattt.ngnl.event.listener.GameListener;
 import be.thespattt.ngnl.event.listener.PlayerListener;
 import be.thespattt.ngnl.event.listener.MiniGameListener;
@@ -9,6 +10,7 @@ import be.thespattt.ngnl.game.GameManager;
 import be.thespattt.ngnl.game.world.WorldManager;
 import be.thespattt.ngnl.item.ItemManager;
 import be.thespattt.ngnl.minigame.MiniGameManager;
+import be.thespattt.ngnl.minigame.MiniGameSessionManager;
 import be.thespattt.ngnl.player.PlayerManager;
 import be.thespattt.ngnl.player.faction.FactionManager;
 import be.thespattt.ngnl.role.RoleManager;
@@ -40,6 +42,11 @@ public class NoGameNoLife extends JavaPlugin {
     private WorldManager worldManager;
     private CommandManager commandManager;
 
+    private CombatTracker combatTracker;
+
+    private MiniGameSessionManager miniGameSessionManager;
+
+
     @Override
     public void onEnable() {
         instance = this;
@@ -54,6 +61,8 @@ public class NoGameNoLife extends JavaPlugin {
         this.itemManager = new ItemManager(this);
         this.gameManager = new GameManager(this);
         this.commandManager = new CommandManager(this);
+        this.combatTracker =  new CombatTracker();
+        this.miniGameSessionManager = new MiniGameSessionManager();
 
         // Register event listeners
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
@@ -211,4 +220,14 @@ public class NoGameNoLife extends JavaPlugin {
     public NamespacedKey getNamespacedKey(String key) {
         return new NamespacedKey(this, key);
     }
+
+    public CombatTracker getCombatTracker() {
+        return combatTracker;
+    }
+
+    public MiniGameSessionManager getMiniGameSessionManager() {
+        return miniGameSessionManager;
+    }
+
+
 }

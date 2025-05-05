@@ -3,10 +3,7 @@ package be.thespattt.ngnl.game.world;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.util.MessageUtil;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.WorldCreator;
+import org.bukkit.*;
 import org.bukkit.WorldType;
 
 import java.io.File;
@@ -27,10 +24,12 @@ public class WorldManager {
     private final String waitingWorldName = "ngnl_waiting";
     private final String miningWorldName = "ngnl_mining";
     private final String arenaWorldName = "ngnl_arena";
+    private final String minigameWorldName = "ngnl_minigame";
 
     private World waitingWorld;
     private World miningWorld;
     private World arenaWorld;
+    private World minigameWorld;
 
     private final Map<be.thespattt.ngnl.game.world.WorldType, List<Location>> spawnLocations = new HashMap<>();
 
@@ -58,9 +57,20 @@ public class WorldManager {
             setupWaitingWorld(waitingWorld);
         }
 
-        // Load existing mining and arena worlds if they exist
-        miningWorld = Bukkit.getWorld(miningWorldName);
-        arenaWorld = Bukkit.getWorld(arenaWorldName);
+        miningWorld = getOrCreateWorld(miningWorldName, World.Environment.NORMAL, WorldType.NORMAL);
+        if (miningWorld != null) {
+            setupMiningWorld(miningWorld);
+        }
+
+        arenaWorld = getOrCreateWorld(arenaWorldName, World.Environment.NORMAL, WorldType.FLAT);
+        if (arenaWorld != null) {
+            setupArenaWorld(arenaWorld);
+        }
+
+        minigameWorld = getOrCreateWorld(minigameWorldName, World.Environment.NORMAL, WorldType.FLAT);
+        if (minigameWorld != null) {
+            setupMiniGameWorld(arenaWorld);
+        }
 
         // Load spawn locations
         loadSpawnLocations();
@@ -169,11 +179,6 @@ public class WorldManager {
         }
     }
 
-    /**
-     * Setup arena world
-     *
-     * @param world World to setup
-     */
     public void setupArenaWorld(World world) {
         // Set game rules
         world.setGameRuleValue("doDaylightCycle", "false");
@@ -189,6 +194,56 @@ public class WorldManager {
 
         // Generate spawn locations
         generateSpawnLocations(world, be.thespattt.ngnl.game.world.WorldType.ARENA, 8);
+    }
+
+
+    private void createMiniGameWorld() {
+        String name = "ngnl_minigame";
+
+        if (Bukkit.getWorld(name) == null) {
+            WorldCreator creator = new WorldCreator(name);
+            creator.environment(World.Environment.NORMAL);
+            creator.type(WorldType.FLAT);
+            creator.generatorSettings("3;minecraft:bedrock,2*minecraft:dirt,minecraft:grass_block;1"); // plat
+            World world = creator.createWorld();
+
+            generateWoodenRoom(world); // salle 5x5
+        }
+    }
+
+    private void generateWoodenRoom(World world) {
+        Location center = new Location(world, 0, 70, 0); // coordonnée de base
+        int radius = 2;
+
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = 0; y <= 4; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    boolean isWall = x == -radius || x == radius || z == -radius || z == radius || y == 0 || y == 4;
+                    Material material = isWall ? Material.OAK_PLANKS : Material.AIR;
+                    world.getBlockAt(center.clone().add(x, y, z)).setType(material);
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Setup arena world
+     *
+     * @param world World to setup
+     */
+    public void setupMiniGameWorld(World world) {
+        // Set game rules
+        world.setGameRuleValue("doDaylightCycle", "false");
+        world.setGameRuleValue("doWeatherCycle", "false");
+        world.setGameRuleValue("doMobSpawning", "false");
+        world.setTime(6000); // Midday
+
+        // Set world border
+        int borderSize = plugin.getConfigManager().getGameConfig().getArenaWorldBorderSize();
+        world.getWorldBorder().setSize(borderSize * 2);
+        world.getWorldBorder().setWarningDistance(20);
+        world.getWorldBorder().setCenter(0, 0);
     }
 
     /**
@@ -290,20 +345,6 @@ public class WorldManager {
         return new Location(world, x + 0.5, y, z + 0.5, 0, 0);
     }
 
-    /**
-     * Prepare worlds for a new game
-     */
-    public void prepareWorlds() {
-        // Create mining world if needed
-        if (miningWorld == null) {
-            createMiningWorld();
-        }
-
-        // Create arena world if needed
-        if (arenaWorld == null) {
-            createArenaWorld();
-        }
-    }
 
     /**
      * Cleanup worlds after a game

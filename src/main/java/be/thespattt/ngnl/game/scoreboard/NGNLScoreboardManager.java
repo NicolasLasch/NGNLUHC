@@ -80,7 +80,8 @@ public class NGNLScoreboardManager {
      */
     private int getTotalRolePages() {
         List<RoleType> activeRoles = getActiveRoles();
-        return (int) Math.ceil((double) activeRoles.size() / ROLES_PER_PAGE);
+        int rolePages = (int) Math.ceil((double) activeRoles.size() / ROLES_PER_PAGE);
+        return Math.max(1, rolePages) + 1;
     }
 
     /**
@@ -151,12 +152,10 @@ public class NGNLScoreboardManager {
             return;
         }
 
-        // Get the objective
         Objective objective = scoreboard.getObjective(DisplaySlot.SIDEBAR);
-
         if (objective == null) {
             objective = scoreboard.registerNewObjective("ngnl", "dummy");
-            objective.setDisplayName(ChatColor.GOLD + "No Game No Life UHC");
+            objective.setDisplayName(ChatColor.LIGHT_PURPLE + "No Game No Life UHC");
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         }
 
@@ -165,116 +164,107 @@ public class NGNLScoreboardManager {
             scoreboard.resetScores(entry);
         }
 
-        // Get current game state
-        GameState gameState = plugin.getGameManager().getGameState();
+        int page = playerScoreboardPages.getOrDefault(player.getUniqueId(), 0);
 
-        // Add game state
-        Score stateScore = objective.getScore(ChatColor.YELLOW + "Game: " + ChatColor.WHITE + gameState.getDisplayName());
-        stateScore.setScore(15);
+        if (page == 0) {
+            // Page principale : infos générales
 
-        // Add empty line
-        Score emptyLine1 = objective.getScore(ChatColor.RESET + " ");
-        emptyLine1.setScore(14);
+            // Ligne vide
+            Score emptyLine1 = objective.getScore(ChatColor.RESET + " ");
+            emptyLine1.setScore(16);
 
-        // Add episode info
-        if (gameState == GameState.MINING_PHASE || gameState == GameState.ARENA_PHASE) {
-            int currentEpisode = plugin.getGameManager().getGame().getEpisodeManager().getCurrentEpisode();
-            String timeRemaining = plugin.getGameManager().getGame().getEpisodeManager().getFormattedTimeRemaining();
+            // Game state
+            GameState gameState = plugin.getGameManager().getGameState();
+            Score stateScore = objective.getScore(ChatColor.WHITE + "   Game: " + ChatColor.DARK_PURPLE + gameState.getDisplayName());
+            stateScore.setScore(15);
 
-            Score episodeScore = objective.getScore(ChatColor.YELLOW + "Episode: " + ChatColor.WHITE + currentEpisode);
-            episodeScore.setScore(13);
-
-            Score timeScore = objective.getScore(ChatColor.YELLOW + "Time: " + ChatColor.WHITE + timeRemaining);
-            timeScore.setScore(12);
-        } else {
-            Score waitingScore = objective.getScore(ChatColor.YELLOW + "Waiting for game to start");
-            waitingScore.setScore(13);
-        }
-
-        // Add player info
-        if (gameState == GameState.MINING_PHASE || gameState == GameState.ARENA_PHASE) {
-            // Add empty line
+            // Ligne vide
             Score emptyLine2 = objective.getScore(ChatColor.RESET + "  ");
-            emptyLine2.setScore(11);
+            emptyLine2.setScore(14);
 
-            // Add player count
-            int alivePlayers = plugin.getGameManager().getGame().getAlivePlayers().size();
-            Score playersScore = objective.getScore(ChatColor.YELLOW + "Players: " + ChatColor.WHITE + alivePlayers);
-            playersScore.setScore(10);
+            if (gameState == GameState.MINING_PHASE || gameState == GameState.ARENA_PHASE) {
+                int currentEpisode = plugin.getGameManager().getGame().getEpisodeManager().getCurrentEpisode();
+                int totalSeconds = plugin.getGameManager().getGame().getEpisodeManager().getTotalElapsedSeconds();
+                String formattedTime = plugin.getGameManager().getGame().getEpisodeManager().formatSeconds(totalSeconds);
 
-            // Add border size
-            int borderSize = 0;
-            if (gameState == GameState.MINING_PHASE && plugin.getWorldManager().getMiningWorld() != null) {
-                borderSize = (int) plugin.getWorldManager().getMiningWorld().getWorldBorder().getSize() / 2;
-            } else if (gameState == GameState.ARENA_PHASE && plugin.getWorldManager().getArenaWorld() != null) {
-                borderSize = (int) plugin.getWorldManager().getArenaWorld().getWorldBorder().getSize() / 2;
+                Score episodeScore = objective.getScore(ChatColor.WHITE + "Episode: " + ChatColor.DARK_PURPLE + currentEpisode);
+                episodeScore.setScore(13);
+
+                Score timeScore = objective.getScore(ChatColor.WHITE + "Time: " + ChatColor.DARK_PURPLE + formattedTime);
+                timeScore.setScore(12);
+            } else {
+                Score waitingScore = objective.getScore(ChatColor.WHITE + "Waiting for game to start");
+                waitingScore.setScore(13);
             }
 
-            Score borderScore = objective.getScore(ChatColor.YELLOW + "Border: " + ChatColor.WHITE + borderSize);
-            borderScore.setScore(9);
-
-            // Add role info for this player
-            NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
-            if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
-                Role role = ngnlPlayer.getRole();
-
-                // Add empty line
+            // Joueurs
+            if (gameState == GameState.MINING_PHASE || gameState == GameState.ARENA_PHASE) {
                 Score emptyLine3 = objective.getScore(ChatColor.RESET + "   ");
-                emptyLine3.setScore(8);
+                emptyLine3.setScore(11);
 
-                // Add role info
-                Score roleScore = objective.getScore(ChatColor.YELLOW + "Role: " + ChatColor.WHITE + role.getDisplayName());
-                roleScore.setScore(7);
+                int alivePlayers = plugin.getGameManager().getGame().getAlivePlayers().size();
+                Score playersScore = objective.getScore(ChatColor.WHITE + "Players: " + ChatColor.DARK_PURPLE + alivePlayers);
+                playersScore.setScore(10);
 
-                // Add faction info
-                FactionType faction = role.getRoleType().getFaction();
-                if (faction != null) {
-                    Score factionScore = objective.getScore(ChatColor.YELLOW + "Faction: " + faction.getColor() + faction.getDisplayName());
-                    factionScore.setScore(6);
+                int borderSize = 0;
+                if (gameState == GameState.MINING_PHASE && plugin.getWorldManager().getMiningWorld() != null) {
+                    borderSize = (int) plugin.getWorldManager().getMiningWorld().getWorldBorder().getSize() / 2;
+                } else if (gameState == GameState.ARENA_PHASE && plugin.getWorldManager().getArenaWorld() != null) {
+                    borderSize = (int) plugin.getWorldManager().getArenaWorld().getWorldBorder().getSize() / 2;
                 }
 
-                // Add duo partner info
-                if (role.isDuo()) {
-                    UUID partnerUUID = role.getPartnerUUID();
-                    if (partnerUUID != null) {
-                        Player partnerPlayer = Bukkit.getPlayer(partnerUUID);
-                        String partnerName = partnerPlayer != null ? partnerPlayer.getName() : "Unknown";
-                        boolean partnerAlive = plugin.getGameManager().isPlayerAlive(partnerUUID);
+                Score borderScore = objective.getScore(ChatColor.WHITE + "Border: ±" + ChatColor.DARK_PURPLE + borderSize);
+                borderScore.setScore(9);
 
-                        String partnerStatus = partnerAlive ? ChatColor.GREEN + partnerName : ChatColor.RED + partnerName;
-                        Score partnerScore = objective.getScore(ChatColor.YELLOW + "Partner: " + partnerStatus);
-                        partnerScore.setScore(5);
+                // Rôle du joueur
+                NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
+                if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
+                    Role role = ngnlPlayer.getRole();
+
+                    Score emptyLine4 = objective.getScore(ChatColor.RESET + "    ");
+                    emptyLine4.setScore(8);
+
+                    Score roleScore = objective.getScore(ChatColor.WHITE + "Role: " + ChatColor.DARK_PURPLE + role.getDisplayName());
+                    roleScore.setScore(7);
+
+                    if (role.getRoleType().getFaction() != null) {
+                        Score factionScore = objective.getScore(ChatColor.YELLOW + "Faction: " + role.getRoleType().getFaction().getColor() + role.getRoleType().getFaction().getDisplayName());
+                        factionScore.setScore(6);
                     }
-                }
 
-                // Add alliance info
-                if (ngnlPlayer.hasAlliancePartner()) {
-                    UUID allianceUUID = ngnlPlayer.getAlliancePartner();
-                    if (allianceUUID != null) {
-                        Player alliancePlayer = Bukkit.getPlayer(allianceUUID);
-                        String allianceName = alliancePlayer != null ? alliancePlayer.getName() : "Unknown";
-                        boolean allianceAlive = plugin.getGameManager().isPlayerAlive(allianceUUID);
+                    if (role.isDuo()) {
+                        UUID partnerUUID = role.getPartnerUUID();
+                        if (partnerUUID != null) {
+                            Player partnerPlayer = Bukkit.getPlayer(partnerUUID);
+                            String partnerName = partnerPlayer != null ? partnerPlayer.getName() : "Unknown";
+                            Score partnerScore = objective.getScore(ChatColor.WHITE + "Partner: " + ChatColor.DARK_PURPLE + partnerName);
+                            partnerScore.setScore(5);
+                        }
+                    }
 
-                        String allianceStatus = allianceAlive ? ChatColor.GREEN + allianceName : ChatColor.RED + allianceName;
-                        Score allianceScore = objective.getScore(ChatColor.YELLOW + "Alliance: " + allianceStatus);
-                        allianceScore.setScore(4);
+                    if (ngnlPlayer.hasAlliancePartner()) {
+                        UUID allianceUUID = ngnlPlayer.getAlliancePartner();
+                        if (allianceUUID != null) {
+                            Player alliancePlayer = Bukkit.getPlayer(allianceUUID);
+                            String allianceName = alliancePlayer != null ? alliancePlayer.getName() : "Unknown";
+                            Score allianceScore = objective.getScore(ChatColor.WHITE + "Alliance: " + ChatColor.DARK_PURPLE + allianceName);
+                            allianceScore.setScore(4);
+                        }
                     }
                 }
             }
 
-            // Add empty line
-            Score emptyLine4 = objective.getScore(ChatColor.RESET + "    ");
-            emptyLine4.setScore(3);
+            // Footer
+            Score footerScore = objective.getScore(ChatColor.DARK_PURPLE + "ngnl.be.thespattt.net");
+            footerScore.setScore(0);
 
-            // Add active roles page
+        } else {
+            // Pages 1+ : rôles actifs
+            Score title = objective.getScore(ChatColor.LIGHT_PURPLE + "--- Active Roles ---");
+            title.setScore(15);
             addActiveRolesPage(player, objective);
         }
 
-        // Add footer
-        Score footerScore = objective.getScore(ChatColor.GOLD + "ngnl.be.thespattt.net");
-        footerScore.setScore(0);
-
-        // Set player's scoreboard
         player.setScoreboard(scoreboard);
     }
 
@@ -303,10 +293,10 @@ public class NGNLScoreboardManager {
 
         // Add page info
         if (totalPages > 1) {
-            Score pageScore = objective.getScore(ChatColor.YELLOW + "Roles Page: " + ChatColor.WHITE + (page + 1) + "/" + totalPages);
+            Score pageScore = objective.getScore(ChatColor.WHITE + "Roles Page: " + ChatColor.DARK_PURPLE + (page + 1) + "/" + totalPages);
             pageScore.setScore(2);
         } else {
-            Score rolesTitle = objective.getScore(ChatColor.YELLOW + "Active Roles:");
+            Score rolesTitle = objective.getScore(ChatColor.WHITE + "Active Roles:");
             rolesTitle.setScore(2);
         }
 
@@ -316,34 +306,9 @@ public class NGNLScoreboardManager {
 
         for (int i = startIndex; i < endIndex; i++) {
             RoleType roleType = activeRoles.get(i);
-            FactionType faction = roleType.getFaction();
-            String factionColor = faction != null ? faction.getColor().toString() : ChatColor.WHITE.toString();
-
-            // Get count of this role type
-            int count = countPlayersWithRole(roleType);
-
-            Score roleScore = objective.getScore(factionColor + roleType.getDisplayName() + ChatColor.GRAY + " (" + count + ")");
+            Score roleScore = objective.getScore(ChatColor.WHITE + roleType.getDisplayName());
             roleScore.setScore(1);
         }
-    }
-
-    /**
-     * Count players with a specific role type
-     *
-     * @param roleType Role type to count
-     * @return Count of players with this role
-     */
-    private int countPlayersWithRole(RoleType roleType) {
-        int count = 0;
-
-        for (UUID playerId : plugin.getGameManager().getGame().getAlivePlayers()) {
-            NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
-            if (ngnlPlayer != null && ngnlPlayer.getRole() != null && ngnlPlayer.getRole().getRoleType() == roleType) {
-                count++;
-            }
-        }
-
-        return count;
     }
 
     /**

@@ -78,15 +78,6 @@ public class EpisodeManager {
         // Update scoreboard
         plugin.getGameManager().getGame().getScoreboardManager().updateScoreboardsForAllPlayers();
 
-        // Check for time warnings
-        if (episodeTimeRemaining == 60) { // 1 minute warning
-            broadcastTimeWarning(1);
-        } else if (episodeTimeRemaining == 30) { // 30 seconds warning
-            broadcastTimeWarning(0.5);
-        } else if (episodeTimeRemaining == 10) { // 10 seconds warning
-            broadcastTimeWarning(10.0 / 60.0);
-        }
-
         // Check if episode is over
         if (episodeTimeRemaining <= 0) {
             endCurrentEpisode();
@@ -119,15 +110,21 @@ public class EpisodeManager {
      */
     private void checkEpisodeTriggers() {
         // Check if PvP should be enabled
-        int pvpEpisode = 2; // Default: Episode 2
+        int pvpEpisode = 2;
+
+        if (currentEpisode == 2) {
+            // Assign roles and factions
+            plugin.getRoleManager().assignRoles();
+
+        }
 
         if (currentEpisode == pvpEpisode) {
             // Broadcast PvP enable
-            MessageUtil.broadcast("&c&lPvP is now enabled!");
+            MessageUtil.broadcast("&ePvP is now enabled!");
 
             // Play sound to all players
             for (Player player : Bukkit.getOnlinePlayers()) {
-                player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 1.0f);
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.2f, 1.0f);
             }
         }
 
@@ -138,29 +135,14 @@ public class EpisodeManager {
      * Broadcast episode start
      */
     private void broadcastEpisodeStart() {
-        MessageUtil.broadcast("&6&l=========================");
-        MessageUtil.broadcast("&6&lEPISODE " + currentEpisode + " HAS STARTED!");
-        MessageUtil.broadcast("&eDuration: " + plugin.getConfigManager().getGameConfig().getEpisodeLength() + " minutes");
-        MessageUtil.broadcast("&6&l=========================");
-
-        // Play sound to all players
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-        }
+        MessageUtil.broadcast("&f———— Episode &e" + currentEpisode + " &fhas started! ————");
     }
 
     /**
      * Broadcast episode end
      */
     private void broadcastEpisodeEnd() {
-        MessageUtil.broadcast("&6&l=========================");
-        MessageUtil.broadcast("&6&lEPISODE " + currentEpisode + " HAS ENDED!");
-        MessageUtil.broadcast("&6&l=========================");
-
         // Play sound to all players
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.7f, 1.0f);
-        }
     }
 
     /**
@@ -177,12 +159,8 @@ public class EpisodeManager {
             timeText = (int) (minutes * 60) + " seconds";
         }
 
-        MessageUtil.broadcast("&6&lEPISODE " + currentEpisode + " ENDS IN " + timeText + "!");
+        // MessageUtil.broadcast("&6&lEPISODE " + currentEpisode + " ENDS IN " + timeText + "!");
 
-        // Play sound to all players
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.playSound(player.getLocation(), Sound.BLOCK_COMPARATOR_CLICK, 1.0f, 1.0f);
-        }
     }
 
     /**
@@ -222,5 +200,25 @@ public class EpisodeManager {
         int seconds = episodeTimeRemaining % 60;
 
         return String.format("%02d:%02d", minutes, seconds);
+    }
+
+    public int getTotalElapsedSeconds() {
+        int currentEpisode = getCurrentEpisode();
+        int secondsPerEpisode = plugin.getConfigManager().getGameConfig().getEpisodeLength();
+        int secondsIntoCurrent = plugin.getConfigManager().getGameConfig().getEpisodeLength() - episodeTimeRemaining;
+
+        return (currentEpisode - 1) * secondsPerEpisode + secondsIntoCurrent;
+    }
+
+    public String formatSeconds(int seconds) {
+        int hours = seconds / 3600;
+        int minutes = (seconds % 3600) / 60;
+        int secs = seconds % 60;
+
+        if (hours > 0) {
+            return String.format("%02d:%02d:%02d", hours, minutes, secs);
+        } else {
+            return String.format("%02d:%02d", minutes, secs);
+        }
     }
 }

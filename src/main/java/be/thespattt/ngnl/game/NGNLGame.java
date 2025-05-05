@@ -9,6 +9,7 @@ import be.thespattt.ngnl.game.world.WorldManager;
 import be.thespattt.ngnl.game.world.WorldType;
 import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.player.NGNLPlayer;
+import be.thespattt.ngnl.role.Role;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
@@ -77,15 +78,10 @@ public class NGNLGame {
             MessageUtil.broadcast("&cThe game is already running!");
             return;
         }
-
         // Change game state
         gameState = GameState.STARTING;
-
         // Initialize alive players
         initializePlayers();
-
-        // Assign roles and factions
-        plugin.getRoleManager().assignRoles();
 
         // Teleport players to starting positions
         teleportPlayersToMiningWorld();
@@ -97,8 +93,8 @@ public class NGNLGame {
         gameState = GameState.MINING_PHASE;
 
         // Broadcast game start
-        MessageUtil.broadcast("&6&lNo Game No Life UHC has begun!");
-        MessageUtil.broadcast("&eGood luck and remember: In this world, games decide everything!");
+        MessageUtil.broadcast("&fNo Game No Life UHC has begun!");
+        MessageUtil.broadcast("&fGood luck and remember: In this world, &5games &fdecide everything!");
     }
 
     /**
@@ -107,41 +103,75 @@ public class NGNLGame {
      * @param force Force end even if players remain
      */
     public void endGame(boolean force) {
-        if (gameState == GameState.WAITING || gameState == GameState.ENDED) {
-            return;
-        }
+        if (gameState == GameState.WAITING || gameState == GameState.ENDED) return;
 
-        // Stop timers
         episodeManager.stopEpisodeTimer();
+        MessageUtil.broadcast("&5——————————————————————————————————————————————————");
 
-        // Determine winner if game wasn't force-ended
+        List<UUID> allPlayers = plugin.getPlayerManager().getAllNGNLPlayers().stream()
+                .map(NGNLPlayer::getPlayerId)
+                .toList();
+
+        // Gagnants (si pas force)
         if (!force && alivePlayers.size() == 1) {
             UUID winnerId = alivePlayers.get(0);
-            NGNLPlayer winner = plugin.getPlayerManager().getNGNLPlayer(winnerId);
+            Player winnerPlayer = Bukkit.getPlayer(winnerId);
+            String winnerName = winnerPlayer != null ? winnerPlayer.getName() : "Unknown";
+            String winnerRole = plugin.getPlayerManager().getNGNLPlayer(winnerId).getRole().getDisplayName();
 
-            if (winner != null) {
-                String roleName = winner.getRole().getDisplayName();
-                String playerName = Bukkit.getPlayer(winnerId) != null ?
-                        Bukkit.getPlayer(winnerId).getName() : "Unknown";
+            MessageUtil.broadcast("&fWinner: &e" + winnerName);
+            MessageUtil.broadcast("&7   (" + winnerRole + ")");
 
-                MessageUtil.broadcast("&6&l" + playerName + " has won the game as " + roleName + "!");
+        } else if (!force && alivePlayers.size() == 2) {
+            UUID p1 = alivePlayers.get(0);
+            UUID p2 = alivePlayers.get(1);
+
+            NGNLPlayer ngnl1 = plugin.getPlayerManager().getNGNLPlayer(p1);
+            NGNLPlayer ngnl2 = plugin.getPlayerManager().getNGNLPlayer(p2);
+            Role r1 = ngnl1.getRole();
+            Role r2 = ngnl2.getRole();
+
+            boolean areDuo = r1 != null && r1.isDuo() && p2.equals(r1.getPartnerUUID());
+            boolean areAlliance = ngnl1.hasAlliancePartner() && p2.equals(ngnl1.getAlliancePartner());
+
+            if (areDuo || areAlliance) {
+                String name1 = Bukkit.getPlayer(p1) != null ? Bukkit.getPlayer(p1).getName() : "Player1";
+                String name2 = Bukkit.getPlayer(p2) != null ? Bukkit.getPlayer(p2).getName() : "Player2";
+                String role1 = r1 != null ? r1.getDisplayName() : "Unknown";
+                String role2 = r2 != null ? r2.getDisplayName() : "Unknown";
+
+                MessageUtil.broadcast("&fWinners: &e" + name1 + "&f and &e" + name2);
+                MessageUtil.broadcast("&5   (" + role1 + " / " + role2 + ")");
+            } else {
+                MessageUtil.broadcast("&fThe game has ended in a &edraw!");
             }
+
         } else if (!force && alivePlayers.isEmpty()) {
-            MessageUtil.broadcast("&6&lThe game has ended in a draw!");
-        } else {
-            MessageUtil.broadcast("&c&lThe game has been forcefully ended by an administrator.");
+            MessageUtil.broadcast("&fThe game has ended in a &edraw!");
+        } else if (force) {
+            MessageUtil.broadcast("&fThe game has been forcefully ended by an &3administrator.");
         }
 
-        // Reset players
+        // Afficher TOUS les joueurs avec leur rôle, en mettant les gagnants en vert
+        MessageUtil.broadcast("&fPlayers and Roles:");
+        for (UUID playerId : allPlayers) {
+            NGNLPlayer ngnl = plugin.getPlayerManager().getNGNLPlayer(playerId);
+            Player player = Bukkit.getPlayer(playerId);
+            String name = player != null ? player.getName() : "Unknown";
+            String role = ngnl.getRole() != null ? ngnl.getRole().getDisplayName() : "No Role";
+
+            if (alivePlayers.contains(playerId)) {
+                MessageUtil.broadcast("&2✔ &f" + name + " &5(" + role + ")");
+            } else {
+                MessageUtil.broadcast("&4✘ &f" + name + " &5(" + role + ")");
+            }
+        }
+
+        MessageUtil.broadcast("&5——————————————————————————————————————————————————");
+
         resetPlayers();
-
-        // Change game state
         gameState = GameState.ENDED;
-
-        // Clean up
         cleanup();
-
-        // Return to waiting state
         gameState = GameState.WAITING;
     }
 
@@ -162,8 +192,8 @@ public class NGNLGame {
         }
 
         // Broadcast phase change
-        MessageUtil.broadcast("&c&lQualifications complete! Arena phase has begun!");
-        MessageUtil.broadcast("&eAll Pledges are now void. The final battle begins!");
+        MessageUtil.broadcast("&fQualifications complete! &5Arena &fphase has begun!");
+        MessageUtil.broadcast("&fAll Pledges are now void. The &5final battle &fbegins!");
 
         // Deactivate pledges
         pledgesActive = false;
@@ -317,6 +347,27 @@ public class NGNLGame {
     private void checkGameEnd() {
         if (alivePlayers.size() <= 1) {
             endGame(false);
+            return;
+        }
+
+        if (alivePlayers.size() == 2) {
+            UUID p1 = alivePlayers.get(0);
+            UUID p2 = alivePlayers.get(1);
+
+            NGNLPlayer ngnl1 = plugin.getPlayerManager().getNGNLPlayer(p1);
+            NGNLPlayer ngnl2 = plugin.getPlayerManager().getNGNLPlayer(p2);
+
+            if (ngnl1 != null && ngnl2 != null) {
+                Role r1 = ngnl1.getRole();
+                Role r2 = ngnl2.getRole();
+
+                boolean areDuo = r1 != null && r1.isDuo() && p2.equals(r1.getPartnerUUID());
+                boolean areAlliance = ngnl1.hasAlliancePartner() && p2.equals(ngnl1.getAlliancePartner());
+
+                if (areDuo || areAlliance) {
+                    endGame(false);
+                }
+            }
         }
     }
 

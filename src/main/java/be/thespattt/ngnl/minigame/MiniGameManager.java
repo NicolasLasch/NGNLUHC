@@ -6,11 +6,15 @@ import be.thespattt.ngnl.event.custom.MiniGameStartEvent;
 import be.thespattt.ngnl.minigame.games.RockPaperScissorsGame;
 import be.thespattt.ngnl.util.MessageUtil;
 
-import org.bukkit.Bukkit;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -475,4 +479,52 @@ public class MiniGameManager {
          */
         public abstract void endGame(boolean completed, UUID winnerUUID);
     }
+
+    public void startMiniGameDuel(Player killer, Player victim) {
+        // Téléporte dans la salle
+        teleportToMiniGameRoom(killer, victim);
+
+        // Lance GUI ou message
+        MessageUtil.sendMessage(killer, "&eChoose a mini-game to challenge &c" + victim.getName());
+        openMiniGameSelectionGUI(killer, victim); // à implémenter si besoin
+    }
+
+    public void openMiniGameSelectionGUI(Player killer, Player victim) {
+        Inventory gui = Bukkit.createInventory(null, 9, ChatColor.DARK_PURPLE + "Choose a Mini-Game");
+
+        for (MiniGameType type : MiniGameType.values()) {
+            ItemStack item = new ItemStack(Material.PAPER);
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(ChatColor.GOLD + type.getDisplayName());
+                meta.setLore(List.of(
+                        ChatColor.GRAY + "Click to challenge " + victim.getName(),
+                        ChatColor.GRAY + "Mini-game: " + type.name()
+                ));
+                item.setItemMeta(meta);
+            }
+            gui.addItem(item);
+        }
+
+        plugin.getMiniGameSessionManager().registerPendingSession(killer.getUniqueId(), victim.getUniqueId());
+
+        killer.openInventory(gui);
+    }
+
+
+    public void teleportToMiniGameRoom(Player killer, Player victim) {
+        World world = Bukkit.getWorld("arena_minigame");
+        if (world == null) {
+            MessageUtil.sendMessage(killer, "&c[Error] Mini-game world not found.");
+            return;
+        }
+
+        Location center = new Location(world, 0, 71, 0);
+        Location left = center.clone().add(-1, 0, 0);
+        Location right = center.clone().add(1, 0, 0);
+
+        killer.teleport(left);
+        victim.teleport(right);
+    }
+
 }
