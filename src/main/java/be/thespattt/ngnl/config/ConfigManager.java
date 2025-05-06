@@ -161,4 +161,22 @@ public class ConfigManager {
         loadConfigs();
         MessageUtil.logInfo("All configurations reloaded");
     }
+
+    /**
+     * Reload configuration
+     * This method is used by the GUI system to reload just the game config
+     */
+    public void reloadConfig() {
+        gameConfig.loadConfig();
+        MessageUtil.logInfo("Game configuration reloaded");
+    }
+
+    /**
+     * Save configuration
+     * This method is used by the GUI system to save just the game config
+     */
+    public void saveConfig() {
+        gameConfig.saveConfig();
+        MessageUtil.logInfo("Game configuration saved");
+    }
 }

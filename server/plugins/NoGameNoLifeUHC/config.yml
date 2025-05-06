@@ -29,6 +29,8 @@ game:
   # Random location will be announced between 50-80 minutes
   aka_si_anse_appear_time: 60
   pvp_enable_episode: 2
+  pvp-enabled-time: 20
+  natural-regen: false
 
 # World settings
 world:
@@ -48,6 +50,8 @@ world:
     
     # Seed for arena world (leave empty for random)
     arena_seed: ''
+  always-day: false
+  border-shrinking: true
 
 # Mini-game settings
 minigames:
@@ -122,3 +126,64 @@ debug:
   
   # Whether to log detailed information
   verbose: false
+mini-games:
+  winner-health-loss: 3.5
+  loser-health-loss: 5.0
+  rematch-chance: 0.1
+  random-start: true
+  reroll-allowed: true
+  book-reward: true
+arena:
+  size: 300
+  shrinking: true
+  shrink-time: 30
+  final-size: 100
+  special-items: true
+  grace-period: 30
+  ability-cooldown-multiplier: 1.0
+  events-enabled: true
+roles:
+  ability-strength: 1.0
+  enabled:
+    nonna: true
+    artosh: true
+    stephanie: true
+    fiel: true
+    holou: true
+    kurami: true
+    feel: true
+    ghost: true
+    riku: true
+    izuna: true
+    teto: true
+    einzig: true
+    chlammy: true
+    plum: true
+    okein: true
+    corone: true
+    think: true
+    jibril: true
+    azriel: true
+    schwi: true
+    ku: true
+    ino: true
+    ivan: true
+    kainas: true
+    miko: true
+    shiro: true
+    shi: true
+    makoto: true
+    sora: true
+factions:
+  bonuses-enabled: true
+  reveal-on-death: true
+  proximity-bonus: true
+  betrayal-penalty: true
+  enabled:
+    other: true
+    werebeasts: true
+    imanity: true
+    old_deus: true
+    flugel: true
+    ex_machina: true
+    elves: true

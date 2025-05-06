@@ -2,8 +2,11 @@ package be.thespattt.ngnl.command;
 
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.command.commands.*;
+import be.thespattt.ngnl.minigame.MiniGameBase;
+import be.thespattt.ngnl.minigame.games.ChessMiniGame;
 import be.thespattt.ngnl.util.MessageUtil;
 
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
@@ -22,7 +25,10 @@ public class CommandManager {
     private RockPaperScissorsCommand rpsCommand;
 
     private AdminCommand adminCommand;
+    private MiniGameCommand miniGameCommand;
+    private ForceKillCommand forceKillCommand;
 
+    private RoleCommand roleCommand;
     /**
      * Constructor
      *
@@ -48,15 +54,23 @@ public class CommandManager {
         // ForestCommand forestCommand = new ForestCommand(plugin);
         // TeleportCommand teleportCommand = new TeleportCommand(plugin);
         this.rpsCommand = new RockPaperScissorsCommand(plugin);
-
+        this.miniGameCommand = new MiniGameCommand(plugin);
+        this.forceKillCommand = new ForceKillCommand(plugin);
+        this.roleCommand = new RoleCommand(plugin);
         // Register main command
+        registerCommand("role", roleCommand);
         registerCommand("ngnl", ngnlCommand);
         registerCommand("ngnladmin", adminCommand);
+        registerCommand("forcekill", forceKillCommand);
         // Register game-related commands
         registerCommand("challenge", challengeCommand);
         registerCommand("duo", duoCommand);
         registerCommand("alliance", allianceCommand);
         registerCommand("pledge", pledgeCommand);
+        registerCommand("minigame", miniGameCommand);
+        registerCommand("ngnlconfig", new be.thespattt.ngnl.gui.ConfigCommand(plugin));
+        registerCommand("chess", new ChessCommand(plugin));
+        // Exemple d'exécution de la commande /chess
 
         // Register role-specific commands
         // registerCommand("heal", healCommand);
@@ -135,5 +149,9 @@ public class CommandManager {
      */
     public AdminCommand getAdminCommand() {
         return adminCommand;
+    }
+
+    public MiniGameCommand getMiniGameCommand() {
+        return miniGameCommand;
     }
 }

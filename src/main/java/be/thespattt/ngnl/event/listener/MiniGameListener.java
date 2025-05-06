@@ -113,39 +113,6 @@ public class MiniGameListener implements Listener {
                 ngnlPlayer2.incrementMiniGamesLost();
             }
         }
-
-        // Determine winner and loser
-        Player winner = event.isPlayer1Winner() ? player1 : player2;
-        Player loser = event.isPlayer1Winner() ? player2 : player1;
-        UUID winnerId = winner.getUniqueId();
-        UUID loserId = loser.getUniqueId();
-
-        // Record which mini-game the loser lost on
-        plugin.getGameManager().getGame().setLastMiniGameLostBy(loserId, event.getMiniGameType());
-
-        // Determine if the winner of the mini-game was the winner of the initial PvP
-        boolean winnerWonPvP = (event.isPlayer1Winner() == event.isPlayer1WonPvP());
-
-        // Apply heart loss
-        double heartsToLose = winnerWonPvP ? 5.0 : 3.5;
-        plugin.getGameManager().removePlayerHearts(loserId, heartsToLose);
-
-        // Notify players
-        MessageUtil.sendMessage(winner, "&aYou won the mini-game!");
-        MessageUtil.sendMessage(loser, "&cYou lost the mini-game and lost " + heartsToLose + " hearts!");
-
-        // Record hearts lost for the loser
-        NGNLPlayer loserPlayer = plugin.getPlayerManager().getNGNLPlayer(loserId);
-        if (loserPlayer != null) {
-            loserPlayer.recordHeartsLost((int) Math.ceil(heartsToLose));
-        }
-
-        // Give reward to winner
-        giveRewardToWinner(winner, event.getMiniGameType());
-
-        // Broadcast mini-game end
-        MessageUtil.broadcast("&6Mini-game has ended: &e" + event.getMiniGameType().getDisplayName());
-        MessageUtil.broadcast("&6Winner: &a" + winner.getName() + " &7| Loser: &c" + loser.getName());
     }
 
     /**
@@ -420,7 +387,7 @@ public class MiniGameListener implements Listener {
                 manager.clearPending(player.getUniqueId());
                 MessageUtil.sendMessage(victim, "Playing Minigame : " + selected);
                 MessageUtil.sendMessage(player, "Playing Minigame : " + selected);
-                // plugin.getMiniGameEngine().startGame(selected, player, victim); // à adapter selon ton moteur
+                plugin.getMiniGameEngine().startGame(selected, player, victim);
             }
         }
 

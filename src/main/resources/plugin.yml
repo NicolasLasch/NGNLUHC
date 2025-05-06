@@ -57,11 +57,32 @@ commands:
     usage: /ngnladmin <subcommand>
     permission: ngnl.admin
     aliases: [ ngadmin ]
-
+  ngnlconfig:
+    description: Open the No Game No Life configuration GUI
+    usage: /ngnlconfig
+    permission: ngnl.admin
   rps:
-    description: Rock Paper Scissors command
+    description: Rock Paper Scissors challenge command
     usage: /rps <player> <wager>
-    # Add other commands here
+    permission: ngnl.player
+  minigame:
+    description: Manage mini-games
+    usage: /minigame <select|move|forfeit|help>
+    permission: ngnl.player
+    aliases: [ mg ]
+  forcekill:
+    description: Force a player's health to 0 for testing
+    usage: /forcekill <player> [hearts]
+    permission: ngnl.admin.forcekill
+  role:
+    description: View your role information
+    usage: /role
+    permission: ngnl.player
+    aliases: [ r ]
+  chess:
+    description: Reopen the chess board if it was closed
+    usage: /chess
+    permission: ngnl.player
 
 permissions:
   ngnl.admin:

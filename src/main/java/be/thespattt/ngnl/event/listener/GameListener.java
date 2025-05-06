@@ -127,10 +127,10 @@ public class GameListener implements Listener {
 
         // Broadcast game start
         MessageUtil.broadcastTitle("&6&lGAME START", "&eGood luck and have fun!", 10, 70, 20);
-        MessageUtil.broadcast("&6&l=========================");
-        MessageUtil.broadcast("&6&lGAME HAS STARTED!");
-        MessageUtil.broadcast("&eRemember: In this world, games decide everything!");
-        MessageUtil.broadcast("&6&l=========================");
+        MessageUtil.broadcast("&7&m                    ");
+        MessageUtil.broadcast("&fGAME HAS STARTED!");
+        MessageUtil.broadcast("&fRemember: In this world, &5games &fdecide everything!");
+        MessageUtil.broadcast("&7&m                    ");
     }
 
     /**
@@ -195,89 +195,8 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onMiniGameEnd(MiniGameEndEvent event) {
-        // Forward mini-game end event to roles
-        Player player1 = Bukkit.getPlayer(event.getPlayer1Id());
-        Player player2 = Bukkit.getPlayer(event.getPlayer2Id());
-
-        if (player1 != null) {
-            NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player1.getUniqueId());
-            if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
-                ngnlPlayer.getRole().onMiniGameEnd(event.getPlayer2Id(), event.getMiniGameType(), event.isPlayer1Winner());
-
-                // Update mini-game stats
-                if (event.isPlayer1Winner()) {
-                    ngnlPlayer.incrementMiniGamesWon();
-                } else {
-                    ngnlPlayer.incrementMiniGamesLost();
-                }
-            }
-        }
-
-        if (player2 != null) {
-            NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player2.getUniqueId());
-            if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
-                ngnlPlayer.getRole().onMiniGameEnd(event.getPlayer1Id(), event.getMiniGameType(), !event.isPlayer1Winner());
-
-                // Update mini-game stats
-                if (!event.isPlayer1Winner()) {
-                    ngnlPlayer.incrementMiniGamesWon();
-                } else {
-                    ngnlPlayer.incrementMiniGamesLost();
-                }
-            }
-        }
-
-        // Handle mini-game results
-        handleMiniGameResults(event);
-
-        // Broadcast mini-game end
-        MessageUtil.broadcast("&6Mini-game has ended: &e" + event.getMiniGameType().getDisplayName());
-        if (player1 != null && player2 != null) {
-            String winner = event.isPlayer1Winner() ? player1.getName() : player2.getName();
-            String loser = event.isPlayer1Winner() ? player2.getName() : player1.getName();
-            MessageUtil.broadcast("&6Winner: &a" + winner + " &7| Loser: &c" + loser);
-        }
-    }
-
-    /**
-     * Handle mini-game results (heart loss, etc.)
-     *
-     * @param event MiniGameEndEvent
-     */
-    private void handleMiniGameResults(MiniGameEndEvent event) {
-        // Determine winner and loser
-        UUID winnerId = event.isPlayer1Winner() ? event.getPlayer1Id() : event.getPlayer2Id();
-        UUID loserId = event.isPlayer1Winner() ? event.getPlayer2Id() : event.getPlayer1Id();
-
-        // Determine if the winner of the mini-game was the winner of the initial PvP
-        boolean winnerWonPvP = (event.isPlayer1Winner() == event.isPlayer1WonPvP());
-
-        // Apply heart loss based on rules
-        Player loser = Bukkit.getPlayer(loserId);
-        if (loser != null) {
-            // Determine hearts to lose
-            double heartsToLose = winnerWonPvP ? 5.0 : 3.5;
-
-            // Apply heart loss
-            plugin.getGameManager().removePlayerHearts(loserId, heartsToLose);
-
-            // Notify player
-            MessageUtil.sendMessage(loser, "&cYou lost " + heartsToLose + " hearts!");
-        }
-
-        // Give reward to winner
-        Player winner = Bukkit.getPlayer(winnerId);
-        if (winner != null) {
-            // In this case, winning just means not losing hearts
-            // But we could also give additional rewards
-            MessageUtil.sendMessage(winner, "&aYou won the mini-game!");
-
-            // Give random book
-            giveRandomRewardBook(winner);
-        }
-
-        // Record which mini-game the loser lost on
-        plugin.getGameManager().getGame().setLastMiniGameLostBy(loserId, event.getMiniGameType());
+        // Pass
+        return;
     }
 
     /**

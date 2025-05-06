@@ -106,7 +106,7 @@ public class NGNLGame {
         if (gameState == GameState.WAITING || gameState == GameState.ENDED) return;
 
         episodeManager.stopEpisodeTimer();
-        MessageUtil.broadcast("&5——————————————————————————————————————————————————");
+        MessageUtil.broadcast("&5&m                    ");
 
         List<UUID> allPlayers = plugin.getPlayerManager().getAllNGNLPlayers().stream()
                 .map(NGNLPlayer::getPlayerId)
@@ -167,7 +167,7 @@ public class NGNLGame {
             }
         }
 
-        MessageUtil.broadcast("&5——————————————————————————————————————————————————");
+        MessageUtil.broadcast("&5&m                    ");
 
         resetPlayers();
         gameState = GameState.ENDED;

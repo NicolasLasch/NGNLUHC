@@ -481,12 +481,15 @@ public class MiniGameManager {
     }
 
     public void startMiniGameDuel(Player killer, Player victim) {
-        // Téléporte dans la salle
+        // Teleport to mini-game room
         teleportToMiniGameRoom(killer, victim);
 
-        // Lance GUI ou message
+        // Set up the pending session first
+        plugin.getMiniGameSessionManager().registerPendingSession(killer.getUniqueId(), victim.getUniqueId());
+
+        // Launch GUI or message
         MessageUtil.sendMessage(killer, "&eChoose a mini-game to challenge &c" + victim.getName());
-        openMiniGameSelectionGUI(killer, victim); // à implémenter si besoin
+        openMiniGameSelectionGUI(killer, victim);
     }
 
     public void openMiniGameSelectionGUI(Player killer, Player victim) {

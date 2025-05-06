@@ -58,12 +58,12 @@ public abstract class Role {
      *
      * @param player The player
      */
-    protected void sendRoleInfo(Player player) {
+    public void sendRoleInfo(Player player) {
         FactionType faction = getNGNLPlayer().getFaction();
         String factionName = (faction != null) ? faction.getColoredName() : "Unknown";
 
         // Send header
-        MessageUtil.sendMessage(player,"&7———————————————————————————————————");
+        MessageUtil.sendMessage(player,"&m                    ");
         MessageUtil.sendMessage(player,"");
         MessageUtil.sendMessage(player, "&7Your Are: &5&l" + getDisplayName());
         MessageUtil.sendMessage(player,"");
@@ -76,7 +76,7 @@ public abstract class Role {
             MessageUtil.sendMessage(player, "&f" + line);
         }
         MessageUtil.sendMessage(player,"");
-        MessageUtil.sendMessage(player,"&7———————————————————————————————————");
+        MessageUtil.sendMessage(player,"&m                    ");
     }
 
     /**
@@ -125,14 +125,7 @@ public abstract class Role {
      * @param isWinner True if this player won the mini-game
      */
     public void onMiniGameEnd(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        Player self = getPlayer();
-        if (self == null) return;
-
-        if (!isWinner) {
-            self.setHealth(0); // Le joueur perd => mort définitive
-        } else {
-            //plugin.getGameManager().teleportBackToGame(self); // méthode à créer
-        }
+        //rien
     }
 
     /**

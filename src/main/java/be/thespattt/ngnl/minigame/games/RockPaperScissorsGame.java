@@ -6,6 +6,8 @@ import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
@@ -24,7 +26,7 @@ public class RockPaperScissorsGame implements PlayerGameChecker {
 
     private final Map<UUID, String> choices = new HashMap<>();
     private int taskId = -1;
-    private int timeLeft = 30; // 30 seconds to make a choice
+    private int timeLeft = 20; // 30 seconds to make a choice
 
     /**
      * Constructor
@@ -212,14 +214,26 @@ public class RockPaperScissorsGame implements PlayerGameChecker {
                 break;
 
             case "hearts":
-                // Remove 1 heart (2 health points) from loser
+                // Remove 1 heart from loser (2 health points) and give 1 heart to winner
                 NGNLPlayer loserNGNLPlayer = plugin.getPlayerManager().getNGNLPlayer(loser.getUniqueId());
-                if (loserNGNLPlayer != null) {
-                    plugin.getGameManager().removePlayerHearts(loser.getUniqueId(), 1);
+                NGNLPlayer winnerNGNLPlayer = plugin.getPlayerManager().getNGNLPlayer(winner.getUniqueId());
 
-                    MessageUtil.sendMessage(winner, "&aYou won the challenge! " + loser.getName() +
-                            " lost 1 heart.");
-                    MessageUtil.sendMessage(loser, "&cYou lost the challenge! You lost 1 heart.");
+                if (loserNGNLPlayer != null && winnerNGNLPlayer != null) {
+                    // Remove 2 max health from loser
+                    AttributeInstance loserHealthAttr = loser.getAttribute(Attribute.MAX_HEALTH);
+                    if (loserHealthAttr != null) {
+                        double newHealth = Math.max(2.0, loserHealthAttr.getBaseValue() - 2.0);
+                        loserHealthAttr.setBaseValue(newHealth);
+                    }
+
+                    // Add 2 max health to winner
+                    AttributeInstance winnerHealthAttr = winner.getAttribute(Attribute.MAX_HEALTH);
+                    if (winnerHealthAttr != null) {
+                        winnerHealthAttr.setBaseValue(winnerHealthAttr.getBaseValue() + 2.0);
+                    }
+
+                    MessageUtil.sendMessage(winner, "&aYou won the challenge! " + loser.getName() + " lost 1 heart and you gained 1!");
+                    MessageUtil.sendMessage(loser, "&cYou lost the challenge! You lost 1 heart permanently.");
                 }
                 break;
 

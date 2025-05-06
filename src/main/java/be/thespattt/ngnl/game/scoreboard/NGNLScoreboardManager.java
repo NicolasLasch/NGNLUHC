@@ -123,7 +123,7 @@ public class NGNLScoreboardManager {
 
         // Create objective
         Objective objective = scoreboard.registerNewObjective("ngnl", "dummy");
-        objective.setDisplayName(ChatColor.GOLD + "No Game No Life UHC");
+        objective.setDisplayName(ChatColor.DARK_PURPLE + "No Game No Life UHC");
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         // Store scoreboard
@@ -175,7 +175,7 @@ public class NGNLScoreboardManager {
 
             // Game state
             GameState gameState = plugin.getGameManager().getGameState();
-            Score stateScore = objective.getScore(ChatColor.WHITE + "   Game: " + ChatColor.DARK_PURPLE + gameState.getDisplayName());
+            Score stateScore = objective.getScore(ChatColor.WHITE + "Game: " + ChatColor.DARK_PURPLE + gameState.getDisplayName());
             stateScore.setScore(15);
 
             // Ligne vide
@@ -187,13 +187,13 @@ public class NGNLScoreboardManager {
                 int totalSeconds = plugin.getGameManager().getGame().getEpisodeManager().getTotalElapsedSeconds();
                 String formattedTime = plugin.getGameManager().getGame().getEpisodeManager().formatSeconds(totalSeconds);
 
-                Score episodeScore = objective.getScore(ChatColor.WHITE + "Episode: " + ChatColor.DARK_PURPLE + currentEpisode);
+                Score episodeScore = objective.getScore(ChatColor.WHITE + "   Episode: " + ChatColor.DARK_PURPLE + currentEpisode);
                 episodeScore.setScore(13);
 
-                Score timeScore = objective.getScore(ChatColor.WHITE + "Time: " + ChatColor.DARK_PURPLE + formattedTime);
+                Score timeScore = objective.getScore(ChatColor.WHITE + "   Time: " + ChatColor.DARK_PURPLE + formattedTime);
                 timeScore.setScore(12);
             } else {
-                Score waitingScore = objective.getScore(ChatColor.WHITE + "Waiting for game to start");
+                Score waitingScore = objective.getScore(ChatColor.WHITE + "   Waiting for game to start");
                 waitingScore.setScore(13);
             }
 
@@ -203,7 +203,7 @@ public class NGNLScoreboardManager {
                 emptyLine3.setScore(11);
 
                 int alivePlayers = plugin.getGameManager().getGame().getAlivePlayers().size();
-                Score playersScore = objective.getScore(ChatColor.WHITE + "Players: " + ChatColor.DARK_PURPLE + alivePlayers);
+                Score playersScore = objective.getScore(ChatColor.WHITE + "   Players: " + ChatColor.DARK_PURPLE + alivePlayers);
                 playersScore.setScore(10);
 
                 int borderSize = 0;
@@ -213,7 +213,7 @@ public class NGNLScoreboardManager {
                     borderSize = (int) plugin.getWorldManager().getArenaWorld().getWorldBorder().getSize() / 2;
                 }
 
-                Score borderScore = objective.getScore(ChatColor.WHITE + "Border: ±" + ChatColor.DARK_PURPLE + borderSize);
+                Score borderScore = objective.getScore(ChatColor.WHITE + "   Border: ±" + ChatColor.DARK_PURPLE + borderSize);
                 borderScore.setScore(9);
 
                 // Rôle du joueur
@@ -224,11 +224,11 @@ public class NGNLScoreboardManager {
                     Score emptyLine4 = objective.getScore(ChatColor.RESET + "    ");
                     emptyLine4.setScore(8);
 
-                    Score roleScore = objective.getScore(ChatColor.WHITE + "Role: " + ChatColor.DARK_PURPLE + role.getDisplayName());
+                    Score roleScore = objective.getScore(ChatColor.WHITE + "   Role: " + ChatColor.DARK_PURPLE + role.getDisplayName());
                     roleScore.setScore(7);
 
                     if (role.getRoleType().getFaction() != null) {
-                        Score factionScore = objective.getScore(ChatColor.YELLOW + "Faction: " + role.getRoleType().getFaction().getColor() + role.getRoleType().getFaction().getDisplayName());
+                        Score factionScore = objective.getScore(ChatColor.WHITE + "   Faction: " + ChatColor.DARK_PURPLE + role.getRoleType().getFaction().getDisplayName());
                         factionScore.setScore(6);
                     }
 
@@ -237,7 +237,7 @@ public class NGNLScoreboardManager {
                         if (partnerUUID != null) {
                             Player partnerPlayer = Bukkit.getPlayer(partnerUUID);
                             String partnerName = partnerPlayer != null ? partnerPlayer.getName() : "Unknown";
-                            Score partnerScore = objective.getScore(ChatColor.WHITE + "Partner: " + ChatColor.DARK_PURPLE + partnerName);
+                            Score partnerScore = objective.getScore(ChatColor.WHITE + "   Partner: " + ChatColor.DARK_PURPLE + partnerName);
                             partnerScore.setScore(5);
                         }
                     }
@@ -247,7 +247,7 @@ public class NGNLScoreboardManager {
                         if (allianceUUID != null) {
                             Player alliancePlayer = Bukkit.getPlayer(allianceUUID);
                             String allianceName = alliancePlayer != null ? alliancePlayer.getName() : "Unknown";
-                            Score allianceScore = objective.getScore(ChatColor.WHITE + "Alliance: " + ChatColor.DARK_PURPLE + allianceName);
+                            Score allianceScore = objective.getScore(ChatColor.WHITE + "   Alliance: " + ChatColor.DARK_PURPLE + allianceName);
                             allianceScore.setScore(4);
                         }
                     }
@@ -260,7 +260,7 @@ public class NGNLScoreboardManager {
 
         } else {
             // Pages 1+ : rôles actifs
-            Score title = objective.getScore(ChatColor.LIGHT_PURPLE + "--- Active Roles ---");
+            Score title = objective.getScore(ChatColor.DARK_PURPLE + "Active Roles");
             title.setScore(15);
             addActiveRolesPage(player, objective);
         }
@@ -287,27 +287,16 @@ public class NGNLScoreboardManager {
             page = 0;
             playerScoreboardPages.put(player.getUniqueId(), 0);
         }
-
-        // Calculate total pages
-        int totalPages = (int) Math.ceil((double) activeRoles.size() / ROLES_PER_PAGE);
-
-        // Add page info
-        if (totalPages > 1) {
-            Score pageScore = objective.getScore(ChatColor.WHITE + "Roles Page: " + ChatColor.DARK_PURPLE + (page + 1) + "/" + totalPages);
-            pageScore.setScore(2);
-        } else {
-            Score rolesTitle = objective.getScore(ChatColor.WHITE + "Active Roles:");
-            rolesTitle.setScore(2);
-        }
-
+        // Add roles for this page
         // Add roles for this page
         int startIndex = page * ROLES_PER_PAGE;
         int endIndex = Math.min(startIndex + ROLES_PER_PAGE, activeRoles.size());
 
+        int currentScore = 14;
         for (int i = startIndex; i < endIndex; i++) {
             RoleType roleType = activeRoles.get(i);
             Score roleScore = objective.getScore(ChatColor.WHITE + roleType.getDisplayName());
-            roleScore.setScore(1);
+            roleScore.setScore(currentScore--);
         }
     }
 

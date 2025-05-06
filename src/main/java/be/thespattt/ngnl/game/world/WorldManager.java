@@ -213,7 +213,7 @@ public class WorldManager {
 
     private void generateWoodenRoom(World world) {
         Location center = new Location(world, 0, 70, 0); // coordonnée de base
-        int radius = 2;
+        int radius = 5;
 
         for (int x = -radius; x <= radius; x++) {
             for (int y = 0; y <= 4; y++) {
@@ -422,6 +422,10 @@ public class WorldManager {
      */
     public World getArenaWorld() {
         return arenaWorld;
+    }
+
+    public World getMinigameWorld() {
+        return minigameWorld;
     }
 
     /**

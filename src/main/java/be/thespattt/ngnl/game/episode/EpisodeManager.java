@@ -20,6 +20,8 @@ public class EpisodeManager {
     private BukkitTask episodeTask;
     private boolean episodeTimerActive;
 
+    private long gameStartTime;
+
     /**
      * Constructor
      *
@@ -135,7 +137,7 @@ public class EpisodeManager {
      * Broadcast episode start
      */
     private void broadcastEpisodeStart() {
-        MessageUtil.broadcast("&f———— Episode &e" + currentEpisode + " &fhas started! ————");
+        MessageUtil.broadcast("&f&m     &r Episode &e" + currentEpisode + " &fhas started! &f&m     ");
     }
 
     /**
@@ -203,11 +205,7 @@ public class EpisodeManager {
     }
 
     public int getTotalElapsedSeconds() {
-        int currentEpisode = getCurrentEpisode();
-        int secondsPerEpisode = plugin.getConfigManager().getGameConfig().getEpisodeLength();
-        int secondsIntoCurrent = plugin.getConfigManager().getGameConfig().getEpisodeLength() - episodeTimeRemaining;
-
-        return (currentEpisode - 1) * secondsPerEpisode + secondsIntoCurrent;
+        return (int) ((System.currentTimeMillis() - gameStartTime) / 1000);
     }
 
     public String formatSeconds(int seconds) {
@@ -220,5 +218,9 @@ public class EpisodeManager {
         } else {
             return String.format("%02d:%02d", minutes, secs);
         }
+    }
+
+    public void setGameStartTime(long startTime) {
+        this.gameStartTime = startTime;
     }
 }

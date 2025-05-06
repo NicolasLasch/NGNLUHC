@@ -106,14 +106,33 @@ public class DuoRoleTemplate extends DuoRole {
      * Check proximity to partner and apply effects
      */
     private void checkPartnerProximity() {
-        // N'applique plus d'effet, juste pour logique éventuelle
-        Player player = getPlayer();
-        if (player == null) return;
-
         Player partner = Bukkit.getPlayer(getPartnerUUID());
-        if (partner == null || !plugin.getGameManager().isPlayerAlive(getPartnerUUID())) {
-            // rien de spécial ici car effets gérés par onDamage
+        Player self = Bukkit.getPlayer(this.playerId);
+
+        if (partner == null || self == null) {
+            return;
         }
+
+        // Check if both players are in the same world
+        if (!partner.getWorld().equals(self.getWorld())) {
+            // They're in different worlds, so we can't measure distance
+            // You can handle this however you want:
+            // Option 1: Just return and do nothing
+            return;
+
+            // Option 2: Consider them "not close" and remove buffs if needed
+            // removeProximityBuffs();
+
+            // Option 3: Skip distance check during minigames
+            // if (self.getWorld().getName().contains("minigame") ||
+            //     partner.getWorld().getName().contains("minigame")) {
+            //     return;
+            // }
+        }
+
+        // Now we know they're in the same world, we can check distance
+        double distance = self.getLocation().distance(partner.getLocation());
+        // Rest of your existing code...
     }
 
     @EventHandler

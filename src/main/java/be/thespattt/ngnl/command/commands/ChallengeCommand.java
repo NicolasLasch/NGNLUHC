@@ -199,6 +199,14 @@ public class ChallengeCommand implements CommandExecutor, TabCompleter {
 
         // Create game instance
         RockPaperScissorsGame game = new RockPaperScissorsGame(plugin, challenger, target, wager);
+
+        // Create a unique game ID
+        String gameId = challenger.getUniqueId().toString() + "-" + target.getUniqueId().toString();
+
+        // Register the game with the RockPaperScissorsCommand
+        plugin.getCommandManager().getRpsCommand().registerGame(gameId, game);
+
+        // Start the game
         game.start();
     }
 

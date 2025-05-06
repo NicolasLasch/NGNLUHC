@@ -39,8 +39,9 @@ public class GameManager {
             MessageUtil.broadcast("&cNot enough players to start the game! Minimum: " + minPlayers);
             return false;
         }
-        // Start the game
+        long currentTime = System.currentTimeMillis();
         game.startGame();
+        game.getEpisodeManager().setGameStartTime(currentTime);
         return true;
     }
 
