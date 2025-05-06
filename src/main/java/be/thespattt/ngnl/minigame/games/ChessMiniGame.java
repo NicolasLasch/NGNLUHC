@@ -1220,27 +1220,27 @@ public class ChessMiniGame extends MiniGameBase implements Listener {
      * Calculate possible moves for a pawn - adapted for 6x8 board
      */
     private void calculatePawnMoves(int row, int col, boolean isWhite) {
-        // Direction pawns move (white: down, black: up on a horizontal board)
+        // Déplacement horizontal (blanc → droite, noir → gauche)
         int direction = isWhite ? 1 : -1;
 
-        // Forward move
-        int newRow = row + direction;
-        if (newRow >= 0 && newRow < 6 && board[newRow][col] == null) {
-            possibleMoves.add(getPositionName(newRow, col));
+        // Avancer tout droit
+        int newCol = col + direction;
+        if (newCol >= 0 && newCol < 8 && board[row][newCol] == null) {
+            possibleMoves.add(getPositionName(row, newCol));
 
-            // Double move from starting position
-            if ((isWhite && row == 1) || (!isWhite && row == 4)) {
-                int doubleRow = row + (2 * direction);
-                if (doubleRow >= 0 && doubleRow < 6 && board[doubleRow][col] == null) {
-                    possibleMoves.add(getPositionName(doubleRow, col));
+            // Double pas depuis la position initiale
+            if ((isWhite && col == 1) || (!isWhite && col == 6)) {
+                int doubleCol = col + (2 * direction);
+                if (doubleCol >= 0 && doubleCol < 8 && board[row][doubleCol] == null) {
+                    possibleMoves.add(getPositionName(row, doubleCol));
                 }
             }
         }
 
-        // Capture moves
-        for (int colOffset : new int[]{-1, 1}) {
-            int newCol = col + colOffset;
-            if (newCol >= 0 && newCol < 8 && newRow >= 0 && newRow < 6) {
+        // Captures diagonales (en haut et en bas sur l'axe Y)
+        for (int rowOffset : new int[]{-1, 1}) {
+            int newRow = row + rowOffset;
+            if (newRow >= 0 && newRow < 6 && newCol >= 0 && newCol < 8) {
                 if (board[newRow][newCol] != null && board[newRow][newCol].isWhite() != isWhite) {
                     possibleMoves.add(getPositionName(newRow, newCol));
                 }

@@ -1,81 +1,70 @@
-[00:48:46] [ServerMain/INFO]: [bootstrap] Running Java 21 (OpenJDK 64-Bit Server VM 21.0.4+7-LTS; Eclipse Adoptium Temurin-21.0.4+7) on Mac OS X 14.5 (aarch64)
-[00:48:46] [ServerMain/INFO]: [bootstrap] Loading Purpur 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) for Minecraft 1.21.4
-[00:48:47] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
-[00:48:47] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar'...
-[00:48:48] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar' in 779ms.
-[00:48:48] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
-[00:48:48] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
+[01:07:36] [ServerMain/INFO]: [bootstrap] Running Java 21 (OpenJDK 64-Bit Server VM 21.0.4+7-LTS; Eclipse Adoptium Temurin-21.0.4+7) on Mac OS X 14.5 (aarch64)
+[01:07:36] [ServerMain/INFO]: [bootstrap] Loading Purpur 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) for Minecraft 1.21.4
+[01:07:37] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
+[01:07:37] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar'...
+[01:07:38] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar' in 1068ms.
+[01:07:39] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
+[01:07:39] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
  - NoGameNoLifeUHC (1.0.0)
-[00:48:52] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
-[00:48:53] [ServerMain/INFO]: Loaded 1370 recipes
-[00:48:53] [ServerMain/INFO]: Loaded 1481 advancements
-[00:48:53] [ServerMain/INFO]: [MCTypeRegistry] Initialising converters for DataConverter...
-[00:48:54] [ServerMain/INFO]: [MCTypeRegistry] Finished initialising converters for DataConverter in 223,6ms
-[00:48:54] [Server thread/INFO]: Starting minecraft server version 1.21.4
-[00:48:54] [Server thread/INFO]: Loading properties
-[00:48:54] [Server thread/INFO]: This server is running Purpur version 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) (Implementing API version 1.21.4-R0.1-SNAPSHOT)
-[00:48:54] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
-[00:48:54] [Server thread/INFO]: Using 4 threads for Netty based IO
-[00:48:54] [Server thread/INFO]: Server Ping Player Sample Count: 12
-[00:48:55] [Server thread/INFO]: [MoonriseCommon] Paper is using 2 worker threads, 1 I/O threads
-[00:48:55] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using population gen parallelism: true
-[00:48:56] [Server thread/INFO]: Default game type: SURVIVAL
-[00:48:56] [Server thread/INFO]: Generating keypair
-[00:48:56] [Server thread/INFO]: Starting Minecraft server on *:25565
-[00:48:56] [Server thread/INFO]: Using default channel type
-[00:48:56] [Server thread/INFO]: Paper: Using libdeflate (macOS ARM64 / Apple Silicon) compression from Velocity.
-[00:48:56] [Server thread/INFO]: Paper: Using native (macOS ARM64 / Apple Silicon) cipher from Velocity.
-[00:48:56] [Server thread/INFO]: [NoGameNoLifeUHC] Loading server plugin NoGameNoLifeUHC v1.0.0
-[00:48:56] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
-[00:48:56] [Server thread/INFO]: Preparing level "world"
-[00:48:57] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
-[00:48:57] [Server thread/INFO]: Preparing spawn area: 0%
-[00:48:58] [Server thread/INFO]: Preparing spawn area: 59%
-[00:48:58] [Server thread/INFO]: Time elapsed: 891 ms
-[00:48:58] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
-[00:48:58] [Server thread/INFO]: Preparing spawn area: 0%
-[00:48:58] [Server thread/INFO]: Time elapsed: 101 ms
-[00:48:58] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
-[00:48:58] [Server thread/INFO]: Preparing spawn area: 0%
-[00:48:58] [Server thread/INFO]: Time elapsed: 64 ms
-[00:48:58] [Server thread/INFO]: [NoGameNoLifeUHC] Enabling NoGameNoLifeUHC v1.0.0
-[00:48:58] [Server thread/INFO]: [NoGameNoLifeUHC] All commands registered
-[00:48:58] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration loaded successfully
-[00:48:58] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations loaded
-[00:48:58] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 7 factions
-[00:48:58] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 29 roles
-[00:48:58] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 15 mini-games
-[00:48:59] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 13 special items
-[00:48:59] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_waiting
-[00:48:59] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_waiting
-[00:48:59] [Server thread/INFO]: Preparing spawn area: 0%
-[00:48:59] [Server thread/INFO]: Time elapsed: 73 ms
-[00:48:59] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_mining
-[00:48:59] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_mining
-[00:48:59] [Server thread/INFO]: Preparing spawn area: 0%
-[00:48:59] [Server thread/INFO]: Time elapsed: 307 ms
-[00:49:13] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_arena
-[00:49:13] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_arena
-[00:49:13] [Server thread/INFO]: Preparing spawn area: 0%
-[00:49:13] [Server thread/INFO]: Time elapsed: 53 ms
-[00:49:13] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_minigame
-[00:49:14] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_minigame
-[00:49:14] [Server thread/INFO]: Preparing spawn area: 0%
-[00:49:14] [Server thread/INFO]: Time elapsed: 21 ms
-[00:49:14] [Server thread/INFO]: [NoGameNoLifeUHC] Worlds initialized
-[00:49:14] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been enabled!
-[00:49:14] [Server thread/INFO]: [spark] Starting background profiler...
-[00:49:15] [Server thread/INFO]: Done preparing level "world" (18.544s)
-[00:49:15] [Server thread/INFO]: Running delayed init tasks
-[00:49:15] [Server thread/INFO]: Done (29.791s)! For help, type "help"
-[00:49:42] [Server thread/INFO]: Stopping server
-[00:49:42] [Server thread/INFO]: [NoGameNoLifeUHC] Disabling NoGameNoLifeUHC v1.0.0
-[00:49:42] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration saved successfully
-[00:49:42] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations saved
-[00:49:42] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been disabled!
-[00:49:42] [Server thread/INFO]: Saving players
-[00:49:42] [Server thread/INFO]: Saving worlds
-[00:49:42] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[00:49:42] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
-[00:49:42] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
-[00:49:42] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
+[01:07:45] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[01:07:48] [ServerMain/INFO]: Loaded 1370 recipes
+[01:07:48] [ServerMain/INFO]: Loaded 1481 advancements
+[01:07:48] [ServerMain/INFO]: [MCTypeRegistry] Initialising converters for DataConverter...
+[01:07:48] [ServerMain/INFO]: [MCTypeRegistry] Finished initialising converters for DataConverter in 244,1ms
+[01:07:48] [Server thread/INFO]: Starting minecraft server version 1.21.4
+[01:07:48] [Server thread/INFO]: Loading properties
+[01:07:48] [Server thread/INFO]: This server is running Purpur version 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) (Implementing API version 1.21.4-R0.1-SNAPSHOT)
+[01:07:49] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[01:07:49] [Server thread/INFO]: Server Ping Player Sample Count: 12
+[01:07:49] [Server thread/INFO]: Using 4 threads for Netty based IO
+[01:07:50] [Server thread/INFO]: [MoonriseCommon] Paper is using 2 worker threads, 1 I/O threads
+[01:07:50] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using population gen parallelism: true
+[01:07:50] [Server thread/INFO]: Default game type: SURVIVAL
+[01:07:50] [Server thread/INFO]: Generating keypair
+[01:07:50] [Server thread/INFO]: Starting Minecraft server on *:25565
+[01:07:50] [Server thread/INFO]: Using default channel type
+[01:07:51] [Server thread/INFO]: Paper: Using libdeflate (macOS ARM64 / Apple Silicon) compression from Velocity.
+[01:07:51] [Server thread/INFO]: Paper: Using native (macOS ARM64 / Apple Silicon) cipher from Velocity.
+[01:07:51] [Server thread/INFO]: [NoGameNoLifeUHC] Loading server plugin NoGameNoLifeUHC v1.0.0
+[01:07:51] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[01:07:51] [Server thread/INFO]: Preparing level "world"
+[01:07:51] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
+[01:07:51] [Server thread/INFO]: Preparing spawn area: 0%
+[01:07:52] [Server thread/INFO]: Preparing spawn area: 59%
+[01:07:52] [Server thread/INFO]: Time elapsed: 904 ms
+[01:07:52] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
+[01:07:52] [Server thread/INFO]: Preparing spawn area: 0%
+[01:07:52] [Server thread/INFO]: Time elapsed: 103 ms
+[01:07:52] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
+[01:07:52] [Server thread/INFO]: Preparing spawn area: 0%
+[01:07:52] [Server thread/INFO]: Time elapsed: 138 ms
+[01:07:52] [Server thread/INFO]: [NoGameNoLifeUHC] Enabling NoGameNoLifeUHC v1.0.0
+[01:07:53] [Server thread/INFO]: [NoGameNoLifeUHC] All commands registered
+[01:07:53] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration loaded successfully
+[01:07:53] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations loaded
+[01:07:53] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 7 factions
+[01:07:53] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 29 roles
+[01:07:53] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 15 mini-games
+[01:07:53] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 13 special items
+[01:07:53] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_waiting
+[01:07:53] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_waiting
+[01:07:53] [Server thread/INFO]: Preparing spawn area: 0%
+[01:07:53] [Server thread/INFO]: Time elapsed: 74 ms
+[01:07:53] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_mining
+[01:07:53] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_mining
+[01:07:53] [Server thread/INFO]: Preparing spawn area: 0%
+[01:07:53] [Server thread/INFO]: Time elapsed: 321 ms
+[01:08:15] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_arena
+[01:08:15] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_arena
+[01:08:15] [Server thread/INFO]: Preparing spawn area: 0%
+[01:08:15] [Server thread/INFO]: Time elapsed: 29 ms
+[01:08:15] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_minigame
+[01:08:15] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_minigame
+[01:08:15] [Server thread/INFO]: Preparing spawn area: 0%
+[01:08:15] [Server thread/INFO]: Time elapsed: 16 ms
+[01:08:15] [Server thread/INFO]: [NoGameNoLifeUHC] Worlds initialized
+[01:08:15] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been enabled!
+[01:08:15] [Server thread/INFO]: [spark] Starting background profiler...
+[01:08:17] [Server thread/INFO]: Done preparing level "world" (25.800s)
+[01:08:17] [Server thread/INFO]: Running delayed init tasks
+[01:08:17] [Server thread/INFO]: Done (41.807s)! For help, type "help"
