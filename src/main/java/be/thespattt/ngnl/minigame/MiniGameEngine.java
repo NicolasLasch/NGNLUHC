@@ -292,52 +292,58 @@ public class MiniGameEngine {
      */
     private void returnPlayerToGame(UUID playerId) {
         Player player = Bukkit.getPlayer(playerId);
-        if (player == null) {
-            return;
-        }
+        if (player == null) return;
 
         // Get NGNL player
         NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
-        if (ngnlPlayer == null) {
+        if (ngnlPlayer == null) return;
+
+        // Choisir le monde en fonction de la phase
+        World world = Bukkit.getWorld("ngnl_waiting");
+        GameState gameState = plugin.getGameManager().getGameState();
+        if (gameState == GameState.MINING_PHASE) {
+            world = plugin.getWorldManager().getMiningWorld();
+        } else if (gameState == GameState.ARENA_PHASE) {
+            world = plugin.getWorldManager().getArenaWorld();
+        }
+
+        if (world == null) {
+            MessageUtil.logWarning("No suitable world found to return player to game.");
             return;
         }
 
-        // Get last location
-        Location lastLocation = ngnlPlayer.getLastLocation();
-
-        // If no last location or not in the game world, teleport to random location near spawn
-        if (lastLocation == null) {
-            World world = Bukkit.getWorld("world"); // Default world
-            if (world == null) {
-                MessageUtil.logWarning("Default world not found when trying to return player from minigame");
-                return;
-            }
-
-            // Get the appropriate world based on game phase
-            GameState gameState = plugin.getGameManager().getGameState();
-            if (gameState == GameState.MINING_PHASE) {
-                lastLocation = plugin.getWorldManager().getRandomSpawnLocation(be.thespattt.ngnl.game.world.WorldType.MINING);
-            } else if (gameState == GameState.ARENA_PHASE) {
-                lastLocation = plugin.getWorldManager().getRandomSpawnLocation(be.thespattt.ngnl.game.world.WorldType.ARENA);
-            } else {
-                lastLocation = world.getSpawnLocation();
-            }
-        }
-
-        // Teleport player back
-        if (lastLocation != null) {
-            player.teleport(lastLocation);
+        // Générer une position aléatoire autour du centre (rayon 200)
+        Location randomLocation = getRandomSafeLocation(world, 0, 200);
+        if (randomLocation != null) {
+            player.teleport(randomLocation);
             MessageUtil.sendMessage(player, "&aYou have been returned to the game world.");
         } else {
-            MessageUtil.logError("Failed to teleport player back from minigame: no valid location found");
+            MessageUtil.logError("Failed to find safe location for teleportation.");
         }
 
-        // Make sure player is in the correct game mode
+        // Définir le bon mode de jeu
         if (plugin.getGameManager().isPlayerAlive(playerId)) {
             player.setGameMode(GameMode.SURVIVAL);
         } else {
             player.setGameMode(GameMode.SPECTATOR);
         }
+    }
+
+    /**
+     * Génère une position aléatoire sécurisée au sol dans un rayon donné
+     */
+    private Location getRandomSafeLocation(World world, int center, int radius) {
+        for (int attempt = 0; attempt < 20; attempt++) {
+            int x = center + (int) (Math.random() * radius * 2) - radius;
+            int z = center + (int) (Math.random() * radius * 2) - radius;
+            int y = world.getHighestBlockYAt(x, z) + 1;
+
+            Location loc = new Location(world, x + 0.5, y, z + 0.5);
+            if (world.getBlockAt(loc).getType().isAir()) {
+                return loc;
+            }
+        }
+        return null;
     }
 
     /**
