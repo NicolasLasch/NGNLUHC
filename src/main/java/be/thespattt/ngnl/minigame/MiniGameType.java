@@ -6,8 +6,8 @@ package be.thespattt.ngnl.minigame;
 public enum MiniGameType {
 
     SPEED_BEDWARS("Speed Bedwars", "1v1 Bedwars with pre-built bridges and protected beds"),
-    SPLEEF("Spleef", "Break blocks beneath your opponent to make them fall"),
-    TNT_RUN("TNT Run", "Blocks disappear as you run, avoid falling"),
+    SPLEEF("Spleef", "Break blocks beneath your opponent to make them fall"), //fait
+    TNT_RUN("TNT Run", "Blocks disappear as you run, avoid falling"), //fait
     PARKOUR("Parkour", "Complete a parkour course faster than your opponent"),
     BLOC_PARTY("Bloc Party", "Stand on the correct block shown on screen"),
     SUMO("Sumo", "Knock your opponent off the platform"),
@@ -17,7 +17,7 @@ public enum MiniGameType {
     ANVIL_RAIN("Anvil Rain", "Avoid falling anvils and push your opponent into danger"),
     WORD_CHAIN_BATTLE("Word Chain Battle", "The last letter of a word must be the first letter of the next word"),
     LOGICAL_DEDUCTION("Logical Deduction", "Solve a mystery based on logical clues"),
-    MENTAL_CHESS("Mental Chess", "Simplified chess with time constraints"),
+    MENTAL_CHESS("Mental Chess", "Simplified chess with time constraints"), //fait
     MEMORY_GAME("Memory Game", "Memorize and reproduce patterns with increasing difficulty"),
     MATERIALIZATION_SHIRITORI("Materialization Shiritori", "Special wordplay game where named objects appear");
 

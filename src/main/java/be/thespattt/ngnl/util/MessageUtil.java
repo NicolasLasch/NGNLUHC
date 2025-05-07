@@ -15,7 +15,7 @@ import java.util.logging.Level;
  */
 public class MessageUtil {
 
-    private static final String PREFIX = "&6[NGNL]&r ";
+    private static final String PREFIX = "&5[NGNL]&r ";
 
     /**
      * Send a message to a command sender with color translation

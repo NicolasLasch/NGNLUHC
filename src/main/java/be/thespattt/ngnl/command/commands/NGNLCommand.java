@@ -13,9 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -90,6 +88,44 @@ public class NGNLCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
+        int playerCount = players.size();
+
+        int enabledRoleCount = 0;
+        int enabledSoloCount = 0;
+        int enabledDuoPairsCount = 0;
+
+        Set<RoleType> processedDuoRoles = new HashSet<>();
+
+        for (RoleType roleType : RoleType.values()) {
+            if (plugin.getConfigManager().getGameConfig().isRoleEnabled(roleType)) {
+                if (roleType.isDuo()) {
+                    if (processedDuoRoles.contains(roleType)) {
+                        continue;
+                    }
+
+                    if (plugin.getConfigManager().getGameConfig().isRoleEnabled(roleType.getPartnerRoleType())) {
+                        enabledDuoPairsCount++;
+                        processedDuoRoles.add(roleType);
+                        processedDuoRoles.add(roleType.getPartnerRoleType());
+                    }
+                } else {
+                    enabledSoloCount++;
+                }
+            }
+        }
+
+        // Maximum number of roles we can assign
+        enabledRoleCount = enabledSoloCount + (enabledDuoPairsCount * 2);
+
+        if (enabledRoleCount < playerCount) {
+            MessageUtil.sendMessage(sender, "&cNot enough enabled roles for all players!");
+            MessageUtil.sendMessage(sender, "&7Enabled roles: " + enabledRoleCount + ", Players: " + playerCount);
+            MessageUtil.sendMessage(sender, "&7Enable more roles using /ngnl settings or the role configuration GUI");
+            return true;
+        }
+
+        // Continue with game start process
         if (plugin.getGameManager().startGame()) {
             MessageUtil.sendMessage(sender, "&aGame started successfully!");
         } else {

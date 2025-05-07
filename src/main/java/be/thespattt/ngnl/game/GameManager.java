@@ -33,7 +33,6 @@ public class GameManager {
      * @return True if the game started successfully
      */
     public boolean startGame() {
-        // Check if enough players are online
         int minPlayers = plugin.getConfigManager().getGameConfig().getMinimumPlayers();
         if (Bukkit.getOnlinePlayers().size() < minPlayers) {
             MessageUtil.broadcast("&cNot enough players to start the game! Minimum: " + minPlayers);

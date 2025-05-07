@@ -66,7 +66,6 @@ public class RoleManager {
         if (assignRandomly) {
             assignRolesRandomly(players);
         } else {
-            // Use configured role assignments from config
             assignRolesFromConfig(players);
         }
     }
@@ -80,54 +79,56 @@ public class RoleManager {
         int playerCount = players.size();
         List<RoleType> availableRoles = new ArrayList<>();
 
-        // Prioritize duo roles first
-        List<RoleType> duoRoles = new ArrayList<>();
+        List<RoleType> enabledRoles = new ArrayList<>();
         for (RoleType roleType : RoleType.values()) {
-            if (roleType.isDuo() && !duoRoles.contains(roleType.getPartnerRoleType())) {
-                duoRoles.add(roleType);
+            if (plugin.getConfigManager().getGameConfig().isRoleEnabled(roleType)) {
+                enabledRoles.add(roleType);
             }
         }
 
-        // Shuffle duo roles
-        Collections.shuffle(duoRoles);
+        List<RoleType> soloRoles = new ArrayList<>();
+        List<RoleType> duoRoles = new ArrayList<>();
 
-        // Add duo roles (with their partners) until we can't add more
+        for (RoleType roleType : enabledRoles) {
+            if (roleType.isDuo()) {
+                if (enabledRoles.contains(roleType.getPartnerRoleType()) &&
+                        !duoRoles.contains(roleType) &&
+                        !duoRoles.contains(roleType.getPartnerRoleType())) {
+                    duoRoles.add(roleType);
+                }
+            } else {
+                soloRoles.add(roleType);
+            }
+        }
+
+        Collections.shuffle(duoRoles);
+        Collections.shuffle(soloRoles);
+        availableRoles.addAll(soloRoles);
+
         for (RoleType duoRole : duoRoles) {
-            if (availableRoles.size() + 2 <= playerCount) {  // Need space for both duo members
+            if (availableRoles.size() + 2 <= playerCount) {
                 availableRoles.add(duoRole);
                 availableRoles.add(duoRole.getPartnerRoleType());
             }
         }
 
-        // Add solo roles to fill remaining slots
-        List<RoleType> soloRoles = new ArrayList<>();
-        for (RoleType roleType : RoleType.values()) {
-            if (!roleType.isDuo()) {
-                soloRoles.add(roleType);
-            }
-        }
-
-        // Shuffle solo roles
-        Collections.shuffle(soloRoles);
-
-        // Add solo roles until we have enough
-        int i = 0;
-        while (availableRoles.size() < playerCount && i < soloRoles.size()) {
-            availableRoles.add(soloRoles.get(i++));
-        }
-
-        // Shuffle final list
         Collections.shuffle(availableRoles);
 
-        // Assign roles to players
-        for (int j = 0; j < Math.min(playerCount, availableRoles.size()); j++) {
-            Player player = players.get(j);
-            RoleType roleType = availableRoles.get(j);
+        if (availableRoles.size() < playerCount) {
+            MessageUtil.logWarning("Not enough available roles for all players! " +
+                    "Available: " + availableRoles.size() + ", Players: " + playerCount);
+            return;
+        }
+
+        for (int i = 0; i < Math.min(playerCount, availableRoles.size()); i++) {
+            Player player = players.get(i);
+            RoleType roleType = availableRoles.get(i);
 
             assignRoleToPlayer(player.getUniqueId(), roleType);
         }
 
-        MessageUtil.logInfo("Randomly assigned " + availableRoles.size() + " roles to " + playerCount + " players");
+        MessageUtil.logInfo("Randomly assigned " + Math.min(playerCount, availableRoles.size()) +
+                " roles to " + playerCount + " players");
     }
 
     /**

@@ -34,23 +34,14 @@ public class MiniGameConfigScreen extends ConfigScreen {
     private boolean rerollAllowed;
     private boolean bookReward;
 
-    // Mini-game enabled states
     private Map<MiniGameType, Boolean> enabledMiniGames;
     private List<MiniGameType> allMiniGames;
 
-    // Current page of mini-games
     private int currentPage = 0;
     private final int GAMES_PER_PAGE = 7;
 
-    /**
-     * Constructor
-     *
-     * @param plugin Plugin instance
-     * @param player Player viewing the screen
-     */
     public MiniGameConfigScreen(NoGameNoLife plugin, Player player) {
         super(plugin, player, "§8Mini-Game Configuration", 54);
-        // Initialize collections before calling super constructor
         this.allMiniGames = new ArrayList<>();
         this.enabledMiniGames = new HashMap<>();
         initializeIfNeeded();
@@ -58,7 +49,6 @@ public class MiniGameConfigScreen extends ConfigScreen {
 
     @Override
     protected void initialize() {
-        // Load current values
         GameConfig config = getConfig();
         winnerHealthLoss = config.getMiniGameWinnerHealthLoss();
         loserHealthLoss = config.getMiniGameLoserHealthLoss();
@@ -67,26 +57,19 @@ public class MiniGameConfigScreen extends ConfigScreen {
         rerollAllowed = config.isMiniGameRerollAllowed();
         bookReward = config.isMiniGameBookReward();
 
-        // Get all mini-game types
         for (MiniGameType type : MiniGameType.values()) {
             allMiniGames.add(type);
             enabledMiniGames.put(type, config.isMiniGameEnabled(type));
         }
 
-        // Create and add items
         updateItems();
 
-        // Add navigation buttons
         boolean hasNextPage = (currentPage + 1) * GAMES_PER_PAGE < allMiniGames.size();
         addNavigationButtons(true, true, hasNextPage);
 
-        // Fill empty slots
         fillEmptySlots();
     }
 
-    /**
-     * Update the items in the inventory based on current values
-     */
     private void updateItems() {
         // Clear current items (except navigation)
         for (int i = 0; i < 45; i++) {

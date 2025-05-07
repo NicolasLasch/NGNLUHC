@@ -4,8 +4,7 @@ import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.event.custom.MiniGameEndEvent;
 import be.thespattt.ngnl.event.custom.MiniGameStartEvent;
 import be.thespattt.ngnl.game.GameState;
-import be.thespattt.ngnl.minigame.games.ChessMiniGame;
-import be.thespattt.ngnl.minigame.games.RockPaperScissorsGame;
+import be.thespattt.ngnl.minigame.games.*;
 import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.util.MessageUtil;
 
@@ -72,15 +71,22 @@ public class MiniGameEngine {
             case MENTAL_CHESS:
                 miniGame = new ChessMiniGame(plugin, killerId, victimId, killerWonPvP);
                 break;
-
-            // You could add more mini-game types here over time
+            case SPLEEF:
+                miniGame = new SpleefMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
+            case TNT_RUN:
+                miniGame = new TNTRunMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
+            case BLOC_PARTY:
+                miniGame = new BlockPartyMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
+            case SPLEGG:
+                miniGame = new SpleggMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
 
             default:
-                // Default to rock-paper-scissors
-                RockPaperScissorsGame rpsGame = new RockPaperScissorsGame(plugin, killer, victim, "hearts");
-                plugin.getCommandManager().getRpsCommand().registerGame(gameId, rpsGame);
-                rpsGame.start();
-                return true;
+                miniGame = new SpleefMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
         }
 
         // Register the game

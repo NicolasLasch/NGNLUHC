@@ -200,8 +200,6 @@ public class MiniGameManager {
             return null;
         }
 
-        // For now, we'll implement a simple rock-paper-scissors game as a placeholder
-        // In the future, each mini-game would have its own implementation
         switch (miniGameType) {
             case MATERIALIZATION_SHIRITORI:
             case LOGICAL_DEDUCTION:
