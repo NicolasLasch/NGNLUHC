@@ -89,40 +89,24 @@ public class GameManager {
      * @param hearts Number of hearts to remove
      */
     public void removePlayerHearts(UUID playerId, double hearts) {
+        removePlayerHearts(playerId, hearts, null);
+    }
+    public void removePlayerHearts(UUID playerId, double hearts, UUID killerId) {
         NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
-        if (ngnlPlayer == null) {
-            return;
-        }
-
-        // Calculate new max health
+        if (ngnlPlayer == null) return;
         double currentMaxHealth = ngnlPlayer.getMaxHealth();
-        double newMaxHealth = Math.max(2.0, currentMaxHealth - (hearts * 2)); // 1 heart = 2 health points
-
-        // Update player max health
+        double newMaxHealth = Math.max(2.0, currentMaxHealth - (hearts * 2));
         ngnlPlayer.setMaxHealth(newMaxHealth);
-
-        // Apply to Bukkit player
         Player player = Bukkit.getPlayer(playerId);
-        if (player != null) {
-            player.setMaxHealth(newMaxHealth);
+        if (player == null) return;
 
-            // If current health is greater than new max, adjust it
-            if (player.getHealth() > newMaxHealth) {
-                player.setHealth(newMaxHealth);
-            }
+        player.setMaxHealth(newMaxHealth);
 
-            // Check if player should be eliminated
-            if (newMaxHealth <= 2.0) {
-                handlePlayerElimination(playerId, null);
-            }
-        }
+        if (player.getHealth() > newMaxHealth) player.setHealth(newMaxHealth);
+
+        if (newMaxHealth <= 0.0) handlePlayerElimination(playerId, killerId);
     }
 
-    /**
-     * Check if the game is running
-     *
-     * @return True if the game is in progress
-     */
     public boolean isGameRunning() {
         GameState state = game.getGameState();
         return state == GameState.MINING_PHASE || state == GameState.ARENA_PHASE;

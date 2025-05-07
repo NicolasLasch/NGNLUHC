@@ -17,6 +17,7 @@ public abstract class ConfigScreen {
     protected final Player player;
     protected final Inventory inventory;
     protected boolean changed = false;
+    private boolean initialized = false;
 
     // Navigation item slots
     protected static final int BACK_SLOT = 45;
@@ -65,15 +66,15 @@ public abstract class ConfigScreen {
         this.plugin = plugin;
         this.player = player;
         this.inventory = plugin.getServer().createInventory(null, size, title);
-
-        initialize();
     }
 
-    /**
-     * Get the game configuration
-     *
-     * @return Game configuration
-     */
+    public void initializeIfNeeded() {
+        if (!initialized) {
+            initialize();
+            initialized = true;
+        }
+    }
+
     protected GameConfig getConfig() {
         return plugin.getConfigManager().getGameConfig();
     }

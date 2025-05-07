@@ -40,6 +40,7 @@ public class ArenaConfigScreen extends ConfigScreen {
      */
     public ArenaConfigScreen(NoGameNoLife plugin, Player player) {
         super(plugin, player, "§8Arena Configuration", 54);
+        initializeIfNeeded();
     }
 
     @Override

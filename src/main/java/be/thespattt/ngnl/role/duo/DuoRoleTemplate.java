@@ -146,14 +146,14 @@ public class DuoRoleTemplate extends DuoRole {
         if (partner != null && partner.isOnline() && plugin.getGameManager().isPlayerAlive(partner.getUniqueId())) {
             double distance = damager.getLocation().distance(partner.getLocation());
             if (distance <= PARTNER_PROXIMITY_RANGE) {
-                event.setDamage(event.getDamage() * 1.15); // proche → bonus dégâts
+                event.setDamage(event.getDamage() * 1.15); // proche → bonus dégâts (15% mais probabelemtn équilibrer après)
                 MessageUtil.sendMessage(self, "+15% de dégats");
             } else {
-                event.setDamage(event.getDamage() * 0.85); // loin → malus dégâts
+                event.setDamage(event.getDamage() * 0.85); // loin → malus dégâts (15% dans l'autre sens)
                 MessageUtil.sendMessage(self, "-15% de dégats");
             }
         } else {
-            // partenaire mort/offline → malus dégâts
+            // mate mort/offline → comme si il était loin :p
             event.setDamage(event.getDamage() * 0.85);
             MessageUtil.sendMessage(self, "-15% de dégats");
         }

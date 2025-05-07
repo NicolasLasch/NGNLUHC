@@ -27,6 +27,7 @@ public class MainConfigScreen extends ConfigScreen {
      */
     public MainConfigScreen(NoGameNoLife plugin, Player player) {
         super(plugin, player, "§8No Game No Life - Configuration", 54);
+        initializeIfNeeded();
     }
 
     @Override
@@ -131,12 +132,12 @@ public class MainConfigScreen extends ConfigScreen {
             case RELOAD_SLOT:
                 // Reload configuration from disk
                 plugin.getConfigManager().reloadConfig();
-                player.closeInventory();
+                plugin.getConfigGUIManager().closeScreen(player);
                 break;
             case SAVE_SLOT:
                 // Save configuration
                 plugin.getConfigManager().saveConfig();
-                player.closeInventory();
+                plugin.getConfigGUIManager().closeScreen(player);
                 break;
         }
     }

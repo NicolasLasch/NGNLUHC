@@ -43,6 +43,7 @@ public class GeneralConfigScreen extends ConfigScreen {
      */
     public GeneralConfigScreen(NoGameNoLife plugin, Player player) {
         super(plugin, player, "§8General Configuration", 54);
+        initializeIfNeeded();
     }
 
     @Override

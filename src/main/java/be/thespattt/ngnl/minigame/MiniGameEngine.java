@@ -179,11 +179,9 @@ public class MiniGameEngine {
      */
     private void handleMiniGameResults(UUID player1UUID, UUID player2UUID, boolean player1Winner,
                                        boolean player1WonPvP, MiniGameType miniGameType) {
-        // Determine winner and loser
         UUID winnerId = player1Winner ? player1UUID : player2UUID;
         UUID loserId = player1Winner ? player2UUID : player1UUID;
 
-        // Determine if the winner of the mini-game was the winner of the initial PvP
         boolean winnerWonPvP = (player1Winner == player1WonPvP);
 
         if (recentHeartChange.contains(loserId)) {
@@ -199,16 +197,12 @@ public class MiniGameEngine {
         // Apply heart loss based on rules
         Player loser = Bukkit.getPlayer(loserId);
         if (loser != null) {
-            // Determine hearts to lose
-            double heartsToLose = winnerWonPvP ? 5.0 : 3.5;
+            double heartsToLose = winnerWonPvP ? 5.0 : 3;
 
-            // Apply heart loss ONLY ONCE
             NGNLPlayer loserNGNLPlayer = plugin.getPlayerManager().getNGNLPlayer(loserId);
             if (loserNGNLPlayer != null) {
-                // Record hearts lost for bookkeeping
                 loserNGNLPlayer.recordHeartsLost((int) Math.ceil(heartsToLose));
 
-                // Apply heart loss through GameManager (handles the actual health reduction)
                 plugin.getGameManager().removePlayerHearts(loserId, heartsToLose);
             }
 

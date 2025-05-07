@@ -4,6 +4,7 @@ import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.config.GameConfig;
 import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.util.ItemBuilder;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -19,12 +20,12 @@ import java.util.Map;
 public class RoleConfigScreen extends ConfigScreen {
 
     // Track which roles are enabled
-    private Map<RoleType, Boolean> enabledRoles = new HashMap<>();
+    private Map<RoleType, Boolean> enabledRoles;
 
     // Current page of roles
     private int currentPage = 0;
     private final int ROLES_PER_PAGE = 21;
-    private List<RoleType> allRoles = new ArrayList<>();
+    private List<RoleType> allRoles;
 
     // Item slots
     private static final int ABILITY_STRENGTH_SLOT = 4;
@@ -40,21 +41,25 @@ public class RoleConfigScreen extends ConfigScreen {
      */
     public RoleConfigScreen(NoGameNoLife plugin, Player player) {
         super(plugin, player, "§8Role Configuration", 54);
-        // Initialize collections before calling super constructor
         this.enabledRoles = new HashMap<>();
         this.allRoles = new ArrayList<>();
+        loadAllRoles();
+        initializeIfNeeded();
     }
-    @Override
-    protected void initialize() {
-        // Load current values
-        GameConfig config = getConfig();
-        abilityStrength = config.getRoleAbilityStrength();
 
-        // Get all role types
+    private void loadAllRoles(){
+        GameConfig config = getConfig();
         for (RoleType type : RoleType.values()) {
             allRoles.add(type);
             enabledRoles.put(type, config.isRoleEnabled(type));
         }
+    }
+    @Override
+    protected void initialize() {
+        Bukkit.getLogger().info("Initializing RoleConfigScreen for player: " + player.getName());
+        GameConfig config = getConfig();
+        abilityStrength = config.getRoleAbilityStrength();
+
 
         // Create and add items
         updateItems();
@@ -71,7 +76,6 @@ public class RoleConfigScreen extends ConfigScreen {
      * Update the items in the inventory based on current values
      */
     private void updateItems() {
-        // Clear current items (except navigation)
         for (int i = 0; i < 45; i++) {
             inventory.setItem(i, null);
         }

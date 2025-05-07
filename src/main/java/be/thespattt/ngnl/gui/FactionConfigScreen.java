@@ -6,6 +6,8 @@ import be.thespattt.ngnl.player.faction.FactionType;
 import be.thespattt.ngnl.util.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
@@ -52,6 +54,7 @@ public class FactionConfigScreen extends ConfigScreen {
         // Initialize collections before calling super constructor
         this.enabledFactions = new HashMap<>();
         // Then call the parent constructor, which will trigger initialize()
+        initializeIfNeeded();
     }
 
     @Override
@@ -189,6 +192,7 @@ public class FactionConfigScreen extends ConfigScreen {
 
         inventory.setItem(slot, factionItem);
     }
+
 
     @Override
     public void handleClick(int slot, boolean isLeftClick, boolean isRightClick, boolean isShiftClick) {

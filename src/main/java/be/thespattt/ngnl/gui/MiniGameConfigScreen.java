@@ -40,7 +40,7 @@ public class MiniGameConfigScreen extends ConfigScreen {
 
     // Current page of mini-games
     private int currentPage = 0;
-    private final int GAMES_PER_PAGE = 9;
+    private final int GAMES_PER_PAGE = 7;
 
     /**
      * Constructor
@@ -53,8 +53,7 @@ public class MiniGameConfigScreen extends ConfigScreen {
         // Initialize collections before calling super constructor
         this.allMiniGames = new ArrayList<>();
         this.enabledMiniGames = new HashMap<>();
-
-        // Then call the parent constructor, which will trigger initialize()
+        initializeIfNeeded();
     }
 
     @Override

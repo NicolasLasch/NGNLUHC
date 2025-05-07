@@ -91,7 +91,7 @@ public class ForceKillCommand implements CommandExecutor, TabCompleter {
             MessageUtil.sendMessage(sender, "&aRemoving " + heartsToRemove + " hearts from " + target.getName() + "!");
 
             // Update max health
-            plugin.getGameManager().removePlayerHearts(target.getUniqueId(), heartsToRemove);
+            plugin.getGameManager().removePlayerHearts(target.getUniqueId(), heartsToRemove, killerId);
 
             // Check if player should be eliminated
             if (newMaxHealth <= 2.0) {

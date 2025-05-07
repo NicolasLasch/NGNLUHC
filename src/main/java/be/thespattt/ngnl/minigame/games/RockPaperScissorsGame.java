@@ -214,19 +214,19 @@ public class RockPaperScissorsGame implements PlayerGameChecker {
                 break;
 
             case "hearts":
-                // Remove 1 heart from loser (2 health points) and give 1 heart to winner
+                // Remove un coeur (2 HP -> Et l'envoie à l'autre)
                 NGNLPlayer loserNGNLPlayer = plugin.getPlayerManager().getNGNLPlayer(loser.getUniqueId());
                 NGNLPlayer winnerNGNLPlayer = plugin.getPlayerManager().getNGNLPlayer(winner.getUniqueId());
 
                 if (loserNGNLPlayer != null && winnerNGNLPlayer != null) {
-                    // Remove 2 max health from loser
+                    // Perdant -2 coeurs
                     AttributeInstance loserHealthAttr = loser.getAttribute(Attribute.MAX_HEALTH);
                     if (loserHealthAttr != null) {
                         double newHealth = Math.max(2.0, loserHealthAttr.getBaseValue() - 2.0);
                         loserHealthAttr.setBaseValue(newHealth);
                     }
 
-                    // Add 2 max health to winner
+                    // Gagnat +2 hehe
                     AttributeInstance winnerHealthAttr = winner.getAttribute(Attribute.MAX_HEALTH);
                     if (winnerHealthAttr != null) {
                         winnerHealthAttr.setBaseValue(winnerHealthAttr.getBaseValue() + 2.0);

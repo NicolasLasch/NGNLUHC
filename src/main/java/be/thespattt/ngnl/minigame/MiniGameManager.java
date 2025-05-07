@@ -7,16 +7,15 @@ import be.thespattt.ngnl.minigame.games.RockPaperScissorsGame;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Manager class for mini-games in the game
@@ -39,6 +38,16 @@ public class MiniGameManager {
 
     // Map to track PvP winners (loser UUID -> killer UUID)
     private final Map<UUID, UUID> pvpKillers = new HashMap<>();
+    private int waitingRoomX = 0;
+    private final int waitingRoomY = 72;
+    private int waitingRoomZ = 0;
+    private static final int ROOM_WIDTH = 12;
+    private static final int  ROOM_HEIGHT = 5;
+    private static final int  ROOM_DEPTH = 10;
+
+    private final int STARTX = waitingRoomX - (ROOM_WIDTH / 2);
+    private final int STARTY = waitingRoomY;
+    private final int STARTZ = waitingRoomZ - (ROOM_DEPTH / 2);
 
     /**
      * Constructor
@@ -481,19 +490,16 @@ public class MiniGameManager {
     }
 
     public void startMiniGameDuel(Player killer, Player victim) {
-        // Teleport to mini-game room
         teleportToMiniGameRoom(killer, victim);
 
-        // Set up the pending session first
         plugin.getMiniGameSessionManager().registerPendingSession(killer.getUniqueId(), victim.getUniqueId());
 
-        // Launch GUI or message
         MessageUtil.sendMessage(killer, "&eChoose a mini-game to challenge &c" + victim.getName());
         openMiniGameSelectionGUI(killer, victim);
     }
 
     public void openMiniGameSelectionGUI(Player killer, Player victim) {
-        Inventory gui = Bukkit.createInventory(null, 9, ChatColor.DARK_PURPLE + "Choose a Mini-Game");
+        Inventory gui = Bukkit.createInventory(null, 18, ChatColor.DARK_PURPLE + "Choose a Mini-Game");
 
         for (MiniGameType type : MiniGameType.values()) {
             ItemStack item = new ItemStack(Material.PAPER);
@@ -502,7 +508,7 @@ public class MiniGameManager {
                 meta.setDisplayName(ChatColor.GOLD + type.getDisplayName());
                 meta.setLore(List.of(
                         ChatColor.GRAY + "Click to challenge " + victim.getName(),
-                        ChatColor.GRAY + "Mini-game: " + type.name()
+                        ChatColor.GRAY + "Mini-game: " + ChatColor.DARK_PURPLE + type.name()
                 ));
                 item.setItemMeta(meta);
             }
@@ -516,18 +522,128 @@ public class MiniGameManager {
 
 
     public void teleportToMiniGameRoom(Player killer, Player victim) {
+
         World world = Bukkit.getWorld("ngnl_minigame");
         if (world == null) {
             MessageUtil.sendMessage(killer, "&c[Error] Mini-game world not found.");
             return;
         }
 
-        Location center = new Location(world, 0, 71, 0);
-        Location left = center.clone().add(-1, 0, 0);
-        Location right = center.clone().add(1, 0, 0);
+        Location center = new Location(plugin.getWorldManager().getMinigameWorld(), waitingRoomX, waitingRoomY, waitingRoomZ);
+        preloadChunksAndThen(plugin.getWorldManager().getMinigameWorld(), center, 32, () -> {
+            setupWaitingRoom();
+            teleportPlayersToWaitingRoom(killer, victim);
+        });
+        setupWaitingRoom();
 
-        killer.teleport(left);
-        victim.teleport(right);
+        teleportPlayersToWaitingRoom(killer, victim);
     }
 
+    private void setupWaitingRoom() {
+        World gameWorld = plugin.getWorldManager().getMinigameWorld();
+        if (gameWorld == null) {
+            return;
+        }
+        clearAreaWithAir();
+        buildArenaFloor();
+        buildArenaCeiling();
+        buildArenaWalls();
+    }
+    private void clearAreaWithAir(){
+        World gameWorld = plugin.getWorldManager().getMinigameWorld();
+        for (int x = 0; x < ROOM_WIDTH + 2; x++) {
+            for (int y = 0; y < ROOM_HEIGHT + 2; y++) {
+                for (int z = 0; z < ROOM_DEPTH + 2; z++) {
+                    Block block = gameWorld.getBlockAt(STARTX - 1 + x, STARTY - 1 + y, STARTZ - 1 + z);
+                    block.setType(Material.AIR);
+                }
+            }
+        }
+    }
+    private void buildArenaWalls(){
+        World gameWorld = plugin.getWorldManager().getMinigameWorld();
+        for (int x = 0; x < ROOM_WIDTH; x++) {
+            for (int y = 1; y < ROOM_HEIGHT - 1; y++) {
+                // North wall
+                Block northBlock = gameWorld.getBlockAt(STARTX + x, STARTY + y, STARTZ);
+                northBlock.setType(Material.PURPLE_STAINED_GLASS);
+
+                // South wall
+                Block southBlock = gameWorld.getBlockAt(STARTX + x, STARTY + y, STARTZ + ROOM_DEPTH - 1);
+                southBlock.setType(Material.PURPLE_STAINED_GLASS);
+            }
+        }
+        for (int z = 0; z < ROOM_DEPTH; z++) {
+            for (int y = 1; y < ROOM_HEIGHT - 1; y++) {
+                Block eastBlock = gameWorld.getBlockAt(STARTX, STARTY + y, STARTZ + z);
+                eastBlock.setType(Material.PURPLE_STAINED_GLASS);
+
+                Block westBlock = gameWorld.getBlockAt(STARTX + ROOM_WIDTH - 1, STARTX + y, STARTZ + z);
+                westBlock.setType(Material.PURPLE_STAINED_GLASS);
+            }
+        }
+    }
+    private void buildArenaCeiling(){
+        World gameWorld = plugin.getWorldManager().getMinigameWorld();
+        for (int x = 0; x < ROOM_WIDTH; x++) {
+            for (int z = 0; z < ROOM_DEPTH; z++) {
+                Block block = gameWorld.getBlockAt(STARTX + x, STARTY + ROOM_HEIGHT - 1, STARTZ + z);
+                block.setType(Material.PURPLE_STAINED_GLASS);
+            }
+        }
+    }
+    private void buildArenaFloor(){
+        World gameWorld = plugin.getWorldManager().getMinigameWorld();
+        for (int x = 0; x < ROOM_WIDTH; x++) {
+            for (int z = 0; z < ROOM_DEPTH; z++) {
+                Block block = gameWorld.getBlockAt(STARTX + x, STARTY, STARTZ + z);
+                block.setType(Material.PURPLE_STAINED_GLASS);
+            }
+        }
+    }
+    private void teleportPlayersToWaitingRoom(Player player1, Player player2) {
+
+        World miniGameWorld = plugin.getWorldManager().getMinigameWorld();
+        if (miniGameWorld == null) {
+            miniGameWorld = Bukkit.getWorlds().get(0);
+        }
+
+        if (player1 != null) {
+            Location whiteLocation = new Location(miniGameWorld,
+                    waitingRoomX + 2, waitingRoomY + 1, waitingRoomZ + 2, 45, 0); // White position
+            player1.teleport(whiteLocation);
+        }
+
+        if (player2 != null) {
+            Location blackLocation = new Location(miniGameWorld,
+                    waitingRoomX - 2, waitingRoomY + 1, waitingRoomZ - 2, 225, 0); // Black position
+            player2.teleport(blackLocation);
+        }
+    }
+
+    public void preloadChunksAndThen(World world, Location center, int radius, Runnable onLoaded) {
+        int chunkRadius = (int) Math.ceil(radius / 16.0);
+
+        Set<Chunk> chunksToLoad = loadingChunks(center, world, chunkRadius);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if(chunksToLoad.stream().anyMatch(chunk -> !chunk.isLoaded())) return;
+                cancel();
+                onLoaded.run();
+            }
+        }.runTaskTimer(plugin, 2L, 2L);
+    }
+    private Set<Chunk> loadingChunks(Location center, World world, int chunkRadius){
+        Set<Chunk> chunksToLoad = new HashSet<>();
+        for (int dx = -chunkRadius; dx <= chunkRadius; dx++) {
+            for (int dz = -chunkRadius; dz <= chunkRadius; dz++) {
+                Chunk chunk = world.getChunkAt(center.getBlockX() / 16 + dx, center.getBlockZ() / 16 + dz);
+                chunksToLoad.add(chunk);
+                chunk.load(true);
+            }
+        }
+        return chunksToLoad;
+    }
 }

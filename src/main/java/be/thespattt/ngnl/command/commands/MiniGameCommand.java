@@ -71,9 +71,6 @@ public class MiniGameCommand implements CommandExecutor, TabCompleter {
             case "decline":
                 return handleDeclineCommand(player, args);
 
-            case "move":
-                return handleMoveCommand(player, args);
-
             case "forfeit":
                 return handleForfeitCommand(player);
 
@@ -166,24 +163,20 @@ public class MiniGameCommand implements CommandExecutor, TabCompleter {
      * @return True if handled
      */
     private boolean handleDeclineCommand(Player player, String[] args) {
-        // Check if player has a pending opponent
         UUID victimId = plugin.getMiniGameSessionManager().getPendingVictim(player.getUniqueId());
         if (victimId == null) {
             MessageUtil.sendMessage(player, "&cYou don't have a pending mini-game!");
             return true;
         }
 
-        // Clear pending session
         plugin.getMiniGameSessionManager().clearPending(player.getUniqueId());
 
-        // Notify players
         MessageUtil.sendMessage(player, "&aYou have declined the mini-game.");
 
         Player victim = Bukkit.getPlayer(victimId);
         if (victim != null) {
             MessageUtil.sendMessage(victim, "&c" + player.getName() + " has declined the mini-game.");
 
-            // In this case, the player who declined loses hearts
             double heartsToLose = 5.0;
             plugin.getGameManager().removePlayerHearts(player.getUniqueId(), heartsToLose);
 
@@ -194,50 +187,6 @@ public class MiniGameCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    /**
-     * Handle the move subcommand for chess-like games
-     *
-     * @param player Player using the command
-     * @param args   Command arguments
-     * @return True if handled
-     */
-    private boolean handleMoveCommand(Player player, String[] args) {
-        // Check if there are enough arguments
-        if (args.length < 2) {
-            MessageUtil.sendMessage(player, "&cUsage: /minigame move <position>");
-            return true;
-        }
-
-        // Check if player is in a mini-game
-        if (!plugin.getMiniGameEngine().isPlayerInMiniGame(player.getUniqueId())) {
-            MessageUtil.sendMessage(player, "&cYou are not in a mini-game!");
-            return true;
-        }
-
-        // Get the mini-game
-        be.thespattt.ngnl.minigame.MiniGameBase miniGame = plugin.getMiniGameEngine().getPlayerMiniGame(player.getUniqueId());
-
-        // Check if it's a chess game
-        if (miniGame instanceof be.thespattt.ngnl.minigame.games.ChessMiniGame) {
-            be.thespattt.ngnl.minigame.games.ChessMiniGame chessGame = (be.thespattt.ngnl.minigame.games.ChessMiniGame) miniGame;
-
-            // Process the move
-            // boolean success = chessGame.executeMove(player, args[1]);
-
-            MessageUtil.sendMessage(player, "&cInvalid move!");
-        } else {
-            MessageUtil.sendMessage(player, "&cThis command can only be used in chess-like mini-games!");
-        }
-
-        return true;
-    }
-
-    /**
-     * Handle the forfeit subcommand
-     *
-     * @param player Player using the command
-     * @return True if handled
-     */
     private boolean handleForfeitCommand(Player player) {
         // Check if player is in a mini-game
         if (!plugin.getMiniGameEngine().isPlayerInMiniGame(player.getUniqueId())) {
@@ -275,7 +224,6 @@ public class MiniGameCommand implements CommandExecutor, TabCompleter {
     private void sendHelpMessage(Player player) {
         MessageUtil.sendMessage(player, "&6=== MiniGame Commands ===");
         MessageUtil.sendMessage(player, "&e/minigame select <type> &7- Select a mini-game type");
-        MessageUtil.sendMessage(player, "&e/minigame move <position> &7- Make a move in a chess-like game");
         MessageUtil.sendMessage(player, "&e/minigame forfeit &7- Forfeit the current mini-game");
         MessageUtil.sendMessage(player, "&e/minigame help &7- Show this help message");
         MessageUtil.sendMessage(player, "&6Available mini-game types: &7" + String.join(", ", getAvailableMiniGameTypes()));
@@ -302,7 +250,7 @@ public class MiniGameCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 1) {
             // First argument - subcommands
-            completions.addAll(Arrays.asList("select", "move", "forfeit", "help"));
+            completions.addAll(Arrays.asList("select", "forfeit", "help"));
 
             // Filter by input
             return filterStartingWith(completions, args[0]);
@@ -311,15 +259,6 @@ public class MiniGameCommand implements CommandExecutor, TabCompleter {
                 // Second argument for select - mini-game types
                 for (MiniGameType type : MiniGameType.values()) {
                     completions.add(type.name());
-                }
-
-                return filterStartingWith(completions, args[1]);
-            } else if (args[0].equalsIgnoreCase("move")) {
-                // Second argument for move - chess positions (for Chess mini-game)
-                for (char file = 'a'; file <= 'h'; file++) {
-                    for (int rank = 1; rank <= 8; rank++) {
-                        completions.add(String.valueOf(file) + rank);
-                    }
                 }
 
                 return filterStartingWith(completions, args[1]);

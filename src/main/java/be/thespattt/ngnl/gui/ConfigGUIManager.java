@@ -11,6 +11,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -21,7 +22,8 @@ import java.util.UUID;
 public class ConfigGUIManager implements Listener {
 
     private final NoGameNoLife plugin;
-    private final Map<UUID, ConfigScreen> activeScreens = new HashMap<>();
+    private static final Map<UUID, ConfigScreen> activeScreens = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<ScreenType, Inventory> screenInventories = new HashMap<>();
 
     /**
      * Constructor
@@ -44,12 +46,6 @@ public class ConfigGUIManager implements Listener {
         player.openInventory(screen.getInventory());
     }
 
-    /**
-     * Open a specific configuration screen for a player
-     *
-     * @param player Player to open the screen for
-     * @param screenType Type of screen to open
-     */
     public void openScreen(Player player, ScreenType screenType) {
         ConfigScreen screen;
 
@@ -77,8 +73,26 @@ public class ConfigGUIManager implements Listener {
                 break;
         }
 
+        screen.initializeIfNeeded();
         activeScreens.put(player.getUniqueId(), screen);
+        screenInventories.put(screenType, screen.getInventory());
+
+        // Open the inventory for the player
         player.openInventory(screen.getInventory());
+    }
+
+    public void clearActiveScreen(Player player) {
+        synchronized (activeScreens) {
+            if (activeScreens.containsKey(player.getUniqueId())) {
+                Bukkit.getLogger().warning("Screen for player " + player.getName() + " was manually removed!");
+                activeScreens.remove(player.getUniqueId());
+            }
+        }
+    }
+
+    public void closeScreen(Player player) {
+        clearActiveScreen(player);
+        player.closeInventory();
     }
 
     /**
@@ -99,26 +113,19 @@ public class ConfigGUIManager implements Listener {
             return;
         }
 
-        // Get the active screen
         ConfigScreen screen = activeScreens.get(playerId);
 
-        // Check if they're clicking in any part of the inventory view that contains our GUI
-        // This includes both the top inventory (our GUI) and the bottom inventory (player inventory)
+        if (screen == null) return;
+
         if (event.getView().getTopInventory().equals(screen.getInventory())) {
-            // Cancel the event to prevent item movement for ANY click in this inventory view
             event.setCancelled(true);
 
-            // Only process the click if it's specifically in our GUI inventory (top inventory)
             if (event.getClickedInventory() != null && event.getClickedInventory().equals(screen.getInventory())) {
                 screen.handleClick(event.getSlot(), event.isLeftClick(), event.isRightClick(), event.isShiftClick());
             }
         }
     }
-    /**
-     * Handle inventory close events
-     *
-     * @param event The close event
-     */
+
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player)) {
@@ -131,18 +138,13 @@ public class ConfigGUIManager implements Listener {
         if (activeScreens.containsKey(playerId)) {
             ConfigScreen screen = activeScreens.get(playerId);
 
-            // If the screen needs to save changes, do so
             if (screen.needsSaving()) {
                 screen.saveChanges();
                 MessageUtil.sendMessage(player, "&aConfiguration has been saved!");
 
-                // Reload the configuration
                 plugin.getConfigManager().reloadConfig();
                 MessageUtil.sendMessage(player, "&aConfiguration has been reloaded!");
             }
-
-            // Remove the screen from active screens
-            activeScreens.remove(playerId);
         }
     }
 

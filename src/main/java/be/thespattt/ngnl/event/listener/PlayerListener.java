@@ -104,7 +104,10 @@ public class PlayerListener implements Listener {
             if (killerId != null) {
                 Player killer = Bukkit.getPlayer(killerId);
                 event.setCancelled(true);
-                victim.setHealth(1);
+                victim.setHealth(victim.getMaxHealth());
+                if (killer != null){
+                    killer.setHealth(killer.getMaxHealth());
+                }
                 plugin.getMiniGameManager().startMiniGameDuel(killer, victim);
             }
         }
