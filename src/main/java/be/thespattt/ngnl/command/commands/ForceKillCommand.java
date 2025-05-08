@@ -82,27 +82,8 @@ public class ForceKillCommand implements CommandExecutor, TabCompleter {
             killerId = ((Player) sender).getUniqueId();
         }
 
-        // Test method 1: Remove hearts until elimination
-        if (heartsToRemove > 0) {
-            // Get current max health
-            double currentMaxHealth = target.getMaxHealth();
-            double newMaxHealth = Math.max(0, currentMaxHealth - (heartsToRemove * 2)); // 1 heart = 2 health points
-
-            MessageUtil.sendMessage(sender, "&aRemoving " + heartsToRemove + " hearts from " + target.getName() + "!");
-
-            // Update max health
-            plugin.getGameManager().removePlayerHearts(target.getUniqueId(), heartsToRemove, killerId);
-
-            // Check if player should be eliminated
-            if (newMaxHealth <= 2.0) {
-                MessageUtil.sendMessage(sender, "&a" + target.getName() + " has been eliminated due to losing all hearts!");
-                // The GameManager's removePlayerHearts method should handle the elimination
-            }
-        } else {
-            // Test method 2: Direct elimination
-            plugin.getGameManager().handlePlayerElimination(target.getUniqueId(), killerId);
-            MessageUtil.sendMessage(sender, "&aForced elimination of " + target.getName() + "!");
-        }
+        plugin.getGameManager().handlePlayerElimination(target.getUniqueId(), killerId);
+        MessageUtil.sendMessage(sender, "&aForced elimination of " + target.getName() + "!");
 
         return true;
     }

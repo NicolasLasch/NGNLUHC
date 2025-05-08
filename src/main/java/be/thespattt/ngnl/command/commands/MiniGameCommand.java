@@ -124,14 +124,11 @@ public class MiniGameCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Start the mini-game
         boolean success = plugin.getMiniGameEngine().startGame(miniGameType, player, victim);
 
         if (success) {
-            // Clear pending session
             plugin.getMiniGameSessionManager().clearPending(player.getUniqueId());
 
-            // Notify players
             MessageUtil.sendMessage(player, "&aStarting mini-game: &e" + miniGameType.getDisplayName());
             MessageUtil.sendMessage(victim, "&aStarting mini-game: &e" + miniGameType.getDisplayName());
         } else {
@@ -141,13 +138,6 @@ public class MiniGameCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    /**
-     * Handle the accept subcommand
-     *
-     * @param player Player using the command
-     * @param args   Command arguments
-     * @return True if handled
-     */
     private boolean handleAcceptCommand(Player player, String[] args) {
         // This would handle accepting a mini-game invite
         // For now, let's just mention that this is not needed in the current implementation

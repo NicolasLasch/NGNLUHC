@@ -83,8 +83,12 @@ public class MiniGameEngine {
             case SPLEGG:
                 miniGame = new SpleggMiniGame(plugin, killerId, victimId, killerWonPvP);
                 break;
-
+            case PARKOUR:
+                miniGame = new ParkourMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
+            // Add more cases for additional minigames
             default:
+                // Fallback to a default game if type not recognized
                 miniGame = new SpleefMiniGame(plugin, killerId, victimId, killerWonPvP);
                 break;
         }
@@ -121,12 +125,6 @@ public class MiniGameEngine {
         return false;
     }
 
-    /**
-     * Get the mini-game a player is in
-     *
-     * @param playerId UUID of the player
-     * @return MiniGameBase or null if not in a game
-     */
     public MiniGameBase getPlayerMiniGame(UUID playerId) {
         for (MiniGameBase game : activeMiniGames.values()) {
             if (game.hasPlayer(playerId)) {

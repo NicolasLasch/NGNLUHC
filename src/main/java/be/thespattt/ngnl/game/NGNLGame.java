@@ -301,34 +301,27 @@ public class NGNLGame {
             return;
         }
 
-        // Remove from alive players
         alivePlayers.remove(playerId);
         eliminatedPlayers.add(playerId);
 
-        // Get player objects
         Player player = Bukkit.getPlayer(playerId);
         Player killerPlayer = killer != null ? Bukkit.getPlayer(killer) : null;
 
-        // Set player to spectator mode
         if (player != null) {
             player.setGameMode(GameMode.SPECTATOR);
 
-            // Handle role-specific elimination logic
             NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
             if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
                 ngnlPlayer.getRole().onDeath(killer);
             }
         }
 
-        // Start mini-game if applicable
-        if (killer != null && gameState == GameState.MINING_PHASE) {
-            plugin.getMiniGameManager().startMiniGame(killer, playerId);
-        }
+        //    if (killer != null && gameState == GameState.MINING_PHASE) {
+        //        plugin.getMiniGameManager().startMiniGame(killer, playerId);
+        //    }
 
-        // Check if arena phase should start
         checkArenaPhase();
 
-        // Check if game is over
         checkGameEnd();
     }
 

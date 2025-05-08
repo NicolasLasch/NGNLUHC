@@ -38,6 +38,8 @@ public class MiniGameManager {
 
     // Map to track PvP winners (loser UUID -> killer UUID)
     private final Map<UUID, UUID> pvpKillers = new HashMap<>();
+    private RandomMiniGameSelector miniGameSelector;
+
     private int waitingRoomX = 0;
     private final int waitingRoomY = 72;
     private int waitingRoomZ = 0;
@@ -56,6 +58,7 @@ public class MiniGameManager {
      */
     public MiniGameManager(NoGameNoLife plugin) {
         this.plugin = plugin;
+        this.miniGameSelector = new RandomMiniGameSelector(plugin);
     }
 
     /**
@@ -497,25 +500,8 @@ public class MiniGameManager {
     }
 
     public void openMiniGameSelectionGUI(Player killer, Player victim) {
-        Inventory gui = Bukkit.createInventory(null, 18, ChatColor.DARK_PURPLE + "Choose a Mini-Game");
-
-        for (MiniGameType type : MiniGameType.values()) {
-            ItemStack item = new ItemStack(Material.PAPER);
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                meta.setDisplayName(ChatColor.GOLD + type.getDisplayName());
-                meta.setLore(List.of(
-                        ChatColor.GRAY + "Click to challenge " + victim.getName(),
-                        ChatColor.GRAY + "Mini-game: " + ChatColor.DARK_PURPLE + type.name()
-                ));
-                item.setItemMeta(meta);
-            }
-            gui.addItem(item);
-        }
-
         plugin.getMiniGameSessionManager().registerPendingSession(killer.getUniqueId(), victim.getUniqueId());
-
-        killer.openInventory(gui);
+        miniGameSelector.openMiniGameSelectionGUI(killer, victim);
     }
 
 

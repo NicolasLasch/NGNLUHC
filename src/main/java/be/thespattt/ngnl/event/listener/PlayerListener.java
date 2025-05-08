@@ -117,24 +117,19 @@ public class PlayerListener implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
 
-        // Check if game is running
         if (!plugin.getGameManager().isGameRunning()) {
             return;
         }
 
-        // Check if player was in the game
         if (!plugin.getGameManager().isPlayerAlive(player.getUniqueId())) {
             return;
         }
 
-        // Get killer (if any)
         Player killer = player.getKiller();
         UUID killerId = killer != null ? killer.getUniqueId() : null;
 
-        // Handle death in the game
         plugin.getGameManager().handlePlayerElimination(player.getUniqueId(), killerId);
 
-        // Set death message
         String deathMessage = "&c" + player.getName() + " has been eliminated!";
         if (killer != null) {
             deathMessage += " &7(Killed by " + killer.getName() + ")";
@@ -143,7 +138,6 @@ public class PlayerListener implements Listener {
         event.setDeathMessage(null); // Remove default death message
         MessageUtil.broadcast(deathMessage);
 
-        // Only reveal the mini-game the player lost on
         if (plugin.getGameManager().getGame().getLastMiniGameLostBy(player.getUniqueId()) != null) {
             String miniGameName = plugin.getGameManager().getGame().getLastMiniGameLostBy(player.getUniqueId()).getDisplayName();
             MessageUtil.broadcast("&7They were defeated in: &f" + miniGameName);
