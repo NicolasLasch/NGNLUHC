@@ -9,8 +9,12 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -27,13 +31,34 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     private final Map<UUID, Long> playerCompletionTimes = new HashMap<>();
 
     private Location courseStartLocation;
-    private final int courseLength = 50; // Length of the course
-    private final int courseWidth = 5;   // Width of each player's course
-    private final int courseHeight = 20; // Maximum height of the course
-    private final int totalCheckpoints = 5; // Number of checkpoints (including finish line)
+    private final int courseLength = 90;
+    private final int courseWidth = 5;
+    private final int courseHeight = 20;
+    private final int totalCheckpoints = 5;
+    private final int MAX_JUMP_DISTANCE = 4;
 
     private final Map<Integer, Location> player1Checkpoints = new HashMap<>();
     private final Map<Integer, Location> player2Checkpoints = new HashMap<>();
+
+    private static final String CHECKPOINT_ITEM_NAME = ChatColor.GREEN + "Return to Checkpoint";
+    private static final String FORFEIT_ITEM_NAME = ChatColor.RED + "Forfeit Race";
+
+    public class ParkourSection {
+        int type;
+        int startZ;
+        int endZ;
+        int heightOffset;
+
+        public ParkourSection(int type, int startZ, int endZ, int heightOffset) {
+            this.type = type;
+            this.startZ = startZ;
+            this.endZ = endZ;
+            this.heightOffset = heightOffset;
+        }
+    }
+
+    private final List<Integer> checkpointPositions = new ArrayList<>();
+    private List<ParkourSection> courseSections = new ArrayList<>();
 
     public ParkourMiniGame(NoGameNoLife plugin, UUID player1UUID, UUID player2UUID, boolean player1WonPvP) {
         super(plugin, player1UUID, player2UUID, MiniGameType.PARKOUR, player1WonPvP);
@@ -76,10 +101,51 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         playerInventories.remove(player.getUniqueId());
         playerArmorContents.remove(player.getUniqueId());
 
-        // Remove any potion effects
         for (PotionEffect effect : player.getActivePotionEffects()) {
             player.removePotionEffect(effect.getType());
         }
+    }
+
+    private void giveUtilityItems(Player player) {
+        ItemStack checkpointItem = createCheckpointItem();
+        ItemStack forfeitItem = createForfeitItem();
+
+        player.getInventory().setItem(7, checkpointItem);
+        player.getInventory().setItem(8, forfeitItem);
+    }
+
+    private ItemStack createCheckpointItem() {
+        ItemStack item = new ItemStack(Material.ENDER_PEARL);
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName(CHECKPOINT_ITEM_NAME);
+            meta.setUnbreakable(true);
+            meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ATTRIBUTES);
+            List<String> lore = new ArrayList<>();
+            lore.add(ChatColor.GRAY + "Right-click to return to your last checkpoint");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+
+        return item;
+    }
+
+    private ItemStack createForfeitItem() {
+        ItemStack item = new ItemStack(Material.BARRIER);
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName(FORFEIT_ITEM_NAME);
+            meta.setUnbreakable(true);
+            meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ATTRIBUTES);
+            List<String> lore = new ArrayList<>();
+            lore.add(ChatColor.GRAY + "Right-click to forfeit the race");
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+
+        return item;
     }
 
     private void setupParkourCourse() {
@@ -88,18 +154,74 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
 
         int x = ThreadLocalRandom.current().nextInt(100, 1001) * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
         int z = ThreadLocalRandom.current().nextInt(100, 1001) * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
-        int y = 100; // Start building from y=100
+        int y = 100;
 
         courseStartLocation = new Location(world, x, y, z);
 
+        calculateCheckpointPositions();
+        generateCourseDesign();
+
         preloadChunksAndThen(world, courseStartLocation, Math.max(courseLength, courseWidth) * 2, () -> {
             buildParkourCourse(world, courseStartLocation);
-            setupCheckpoints();
+            setupCheckpoints(world);
             teleportPlayersToStart();
+            giveUtilityItems(getPlayer1());
+            giveUtilityItems(getPlayer2());
             showInstructions();
             resetPlayerProgress();
             startCountdown();
         });
+    }
+
+    private void calculateCheckpointPositions() {
+        checkpointPositions.clear();
+
+        int segmentLength = courseLength / (totalCheckpoints - 1);
+
+        for (int i = 0; i < totalCheckpoints; i++) {
+            if (i == 0) {
+                checkpointPositions.add(0); // Start position
+            } else if (i == totalCheckpoints - 1) {
+                checkpointPositions.add(courseLength); // Finish line
+            } else {
+                checkpointPositions.add(i * segmentLength);
+            }
+        }
+    }
+
+    private void generateCourseDesign() {
+        courseSections.clear();
+
+        int prevSectionType = -1;
+        int currentZ = 3; // Start after platform
+        int currentY = 0;  // Relative height from start
+
+        while (currentZ < courseLength) {
+            // Randomize section length, but ensure it's reasonable
+            int sectionLength = 8 + ThreadLocalRandom.current().nextInt(8); // 8-15 blocks
+            int nextZ = Math.min(currentZ + sectionLength, courseLength);
+
+            // Avoid slime block sections too close to each other
+            int sectionType;
+            do {
+                sectionType = ThreadLocalRandom.current().nextInt(5); // 0-4 (removed ice slide section)
+            } while (sectionType == prevSectionType || (prevSectionType == 4 && sectionType == 4)); // Never repeat slime jumps
+
+            ParkourSection section = new ParkourSection(sectionType, currentZ, nextZ, currentY);
+            courseSections.add(section);
+
+            // Update height for next section
+            if (sectionType == 1) { // Stair climb
+                int steps = (nextZ - currentZ) / 2;
+                currentY += steps;
+            } else if (sectionType == 2) { // Downward path
+                int steps = (nextZ - currentZ) / 2;
+                currentY = Math.max(0, currentY - steps);
+            }
+
+            prevSectionType = sectionType;
+            currentZ = nextZ;
+        }
     }
 
     public void preloadChunksAndThen(World world, Location center, int radius, Runnable onLoaded) {
@@ -132,15 +254,11 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         int startX = startLocation.getBlockX();
         int startY = startLocation.getBlockY();
         int startZ = startLocation.getBlockZ();
+
         clearArea(world, startX, startY, startZ);
-
         buildStartingPlatform(world, startX, startY, startZ);
-
         buildDividingWall(world, startX, startY, startZ);
-
-        buildCourse(world, startX, startY, startZ, true);
-        buildCourse(world, startX, startY, startZ, false);
-
+        buildCoursesFromDesign(world, startX, startY, startZ);
         buildFinishLine(world, startX, startY, startZ);
     }
 
@@ -155,12 +273,14 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     }
 
     private void buildStartingPlatform(World world, int startX, int startY, int startZ) {
+        // Player 1 side - left
         for (int x = -courseWidth; x <= -1; x++) {
             for (int z = -1; z <= 2; z++) {
                 world.getBlockAt(startX + x, startY, startZ + z).setType(Material.QUARTZ_BLOCK);
             }
         }
 
+        // Player 2 side - right
         for (int x = 1; x <= courseWidth; x++) {
             for (int z = -1; z <= 2; z++) {
                 world.getBlockAt(startX + x, startY, startZ + z).setType(Material.QUARTZ_BLOCK);
@@ -176,168 +296,285 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         }
     }
 
-    private void buildCourse(World world, int startX, int startY, int startZ, boolean isPlayer1) {
-        int sideMultiplier = isPlayer1 ? -1 : 1;
+    private void buildCoursesFromDesign(World world, int startX, int startY, int startZ) {
+        // Generate a seed for the course
+        long courseSeed = System.currentTimeMillis();
 
-        Map<Integer, Location> checkpoints = isPlayer1 ? player1Checkpoints : player2Checkpoints;
+        // Build course on both sides using the same seed
+        for (ParkourSection section : courseSections) {
+            buildSection(world, startX - (courseWidth / 2), startY, startZ, section, courseSeed);
+            buildSection(world, startX + (courseWidth / 2), startY, startZ, section, courseSeed);
+        }
+    }
 
-        Random random = new Random();
-        int currentZ = 3;
-        int currentY = startY;
+    private void buildSection(World world, int centerX, int baseY, int startZ, ParkourSection section, long seed) {
+        int sectionStartZ = startZ + section.startZ;
+        int sectionEndZ = startZ + section.endZ;
+        int sectionY = baseY + section.heightOffset;
 
-        checkpoints.put(0, new Location(world,
-                startX + (sideMultiplier * (courseWidth / 2)),
-                startY + 1,
-                startZ + 1));
+        switch (section.type) {
+            case 0: // Jumping blocks
+                buildJumpingBlocksSection(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                break;
+            case 1: // Stair climb
+                buildStairClimbSection(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                break;
+            case 2: // Downward path
+                buildDownwardPathSection(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                break;
+            case 3: // Single block jumps
+                buildSingleBlockJumpsSection(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                break;
+            case 4: // Slime jumps
+                buildSlimeJumpsSection(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                break;
+        }
+    }
 
-        int segmentLength = courseLength / (totalCheckpoints - 1);
+    private void buildJumpingBlocksSection(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
+        Random random = new Random(seed + startZ * 31);
+        int[] xOffsets = {0, 1, -1, 0, 2, 1, 0, -1, -2};
 
-        while (currentZ < courseLength) {
-            int element = random.nextInt(6);
-            int nextZ = Math.min(currentZ + random.nextInt(5) + 3, courseLength);
+        int lastX = centerX;
+        int lastZ = startZ;
 
-            switch (element) {
-                case 0:
-                    buildJumpingBlocks(world, startX, currentY, startZ, currentZ, nextZ, sideMultiplier);
-                    break;
-                case 1:
-                    currentY = buildStairClimb(world, startX, currentY, startZ, currentZ, nextZ, sideMultiplier);
-                    break;
-                case 2:
-                    currentY = buildDownwardPath(world, startX, currentY, startZ, currentZ, nextZ, sideMultiplier);
-                    break;
-                case 3:
-                    buildSingleBlockJumps(world, startX, currentY, startZ, currentZ, nextZ, sideMultiplier);
-                    break;
-                case 4:
-                    buildSlimeJumps(world, startX, currentY, startZ, currentZ, nextZ, sideMultiplier);
-                    break;
-                case 5:
-                    buildIceSlide(world, startX, currentY, startZ, currentZ, nextZ, sideMultiplier);
-                    break;
+        for (int z = startZ; z < endZ; z += 2) {
+            int xOffset = xOffsets[random.nextInt(xOffsets.length)];
+            int blockX = centerX + xOffset;
+
+            // Ensure jumps are never more than MAX_JUMP_DISTANCE blocks apart
+            double distance = Math.sqrt(Math.pow(blockX - lastX, 2) + Math.pow(z - lastZ, 2));
+            if (distance > MAX_JUMP_DISTANCE) {
+                // Place an intermediary block if the jump is too far
+                int midZ = (z + lastZ) / 2;
+                world.getBlockAt(lastX, y, baseZ + midZ).setType(Material.OAK_PLANKS);
             }
 
-            int checkpointIndex = (currentZ / segmentLength) + 1;
-            if (checkpointIndex < totalCheckpoints && currentZ >= checkpointIndex * segmentLength - 2) {
-                int checkpointX = startX + (sideMultiplier * (random.nextInt(courseWidth - 2) + 1));
-                world.getBlockAt(checkpointX, currentY, startZ + nextZ - 1).setType(Material.EMERALD_BLOCK);
+            world.getBlockAt(blockX, y, baseZ + z).setType(Material.OAK_PLANKS);
 
-                checkpoints.put(checkpointIndex, new Location(world,
-                        checkpointX,
-                        currentY + 1,
-                        startZ + nextZ - 1));
+            lastX = blockX;
+            lastZ = z;
+        }
+    }
+
+    private void buildStairClimbSection(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
+        Random random = new Random(seed + startZ * 31);
+        int[] xOffsets = {0, 1, -1, 2, 0, -2, 1};
+
+        int currentY = y;
+        int lastX = centerX;
+        int lastZ = startZ;
+
+        for (int z = startZ; z < endZ; z += 2) {
+            int xOffset = xOffsets[random.nextInt(xOffsets.length)];
+            int blockX = centerX + xOffset;
+
+            currentY++;
+
+            // Ensure jumps are never more than MAX_JUMP_DISTANCE blocks apart
+            double distance = Math.sqrt(Math.pow(blockX - lastX, 2) + Math.pow(z - lastZ, 2) + Math.pow(1, 2));
+            if (distance > MAX_JUMP_DISTANCE) {
+                // Place an intermediary block if the jump is too far
+                int midZ = (z + lastZ) / 2;
+                int midY = (currentY + (currentY - 1)) / 2;
+                world.getBlockAt(lastX, midY, baseZ + midZ).setType(Material.STONE_BRICKS);
             }
 
-            currentZ = nextZ;
+            world.getBlockAt(blockX, currentY, baseZ + z).setType(Material.STONE_BRICKS);
+
+            lastX = blockX;
+            lastZ = z;
         }
     }
 
-    private void buildJumpingBlocks(World world, int startX, int currentY, int startZ, int startZOffset, int endZOffset, int sideMultiplier) {
-        Random random = new Random();
-        int lastX = startX + (sideMultiplier * (random.nextInt(courseWidth - 2) + 1));
+    private void buildDownwardPathSection(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
+        if (y <= 3) return; // Don't go too low
 
-        for (int z = startZOffset; z < endZOffset; z += 2) {
-            int nextX = startX + (sideMultiplier * (random.nextInt(courseWidth - 2) + 1));
-            world.getBlockAt(nextX, currentY, startZ + z).setType(Material.OAK_PLANKS);
+        Random random = new Random(seed + startZ * 31);
+        int[] xOffsets = {0, 1, -1, 2, 0, -2, 1};
 
-            lastX = nextX;
-        }
-    }
+        int currentY = y;
+        int lastX = centerX;
+        int lastZ = startZ;
 
-    private int buildStairClimb(World world, int startX, int currentY, int startZ, int startZOffset, int endZOffset, int sideMultiplier) {
-        Random random = new Random();
-        int newY = currentY;
+        for (int z = startZ; z < endZ; z += 2) {
+            int xOffset = xOffsets[random.nextInt(xOffsets.length)];
+            int blockX = centerX + xOffset;
 
-        for (int z = startZOffset; z < endZOffset; z++) {
-            if (z % 2 == 0) {
-                newY++;
-                int x = startX + (sideMultiplier * (random.nextInt(courseWidth - 2) + 1));
-                world.getBlockAt(x, newY, startZ + z).setType(Material.STONE_BRICKS);
+            currentY = Math.max(0, currentY - 1);
+
+            // Ensure jumps are never more than MAX_JUMP_DISTANCE blocks apart
+            double distance = Math.sqrt(Math.pow(blockX - lastX, 2) + Math.pow(z - lastZ, 2) + Math.pow(1, 2));
+            if (distance > MAX_JUMP_DISTANCE) {
+                // Place an intermediary block if the jump is too far
+                int midZ = (z + lastZ) / 2;
+                int midY = (currentY + (currentY + 1)) / 2;
+                world.getBlockAt(lastX, midY, baseZ + midZ).setType(Material.PRISMARINE_BRICKS);
             }
-        }
 
-        return newY;
+            world.getBlockAt(blockX, currentY, baseZ + z).setType(Material.PRISMARINE_BRICKS);
+
+            lastX = blockX;
+            lastZ = z;
+        }
     }
 
-    private int buildDownwardPath(World world, int startX, int currentY, int startZ, int startZOffset, int endZOffset, int sideMultiplier) {
-        if (currentY <= startZ + 3) {
-            return currentY;
-        }
+    private void buildSingleBlockJumpsSection(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
+        Random random = new Random(seed + startZ * 31);
+        int[] xOffsets = {0, 1, -1, 2, 0, -2, 1};
 
-        Random random = new Random();
-        int newY = currentY;
+        int lastX = centerX;
+        int lastZ = startZ;
 
-        for (int z = startZOffset; z < endZOffset; z++) {
-            if (z % 2 == 0) {
-                newY--;
-                int x = startX + (sideMultiplier * (random.nextInt(courseWidth - 2) + 1));
-                world.getBlockAt(x, newY, startZ + z).setType(Material.PRISMARINE_BRICKS);
+        for (int z = startZ; z < endZ; z += 3) {
+            int xOffset = xOffsets[random.nextInt(xOffsets.length)];
+            int blockX = centerX + xOffset;
+
+            // Ensure jumps are never more than MAX_JUMP_DISTANCE blocks apart
+            double distance = Math.sqrt(Math.pow(blockX - lastX, 2) + Math.pow(z - lastZ, 2));
+            if (distance > MAX_JUMP_DISTANCE) {
+                // Place an intermediary block if the jump is too far
+                int midZ = (z + lastZ) / 2;
+                world.getBlockAt((lastX + blockX) / 2, y, baseZ + midZ).setType(Material.BIRCH_PLANKS);
             }
-        }
 
-        return newY;
-    }
+            world.getBlockAt(blockX, y, baseZ + z).setType(Material.BIRCH_PLANKS);
 
-    private void buildSingleBlockJumps(World world, int startX, int currentY, int startZ, int startZOffset, int endZOffset, int sideMultiplier) {
-        Random random = new Random();
-
-        for (int z = startZOffset; z < endZOffset; z += 3) {
-            int x = startX + (sideMultiplier * (random.nextInt(courseWidth - 2) + 1));
-            world.getBlockAt(x, currentY, startZ + z).setType(Material.BIRCH_PLANKS);
+            lastX = blockX;
+            lastZ = z;
         }
     }
 
-    private void buildSlimeJumps(World world, int startX, int currentY, int startZ, int startZOffset, int endZOffset, int sideMultiplier) {
-        Random random = new Random();
+    private void buildSlimeJumpsSection(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
+        Random random = new Random(seed + startZ * 31);
+        int[] xOffsets = {0, 1, -1, 0, 2};
 
-        for (int z = startZOffset; z < endZOffset; z += 4) {
-            int x = startX + (sideMultiplier * (random.nextInt(courseWidth - 2) + 1));
-            world.getBlockAt(x, currentY, startZ + z).setType(Material.SLIME_BLOCK);
+        int lastX = centerX;
+        int lastZ = startZ;
+
+        // Place a regular block at the start to give players a chance to prepare
+        world.getBlockAt(centerX, y, baseZ + startZ).setType(Material.OAK_PLANKS);
+
+        // Then place slime blocks with extra space between them
+        for (int z = startZ + 5; z < endZ; z += 6) {
+            int xOffset = xOffsets[random.nextInt(xOffsets.length)];
+            int blockX = centerX + xOffset;
+
+            // Ensure jumps are never more than MAX_JUMP_DISTANCE blocks apart
+            // For slime blocks, we allow slightly larger jumps due to bounce
+            double distance = Math.sqrt(Math.pow(blockX - lastX, 2) + Math.pow(z - lastZ, 2));
+            if (distance > MAX_JUMP_DISTANCE + 2) {
+                // Place an intermediary block if the jump is too far
+                int midZ = (z + lastZ) / 2;
+                world.getBlockAt((lastX + blockX) / 2, y, baseZ + midZ).setType(Material.OAK_PLANKS);
+            }
+
+            world.getBlockAt(blockX, y, baseZ + z).setType(Material.SLIME_BLOCK);
+
+            lastX = blockX;
+            lastZ = z;
         }
-    }
 
-    private void buildIceSlide(World world, int startX, int currentY, int startZ, int startZOffset, int endZOffset, int sideMultiplier) {
-        int x = startX + (sideMultiplier * (courseWidth / 2));
-
-        for (int z = startZOffset; z < endZOffset; z++) {
-            world.getBlockAt(x, currentY, startZ + z).setType(Material.BLUE_ICE);
-
-            world.getBlockAt(x + sideMultiplier, currentY, startZ + z).setType(Material.SPRUCE_FENCE);
-            world.getBlockAt(x + (2 * sideMultiplier), currentY, startZ + z).setType(Material.SPRUCE_FENCE);
-        }
+        // Place a regular block at the end to help transition to next section
+        world.getBlockAt(lastX, y, baseZ + endZ - 1).setType(Material.OAK_PLANKS);
     }
 
     private void buildFinishLine(World world, int startX, int startY, int startZ) {
+        // Left side finish platform
         for (int x = -courseWidth; x <= -1; x++) {
             for (int z = courseLength; z <= courseLength + 3; z++) {
                 world.getBlockAt(startX + x, startY, startZ + z).setType(Material.GOLD_BLOCK);
             }
         }
 
+        // Right side finish platform
         for (int x = 1; x <= courseWidth; x++) {
             for (int z = courseLength; z <= courseLength + 3; z++) {
                 world.getBlockAt(startX + x, startY, startZ + z).setType(Material.GOLD_BLOCK);
             }
         }
 
+        // Victory decorations
         for (int x = -courseWidth; x <= courseWidth; x++) {
-            if (x == 0) continue;
+            if (x == 0) continue; // Skip the dividing wall
             world.getBlockAt(startX + x, startY + 3, startZ + courseLength + 2).setType(Material.GLOWSTONE);
         }
-
-        player1Checkpoints.put(totalCheckpoints - 1, new Location(world,
-                startX - (courseWidth / 2),
-                startY + 1,
-                startZ + courseLength + 1));
-
-        player2Checkpoints.put(totalCheckpoints - 1, new Location(world,
-                startX + (courseWidth / 2),
-                startY + 1,
-                startZ + courseLength + 1));
     }
 
-    private void setupCheckpoints() {
-        // Checkpoints are already set up during the course generation
+    private void setupCheckpoints(World world) {
+        int startX = courseStartLocation.getBlockX();
+        int startY = courseStartLocation.getBlockY();
+        int startZ = courseStartLocation.getBlockZ();
+
+        // Set start checkpoints (checkpoint 0)
+        player1Checkpoints.put(0, new Location(
+                world,
+                startX - (courseWidth / 2),
+                startY + 1,
+                startZ + 1
+        ));
+
+        player2Checkpoints.put(0, new Location(
+                world,
+                startX + (courseWidth / 2),
+                startY + 1,
+                startZ + 1
+        ));
+
+        // Set finish line checkpoints (last checkpoint)
+        player1Checkpoints.put(totalCheckpoints - 1, new Location(
+                world,
+                startX - (courseWidth / 2),
+                startY + 1,
+                startZ + courseLength + 1
+        ));
+
+        player2Checkpoints.put(totalCheckpoints - 1, new Location(
+                world,
+                startX + (courseWidth / 2),
+                startY + 1,
+                startZ + courseLength + 1
+        ));
+
+        // Set intermediate checkpoints
+        for (int i = 1; i < totalCheckpoints - 1; i++) {
+            int checkpointZ = checkpointPositions.get(i);
+
+            // Find the height at this position by checking the course sections
+            int checkpointY = getHeightAtPosition(checkpointZ);
+
+            // Make sure there's a block under the checkpoint (fix for teleport issues)
+            world.getBlockAt(startX - (courseWidth / 2), startY + checkpointY, startZ + checkpointZ).setType(Material.EMERALD_BLOCK);
+            world.getBlockAt(startX + (courseWidth / 2), startY + checkpointY, startZ + checkpointZ).setType(Material.EMERALD_BLOCK);
+
+            // Make checkpoint blocks 2 blocks long for easier hitting
+            world.getBlockAt(startX - (courseWidth / 2), startY + checkpointY, startZ + checkpointZ + 1).setType(Material.EMERALD_BLOCK);
+            world.getBlockAt(startX + (courseWidth / 2), startY + checkpointY, startZ + checkpointZ + 1).setType(Material.EMERALD_BLOCK);
+
+            // Record checkpoint locations (1 block above the emerald blocks)
+            player1Checkpoints.put(i, new Location(
+                    world,
+                    startX - (courseWidth / 2),
+                    startY + checkpointY + 1,
+                    startZ + checkpointZ
+            ));
+
+            player2Checkpoints.put(i, new Location(
+                    world,
+                    startX + (courseWidth / 2),
+                    startY + checkpointY + 1,
+                    startZ + checkpointZ
+            ));
+        }
+    }
+
+    private int getHeightAtPosition(int z) {
+        for (ParkourSection section : courseSections) {
+            if (z >= section.startZ && z <= section.endZ) {
+                return section.heightOffset;
+            }
+        }
+        return 0;
     }
 
     private void teleportPlayersToStart() {
@@ -377,11 +614,14 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         MessageUtil.sendMessage(player1, "&7• Hit each &aEmerald Checkpoint &7to track your progress");
         MessageUtil.sendMessage(player2, "&7• Hit each &aEmerald Checkpoint &7to track your progress");
 
+        MessageUtil.sendMessage(player1, "&7• Use the &aEnder Pearl &7to return to your last checkpoint");
+        MessageUtil.sendMessage(player2, "&7• Use the &aEnder Pearl &7to return to your last checkpoint");
+
+        MessageUtil.sendMessage(player1, "&7• Use the &cBarrier &7to forfeit if you're stuck");
+        MessageUtil.sendMessage(player2, "&7• Use the &cBarrier &7to forfeit if you're stuck");
+
         MessageUtil.sendMessage(player1, "&7• Reach the &6Gold Finish Line &7first to win!");
         MessageUtil.sendMessage(player2, "&7• Reach the &6Gold Finish Line &7first to win!");
-
-        MessageUtil.sendMessage(player1, "&7• If you fall, you'll be teleported to your last checkpoint");
-        MessageUtil.sendMessage(player2, "&7• If you fall, you'll be teleported to your last checkpoint");
 
         MessageUtil.sendMessage(player1, header);
         MessageUtil.sendMessage(player2, header);
@@ -431,8 +671,50 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
 
         Player player = event.getPlayer();
         if (!isParticipant(player)) return;
+
         handleCheckpoints(player);
         handleFalling(player);
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!gameActive) return;
+
+        Player player = event.getPlayer();
+        if (!isParticipant(player)) return;
+
+        // Only handle right clicks with items
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+
+        ItemStack item = event.getItem();
+        if (item == null) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        String displayName = meta.getDisplayName();
+
+        if (displayName.equals(CHECKPOINT_ITEM_NAME)) {
+            event.setCancelled(true);
+            teleportToLastCheckpoint(player);
+        } else if (displayName.equals(FORFEIT_ITEM_NAME)) {
+            event.setCancelled(true);
+            handleForfeit(player);
+        }
+    }
+
+    private void handleForfeit(Player player) {
+        UUID playerUUID = player.getUniqueId();
+        UUID opponentUUID = playerUUID.equals(player1UUID) ? player2UUID : player1UUID;
+
+        Player opponent = Bukkit.getPlayer(opponentUUID);
+
+        if (opponent != null) {
+            MessageUtil.sendMessage(player, "&cYou have forfeited the race!");
+            MessageUtil.sendMessage(opponent, "&aYour opponent has forfeited the race! You win!");
+
+            endGame(opponentUUID);
+        }
     }
 
     private void handleCheckpoints(Player player) {
@@ -442,10 +724,12 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         Block blockBelow = player.getLocation().subtract(0, 1, 0).getBlock();
 
         if (blockBelow.getType() == Material.EMERALD_BLOCK) {
+            // Check all checkpoints (except finish line)
             for (int i = 1; i < totalCheckpoints - 1; i++) {
-                if (checkpoints.containsKey(i) &&
-                        isBlockAt(blockBelow, checkpoints.get(i).subtract(0, 1, 0))) {
+                Location checkpointLoc = checkpoints.get(i);
 
+                // Check if the emerald block is at this checkpoint position (or one block ahead)
+                if (isBlockNearCheckpoint(blockBelow, checkpointLoc.clone().subtract(0, 1, 0))) {
                     if (i > currentCheckpoint) {
                         playerCheckpoints.put(playerUUID, i);
                         MessageUtil.sendMessage(player, "&aCheckpoint " + i + " reached!");
@@ -455,17 +739,37 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
                 }
             }
         }
+
         if (blockBelow.getType() == Material.GOLD_BLOCK) {
-            if (currentCheckpoint >= totalCheckpoints - 2) {
+            if (hasAllCheckpoints(playerUUID)) {
                 handleFinish(player);
+            } else {
+                MessageUtil.sendMessage(player, "&cYou must hit all checkpoints before finishing!");
             }
         }
     }
 
-    private boolean isBlockAt(Block block, Location location) {
-        return block.getX() == location.getBlockX() &&
-                block.getY() == location.getBlockY() &&
-                block.getZ() == location.getBlockZ();
+    private boolean hasAllCheckpoints(UUID playerUUID) {
+        int playerCheckpoint = playerCheckpoints.getOrDefault(playerUUID, 0);
+        return playerCheckpoint >= totalCheckpoints - 2;
+    }
+
+    private boolean isBlockNearCheckpoint(Block block, Location checkpointLoc) {
+        // Check the exact position
+        if (block.getX() == checkpointLoc.getBlockX() &&
+                block.getY() == checkpointLoc.getBlockY() &&
+                block.getZ() == checkpointLoc.getBlockZ()) {
+            return true;
+        }
+
+        // Also check one block ahead (for 2-block wide checkpoints)
+        if (block.getX() == checkpointLoc.getBlockX() &&
+                block.getY() == checkpointLoc.getBlockY() &&
+                block.getZ() == checkpointLoc.getBlockZ() + 1) {
+            return true;
+        }
+
+        return false;
     }
 
     private void handleFalling(Player player) {
@@ -477,7 +781,6 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     private void teleportToLastCheckpoint(Player player) {
         UUID playerUUID = player.getUniqueId();
         int checkpoint = playerCheckpoints.getOrDefault(playerUUID, 0);
-
         Map<Integer, Location> checkpoints = playerUUID.equals(player1UUID) ? player1Checkpoints : player2Checkpoints;
 
         if (checkpoints.containsKey(checkpoint)) {
@@ -492,17 +795,27 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
 
     private void handleFinish(Player player) {
         UUID playerUUID = player.getUniqueId();
+
+        // Check if player already finished
         if (playerCompletionTimes.containsKey(playerUUID)) {
             return;
         }
+
+        // Record completion time
         long finishTime = System.currentTimeMillis();
         long startTime = playerStartTimes.getOrDefault(playerUUID, finishTime);
         long completionTime = finishTime - startTime;
         playerCompletionTimes.put(playerUUID, completionTime);
+
+        // Show finish message
         String timeString = formatTime(completionTime);
         MessageUtil.sendMessage(player, "&6You finished the parkour in " + timeString + "!");
+
+        // Visual and sound effects
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
         createFinishFireworks(player.getLocation());
+
+        // Check if this ends the race
         checkRaceEnd();
     }
 
@@ -517,7 +830,8 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         World world = location.getWorld();
         if (world == null) return;
 
-        world.spawnParticle(Particle.ELECTRIC_SPARK, location.add(0, 1, 0), 50, 1, 1, 1, 0.1);
+        world.spawnParticle(Particle.TOTEM_OF_UNDYING, location.add(0, 1, 0), 50, 1, 1, 1, 0.3);
+        world.spawnParticle(Particle.FLAME, location, 30, 0.5, 0.5, 0.5, 0.05);
     }
 
     private void checkRaceEnd() {
@@ -525,6 +839,7 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         boolean player2Finished = playerCompletionTimes.containsKey(player2UUID);
 
         if (player1Finished && player2Finished) {
+            // Both players finished - compare times
             long player1Time = playerCompletionTimes.get(player1UUID);
             long player2Time = playerCompletionTimes.get(player2UUID);
 
@@ -536,6 +851,7 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
             return;
         }
 
+        // If only one player finished, start timeout for the other
         if (player1Finished && !player2Finished) {
             startFinishTimeout(player2UUID);
         } else if (player2Finished && !player1Finished) {
@@ -554,16 +870,20 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
                     return;
                 }
 
+                // Cancel timeout if player finished during countdown
                 if (playerCompletionTimes.containsKey(playerUUID)) {
                     this.cancel();
+                    checkRaceEnd(); // Re-check in case both finished now
                     return;
                 }
 
                 Player player = Bukkit.getPlayer(playerUUID);
 
+                // Time's up
                 if (countdown <= 0) {
                     this.cancel();
 
+                    // Determine winner (the player who did finish)
                     UUID winnerUUID = playerUUID.equals(player1UUID) ? player2UUID : player1UUID;
                     endGame(winnerUUID);
 
@@ -573,6 +893,7 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
                     return;
                 }
 
+                // Countdown warnings
                 if (countdown <= 5 || countdown == 10 || countdown == 20) {
                     if (player != null) {
                         MessageUtil.sendMessage(player, "&eYour opponent already finished! You have " + countdown + " seconds left.");
@@ -598,35 +919,51 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         Player player2 = getPlayer2();
         Player winner = Bukkit.getPlayer(winnerUUID);
 
+        // Call parent method to handle the game ending logic
         super.endGame(winnerUUID);
 
+        // Display result messages
         if (player1 != null && player2 != null && winner != null) {
-            MessageUtil.sendMessage(player1, "&6Parkour Mini-Game has ended! Winner: " + winner.getName());
-            MessageUtil.sendMessage(player2, "&6Parkour Mini-Game has ended! Winner: " + winner.getName());
+            // Main win announcement
+            String winnerName = winner.getName();
+            MessageUtil.sendMessage(player1, "&6Parkour Race has ended! &aWinner: &e" + winnerName);
+            MessageUtil.sendMessage(player2, "&6Parkour Race has ended! &aWinner: &e" + winnerName);
 
+            // Show completion times if available
             if (playerCompletionTimes.containsKey(player1UUID)) {
                 String timeStr = formatTime(playerCompletionTimes.get(player1UUID));
-                MessageUtil.sendMessage(player1, "&eYour time: " + timeStr);
-                MessageUtil.sendMessage(player2, "&ePlayer 1's time: " + timeStr);
+                MessageUtil.sendMessage(player1, "&eYour time: &b" + timeStr);
+                MessageUtil.sendMessage(player2, "&ePlayer 1's time: &b" + timeStr);
+            } else {
+                MessageUtil.sendMessage(player1, "&eYou did not finish the course.");
+                MessageUtil.sendMessage(player2, "&ePlayer 1 did not finish the course.");
             }
 
             if (playerCompletionTimes.containsKey(player2UUID)) {
                 String timeStr = formatTime(playerCompletionTimes.get(player2UUID));
-                MessageUtil.sendMessage(player1, "&ePlayer 2's time: " + timeStr);
-                MessageUtil.sendMessage(player2, "&eYour time: " + timeStr);
+                MessageUtil.sendMessage(player1, "&ePlayer 2's time: &b" + timeStr);
+                MessageUtil.sendMessage(player2, "&eYour time: &b" + timeStr);
+            } else {
+                MessageUtil.sendMessage(player1, "&ePlayer 2 did not finish the course.");
+                MessageUtil.sendMessage(player2, "&eYou did not finish the course.");
             }
 
             // Play sounds
             winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
 
             Player loser = winner.equals(player1) ? player2 : player1;
-            loser.playSound(loser.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            if (loser != null) {
+                loser.playSound(loser.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            }
         }
 
+        // Cleanup and return players
         teleportToSafeLocation();
         restorePlayerInventories();
 
+        // Unregister events
         PlayerMoveEvent.getHandlerList().unregister(this);
+        PlayerInteractEvent.getHandlerList().unregister(this);
     }
 
     private void teleportToSafeLocation() {
