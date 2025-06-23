@@ -2,12 +2,13 @@ package be.thespattt.ngnl.minigame;
 
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.util.MessageUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.block.Block;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.UUID;
@@ -15,7 +16,7 @@ import java.util.UUID;
 /**
  * Base class for all mini-games
  */
-public abstract class MiniGameBase {
+public abstract class MiniGameBase implements Listener {
 
     protected final NoGameNoLife plugin;
     protected final UUID player1UUID;
@@ -61,6 +62,17 @@ public abstract class MiniGameBase {
             MessageUtil.logError("Failed to create game room for " + miniGameType.name());
             endGame(false, player1WonPvP ? player1UUID : player2UUID);
             return;
+        }
+
+        // Set GameMode.ADVENTURE for both players
+        Player player1 = getPlayer1();
+        Player player2 = getPlayer2();
+
+        if (player1 != null) {
+            player1.setGameMode(GameMode.ADVENTURE);
+        }
+        if (player2 != null) {
+            player2.setGameMode(GameMode.ADVENTURE);
         }
 
         // Set up timeout task (2 minutes)
@@ -203,17 +215,36 @@ public abstract class MiniGameBase {
 
         isActive = false;
 
-        // Cancel timeout task
         if (timeoutTask != null) {
             timeoutTask.cancel();
             timeoutTask = null;
         }
 
-        // Get the game ID
         String gameId = player1UUID.toString() + "-" + player2UUID.toString();
-
-        // End the game in the engine
+        HandlerList.unregisterAll(this);
         plugin.getMiniGameEngine().endMiniGame(gameId, winnerUUID);
+    }
+
+    @EventHandler
+    public void onGlobalPlayerDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player) || !(event.getEntity() instanceof Player)) {
+            return;
+        }
+
+        Player damager = (Player) event.getDamager();
+        Player victim = (Player) event.getEntity();
+
+        if (isInAnyMinigame(damager) || isInAnyMinigame(victim)) {
+            if (getMiniGameType() == MiniGameType.SUMO) {
+                return;
+            }
+            event.setCancelled(true);
+        }
+    }
+
+    private boolean isInAnyMinigame(Player player) {
+        // Logic to check if player is in any minigame
+        return player.getUniqueId().equals(player1UUID) || player.getUniqueId().equals(player2UUID);
     }
 
     /**
@@ -251,7 +282,6 @@ public abstract class MiniGameBase {
             MessageUtil.sendMessage(loser, "&cThe game has timed out. You lose by default!");
         }
 
-        // End the game
         endGame(winnerUUID);
     }
 

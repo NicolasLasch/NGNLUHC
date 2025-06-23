@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -24,6 +25,7 @@ public class TNTRunMiniGame extends MiniGameBase implements Listener {
     private Location arenaCenter;
     private int arenaSize = 15;
     private int arenaLayers = 3;
+    private BukkitTask blockRemovalTask; // Task for continuous block removal
 
     public TNTRunMiniGame(NoGameNoLife plugin, UUID player1UUID, UUID player2UUID, boolean player1WonPvP) {
         super(plugin, player1UUID, player2UUID, MiniGameType.TNT_RUN, player1WonPvP);
@@ -33,6 +35,17 @@ public class TNTRunMiniGame extends MiniGameBase implements Listener {
     protected void onGameStart() {
         Bukkit.getPluginManager().registerEvents(this, plugin);
         storePlayerInventories();
+
+        Player player1 = getPlayer1();
+        Player player2 = getPlayer2();
+
+        if (player1 != null) {
+            player1.setGameMode(GameMode.ADVENTURE);
+        }
+        if (player2 != null) {
+            player2.setGameMode(GameMode.ADVENTURE);
+        }
+
         setupTNTRunArena();
     }
 
@@ -188,10 +201,36 @@ public class TNTRunMiniGame extends MiniGameBase implements Listener {
                     MessageUtil.sendMessage(player1, "&aGO! Keep running and don't fall down!");
                     MessageUtil.sendMessage(player2, "&aGO! Keep running and don't fall down!");
                     gameActive = true;
+                    startBlockRemovalTask(); // Start the block removal task when the game begins
                     this.cancel();
                 }
             }
         }.runTaskTimer(plugin, 0L, 20L);
+    }
+
+    // New method to start continuous block removal task
+    private void startBlockRemovalTask() {
+        blockRemovalTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!gameActive) {
+                    this.cancel();
+                    return;
+                }
+
+                Player player1 = getPlayer1();
+                Player player2 = getPlayer2();
+                if (player1 != null && player1.isOnline()) {
+                    if (checkFallIntoWater(player1)) return;
+                    scheduleBlockRemoval(player1);
+                }
+
+                if (player2 != null && player2.isOnline()) {
+                    if (checkFallIntoWater(player2)) return;
+                    scheduleBlockRemoval(player2);
+                }
+            }
+        }.runTaskTimer(plugin, 1L, 1L);
     }
 
     @EventHandler
@@ -201,9 +240,9 @@ public class TNTRunMiniGame extends MiniGameBase implements Listener {
         Player player = event.getPlayer();
         if (!isParticipant(player)) return;
 
-        if (hasChangedBlock(event) && checkFallIntoWater(player)) return;
-
-        scheduleBlockRemoval(player);
+        // We only need to check for falling into water here
+        // The block removal is now handled by the repeating task
+        checkFallIntoWater(player);
     }
 
     private boolean hasChangedBlock(PlayerMoveEvent event) {
@@ -224,7 +263,7 @@ public class TNTRunMiniGame extends MiniGameBase implements Listener {
         Location blockLoc = player.getLocation().clone().subtract(0, 1, 0);
         Block blockBelow = blockLoc.getBlock();
 
-        if (removedBlocks.contains(blockLoc) || (blockBelow.getType() != Material.PURPLE_WOOL)) {
+        if (removedBlocks.contains(blockLoc) || blockBelow.getType() != Material.PURPLE_WOOL) {
             return;
         }
 
@@ -249,10 +288,16 @@ public class TNTRunMiniGame extends MiniGameBase implements Listener {
             endGame(winnerUUID);
         }
     }
-
     @Override
     public void endGame(UUID winnerUUID) {
         gameActive = false;
+
+        // Cancel the block removal task
+        if (blockRemovalTask != null) {
+            blockRemovalTask.cancel();
+            blockRemovalTask = null;
+        }
+
         super.endGame(winnerUUID);
 
         Player player1 = getPlayer1();

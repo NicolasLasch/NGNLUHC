@@ -1,72 +1,68 @@
-[16:13:01] [ServerMain/INFO]: [bootstrap] Running Java 21 (OpenJDK 64-Bit Server VM 21.0.4+7-LTS; Eclipse Adoptium Temurin-21.0.4+7) on Mac OS X 14.5 (aarch64)
-[16:13:01] [ServerMain/INFO]: [bootstrap] Loading Purpur 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) for Minecraft 1.21.4
-[16:13:04] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
-[16:13:04] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar'...
-[16:13:06] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar' in 1646ms.
-[16:13:06] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
-[16:13:06] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
- - NoGameNoLifeUHC (1.0.0)
-[16:13:12] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
-[16:13:15] [ServerMain/INFO]: Loaded 1370 recipes
-[16:13:15] [ServerMain/INFO]: Loaded 1481 advancements
-[16:13:15] [ServerMain/INFO]: [MCTypeRegistry] Initialising converters for DataConverter...
-[16:13:16] [ServerMain/INFO]: [MCTypeRegistry] Finished initialising converters for DataConverter in 746,2ms
-[16:13:16] [Server thread/INFO]: Starting minecraft server version 1.21.4
-[16:13:16] [Server thread/INFO]: Loading properties
-[16:13:16] [Server thread/INFO]: This server is running Purpur version 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) (Implementing API version 1.21.4-R0.1-SNAPSHOT)
-[16:13:16] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
-[16:13:16] [Server thread/INFO]: Using 4 threads for Netty based IO
-[16:13:16] [Server thread/INFO]: Server Ping Player Sample Count: 12
-[16:13:18] [Server thread/INFO]: [MoonriseCommon] Paper is using 2 worker threads, 1 I/O threads
-[16:13:18] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using population gen parallelism: true
-[16:13:18] [Server thread/INFO]: Default game type: SURVIVAL
-[16:13:18] [Server thread/INFO]: Generating keypair
-[16:13:18] [Server thread/INFO]: Starting Minecraft server on *:25565
-[16:13:18] [Server thread/INFO]: Using default channel type
-[16:13:18] [Server thread/INFO]: Paper: Using libdeflate (macOS ARM64 / Apple Silicon) compression from Velocity.
-[16:13:18] [Server thread/INFO]: Paper: Using native (macOS ARM64 / Apple Silicon) cipher from Velocity.
-[16:13:18] [Server thread/INFO]: [NoGameNoLifeUHC] Loading server plugin NoGameNoLifeUHC v1.0.0
-[16:13:18] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
-[16:13:18] [Server thread/INFO]: Preparing level "world"
-[16:13:19] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
-[16:13:19] [Server thread/INFO]: Preparing spawn area: 0%
-[16:13:21] [Server thread/INFO]: Preparing spawn area: 59%
-[16:13:21] [Server thread/INFO]: Preparing spawn area: 59%
-[16:13:21] [Server thread/INFO]: Preparing spawn area: 59%
-[16:13:21] [Server thread/INFO]: Time elapsed: 1641 ms
-[16:13:21] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
-[16:13:21] [Server thread/INFO]: Preparing spawn area: 0%
-[16:13:21] [Server thread/INFO]: Time elapsed: 135 ms
-[16:13:21] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
-[16:13:21] [Server thread/INFO]: Preparing spawn area: 0%
-[16:13:21] [Server thread/INFO]: Time elapsed: 70 ms
-[16:13:21] [Server thread/INFO]: [NoGameNoLifeUHC] Enabling NoGameNoLifeUHC v1.0.0
-[16:13:21] [Server thread/INFO]: [NoGameNoLifeUHC] All commands registered
-[16:13:21] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration loaded successfully
-[16:13:21] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations loaded
-[16:13:21] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 7 factions
-[16:13:21] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 29 roles
-[16:13:21] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 15 mini-games
-[16:13:22] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 13 special items
-[16:13:22] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_waiting
-[16:13:22] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_waiting
-[16:13:22] [Server thread/INFO]: Preparing spawn area: 0%
-[16:13:22] [Server thread/INFO]: Time elapsed: 101 ms
-[16:13:22] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_mining
-[16:13:22] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_mining
-[16:13:22] [Server thread/INFO]: Preparing spawn area: 0%
-[16:13:23] [Server thread/INFO]: Time elapsed: 458 ms
-[16:13:34] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_arena
-[16:13:34] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_arena
-[16:13:34] [Server thread/INFO]: Preparing spawn area: 0%
-[16:13:34] [Server thread/INFO]: Time elapsed: 32 ms
-[16:13:34] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_minigame
-[16:13:34] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_minigame
-[16:13:34] [Server thread/INFO]: Preparing spawn area: 0%
-[16:13:34] [Server thread/INFO]: Time elapsed: 32 ms
-[16:13:34] [Server thread/INFO]: [NoGameNoLifeUHC] Worlds initialized
-[16:13:34] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been enabled!
-[16:13:34] [Server thread/INFO]: [spark] Starting background profiler...
-[16:13:36] [Server thread/INFO]: Done preparing level "world" (17.381s)
-[16:13:36] [Server thread/INFO]: Running delayed init tasks
-[16:13:36] [Server thread/INFO]: Done (44.964s)! For help, type "help"
+[10:34:43] [Server thread/INFO]: Stopping server
+[10:34:43] [Server thread/INFO]: [NoGameNoLifeUHC] Disabling NoGameNoLifeUHC v1.0.0
+[10:34:44] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration saved successfully
+[10:34:44] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations saved
+[10:34:44] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been disabled!
+[10:34:44] [Server thread/INFO]: Saving players
+[10:34:44] [Server thread/INFO]: Saving worlds
+[10:34:44] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
+[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
+[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
+[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 7 entity chunks, 0 poi chunks in world 'world' in 0,13s
+[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'world'
+[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'world'
+[10:34:45] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_nether]'/minecraft:the_nether
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_nether'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_nether'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_nether'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 1 entity chunks, 0 poi chunks in world 'world_nether' in 0,05s
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'world_nether'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'world_nether'
+[10:34:45] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_the_end]'/minecraft:the_end
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_the_end'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_the_end'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_the_end'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 10 entity chunks, 0 poi chunks in world 'world_the_end' in 0,03s
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'world_the_end'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'world_the_end'
+[10:34:45] [Server thread/INFO]: Saving chunks for level 'ServerLevel[ngnl_waiting]'/minecraft:ngnl_waiting
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'ngnl_waiting'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'ngnl_waiting'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'ngnl_waiting'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 0 entity chunks, 0 poi chunks in world 'ngnl_waiting' in 0,01s
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'ngnl_waiting'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'ngnl_waiting'
+[10:34:45] [Server thread/INFO]: Saving chunks for level 'ServerLevel[ngnl_mining]'/minecraft:ngnl_mining
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'ngnl_mining'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'ngnl_mining'
+[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'ngnl_mining'
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Saved 597 block chunks, 4 entity chunks, 2 poi chunks in world 'ngnl_mining' in 1,80s
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'ngnl_mining'
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'ngnl_mining'
+[10:34:47] [Server thread/INFO]: Saving chunks for level 'ServerLevel[ngnl_arena]'/minecraft:ngnl_arena
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'ngnl_arena'
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'ngnl_arena'
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'ngnl_arena'
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Saved 323 block chunks, 0 entity chunks, 0 poi chunks in world 'ngnl_arena' in 0,20s
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'ngnl_arena'
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'ngnl_arena'
+[10:34:47] [Server thread/INFO]: Saving chunks for level 'ServerLevel[ngnl_minigame]'/minecraft:ngnl_minigame
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'ngnl_minigame'
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'ngnl_minigame'
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'ngnl_minigame'
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 0 entity chunks, 0 poi chunks in world 'ngnl_minigame' in 0,01s
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'ngnl_minigame'
+[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'ngnl_minigame'
+[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (ngnl_waiting): All chunks are saved
+[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (ngnl_mining): All chunks are saved
+[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (ngnl_arena): All chunks are saved
+[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (ngnl_minigame): All chunks are saved
+[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[10:34:47] [Server thread/INFO]: Waiting for I/O tasks to complete...
+[10:34:47] [Server thread/INFO]: All I/O tasks to complete
+[10:34:47] [Server thread/INFO]: [MoonriseCommon] Awaiting termination of worker pool for up to 60s...
+[10:34:47] [Server thread/INFO]: [MoonriseCommon] Awaiting termination of I/O pool for up to 60s...

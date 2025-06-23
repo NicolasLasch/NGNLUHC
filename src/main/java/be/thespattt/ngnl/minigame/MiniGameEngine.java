@@ -86,10 +86,14 @@ public class MiniGameEngine {
             case PARKOUR:
                 miniGame = new ParkourMiniGame(plugin, killerId, victimId, killerWonPvP);
                 break;
-            // Add more cases for additional minigames
+            case SUMO:
+                miniGame = new SumoMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
+            case MEMORY_GAME:
+                miniGame = new MemoryMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
             default:
-                // Fallback to a default game if type not recognized
-                miniGame = new SpleefMiniGame(plugin, killerId, victimId, killerWonPvP);
+                miniGame = new ChessMiniGame(plugin, killerId, victimId, killerWonPvP);
                 break;
         }
 
@@ -296,7 +300,6 @@ public class MiniGameEngine {
         NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
         if (ngnlPlayer == null) return;
 
-        // Choisir le monde en fonction de la phase
         World world = Bukkit.getWorld("ngnl_waiting");
         GameState gameState = plugin.getGameManager().getGameState();
         if (gameState == GameState.MINING_PHASE) {
@@ -321,7 +324,7 @@ public class MiniGameEngine {
 
         // Définir le bon mode de jeu
         if (plugin.getGameManager().isPlayerAlive(playerId)) {
-            player.setGameMode(GameMode.SURVIVAL);
+            player.setGameMode(GameMode.SURVIVAL); // GM0
         } else {
             player.setGameMode(GameMode.SPECTATOR);
         }

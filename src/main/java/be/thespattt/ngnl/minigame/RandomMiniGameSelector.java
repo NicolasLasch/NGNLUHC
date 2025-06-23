@@ -26,6 +26,7 @@ public class RandomMiniGameSelector implements Listener {
     private final Map<UUID, MiniGameType> selectedGames = new HashMap<>();
     private final Map<UUID, Boolean> canReroll = new HashMap<>();
     private final Map<UUID, Integer> animationTasks = new HashMap<>();
+    private final Set<UUID> inTeleport = new HashSet<>();
 
     private static final int GUI_SIZE = 27;
     private static final int REROLL_SLOT = 0;
@@ -42,14 +43,29 @@ public class RandomMiniGameSelector implements Listener {
         UUID killerUUID = killer.getUniqueId();
         playerSelections.put(killerUUID, victim.getUniqueId());
         canReroll.put(killerUUID, true);
+        inTeleport.add(killerUUID);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (killer.isOnline()) {
+                    Inventory gui = Bukkit.createInventory(null, GUI_SIZE, ChatColor.DARK_PURPLE + "Random Mini-Game Selector");
+                    fillBackground(gui);
+                    gui.setItem(REROLL_SLOT, createRerollButton(true));
+                    gui.setItem(START_SLOT, createStartButton(false));
 
-        Inventory gui = Bukkit.createInventory(null, GUI_SIZE, ChatColor.DARK_PURPLE + "Random Mini-Game Selector");
-        fillBackground(gui);
-        gui.setItem(REROLL_SLOT, createRerollButton(true));
-        gui.setItem(START_SLOT, createStartButton(false));
+                    killer.openInventory(gui);
+                    startRouletteAnimation(killer, gui);
 
-        killer.openInventory(gui);
-        startRouletteAnimation(killer, gui);
+                    // Remove from teleport tracking after GUI is opened
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            inTeleport.remove(killerUUID);
+                        }
+                    }.runTaskLater(plugin, 5);
+                }
+            }
+        }.runTaskLater(plugin, 10); // Wait half a second after teleport
     }
 
     private void fillBackground(Inventory gui) {
@@ -379,6 +395,9 @@ public class RandomMiniGameSelector implements Listener {
 
         MiniGameType selectedGame = selectedGames.get(playerUUID);
         cancelExistingAnimation(playerUUID);
+
+        // Mark as intentional close to avoid the reopen logic
+        inTeleport.add(playerUUID);
         player.closeInventory();
 
         boolean success = plugin.getMiniGameEngine().startGame(selectedGame, player, victim);
@@ -389,6 +408,7 @@ public class RandomMiniGameSelector implements Listener {
             MessageUtil.sendMessage(victim, "&aStarting mini-game: &e" + selectedGame.getDisplayName());
         } else {
             MessageUtil.sendMessage(player, "&cFailed to start the mini-game!");
+            inTeleport.remove(playerUUID);
         }
     }
 
@@ -399,12 +419,14 @@ public class RandomMiniGameSelector implements Listener {
         Player player = (Player) event.getPlayer();
         UUID playerUUID = player.getUniqueId();
 
-        if (event.getView().getTitle().contains("Random Mini-Game Selector")) {
-            if (animationTasks.containsKey(playerUUID)) {
-                handleAnimationCancellation(player, playerUUID);
-            } else if (selectedGames.containsKey(playerUUID)) {
-                reopenSelectionGui(player, playerUUID);
-            }
+        if (!event.getView().getTitle().contains("Random Mini-Game Selector") || inTeleport.contains(playerUUID)) {
+            return;
+        }
+
+        if (animationTasks.containsKey(playerUUID)) {
+            handleAnimationCancellation(player, playerUUID);
+        } else if (selectedGames.containsKey(playerUUID)) {
+            reopenSelectionGui(player, playerUUID);
         }
     }
 
@@ -446,6 +468,7 @@ public class RandomMiniGameSelector implements Listener {
         playerSelections.remove(playerUUID);
         selectedGames.remove(playerUUID);
         canReroll.remove(playerUUID);
+        inTeleport.remove(playerUUID);
 
         cancelExistingAnimation(playerUUID);
     }
@@ -459,5 +482,6 @@ public class RandomMiniGameSelector implements Listener {
         selectedGames.clear();
         canReroll.clear();
         animationTasks.clear();
+        inTeleport.clear();
     }
 }
