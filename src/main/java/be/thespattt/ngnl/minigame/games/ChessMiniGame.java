@@ -30,9 +30,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-/**
- * Chess minigame with a GUI interface - Modified for 6x8 board
- */
+// Working
+// TODO : Add rock & Check carefule
 public class ChessMiniGame extends MiniGameBase implements Listener {
 
     // Game state

@@ -16,6 +16,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+// Working
 public class BlockPartyMiniGame extends MiniGameBase implements Listener {
     private boolean gameActive = false;
     private final Map<UUID, ItemStack[]> playerInventories = new HashMap<>();

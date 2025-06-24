@@ -21,6 +21,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+// Working
+// TODO : Find a suitable arena for the splegg
 public class SpleggMiniGame extends MiniGameBase implements Listener {
     private boolean gameActive = false;
     private final Map<UUID, ItemStack[]> playerInventories = new HashMap<>();

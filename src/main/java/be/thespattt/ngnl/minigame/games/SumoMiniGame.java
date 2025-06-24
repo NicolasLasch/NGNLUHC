@@ -22,6 +22,8 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+// Working
+// TODO : Fix some arena for not overflowing water + walls
 public class SumoMiniGame extends MiniGameBase implements Listener {
     private int player1Score = 0;
     private int player2Score = 0;

@@ -15,9 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Class representing a rock-paper-scissors game between two players
- */
+// Working
+// TODO : Add a GUI to select between the 3 and have a real "game" instead of using chat
 public class RockPaperScissorsGame implements PlayerGameChecker {
     private final NoGameNoLife plugin;
     private final Player player1;

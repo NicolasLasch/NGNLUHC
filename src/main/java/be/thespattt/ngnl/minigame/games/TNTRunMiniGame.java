@@ -17,6 +17,8 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+// Working
+// TODO : Fix bloc removed radius and arena (remove overflowing water)
 public class TNTRunMiniGame extends MiniGameBase implements Listener {
     private boolean gameActive = false;
     private final Map<UUID, ItemStack[]> playerInventories = new HashMap<>();

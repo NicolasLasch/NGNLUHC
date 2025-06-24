@@ -92,6 +92,12 @@ public class MiniGameEngine {
             case MEMORY_GAME:
                 miniGame = new MemoryMiniGame(plugin, killerId, victimId, killerWonPvP);
                 break;
+            case FLOOR_IS_LAVA:
+                miniGame = new FloorIsLavaMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
+            case ANVIL_RAIN:
+                miniGame = new AnvilRainMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
             default:
                 miniGame = new ChessMiniGame(plugin, killerId, victimId, killerWonPvP);
                 break;

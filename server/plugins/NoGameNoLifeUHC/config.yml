@@ -6,13 +6,13 @@
 # Game settings
 game:
   # Length of episodes in minutes
-  episode_length: 20
+  episode_length: 1
   
   # Number of players remaining to trigger arena phase
-  arena_player_threshold: 8
+  arena_player_threshold: 2
   
   # Minimum number of players required to start the game
-  minimum_players: 4
+  minimum_players: 2
   
   # Whether roles should be assigned randomly
   # If false, roles will be assigned from the roles.yml file
@@ -29,7 +29,7 @@ game:
   # Random location will be announced between 50-80 minutes
   aka_si_anse_appear_time: 60
   pvp_enable_episode: 2
-  pvp-enabled-time: 20
+  pvp-enabled-time: 0
   natural-regen: false
 
 # World settings
@@ -60,7 +60,7 @@ minigames:
   
   # List of enabled mini-games
   enabled:
-    SPEED_BEDWARS: true
+    SPEED_BEDWARS: false
     SPLEEF: true
     TNT_RUN: true
     PARKOUR: true
@@ -71,10 +71,10 @@ minigames:
     DES_A_COUDRE: true
     ANVIL_RAIN: true
     WORD_CHAIN_BATTLE: true
-    LOGICAL_DEDUCTION: true
+    LOGICAL_DEDUCTION: false
     MENTAL_CHESS: true
     MEMORY_GAME: true
-    MATERIALIZATION_SHIRITORI: true
+    MATERIALIZATION_SHIRITORI: false
 
 # Scoreboard settings
 scoreboard:
@@ -130,8 +130,8 @@ mini-games:
   winner-health-loss: 3.5
   loser-health-loss: 5.0
   rematch-chance: 0.1
-  random-start: true
-  reroll-allowed: true
+  random-start: false
+  reroll-allowed: false
   book-reward: true
 arena:
   size: 300
@@ -147,33 +147,33 @@ roles:
   enabled:
     nonna: true
     artosh: true
-    stephanie: true
-    fiel: true
+    stephanie: false
+    fiel: false
     holou: true
-    kurami: true
-    feel: true
+    kurami: false
+    feel: false
     ghost: true
-    riku: true
-    izuna: true
+    riku: false
+    izuna: false
     teto: true
     einzig: true
-    chlammy: true
+    chlammy: false
     plum: true
     okein: true
     corone: true
     think: true
     jibril: true
     azriel: true
-    schwi: true
-    ku: true
-    ino: true
+    schwi: false
+    ku: false
+    ino: false
     ivan: true
     kainas: true
     miko: true
-    shiro: true
-    shi: true
-    makoto: true
-    sora: true
+    shiro: false
+    shi: false
+    makoto: false
+    sora: false
 factions:
   bonuses-enabled: true
   reveal-on-death: true

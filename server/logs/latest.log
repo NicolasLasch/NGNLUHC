@@ -1,68 +1,23 @@
-[10:34:43] [Server thread/INFO]: Stopping server
-[10:34:43] [Server thread/INFO]: [NoGameNoLifeUHC] Disabling NoGameNoLifeUHC v1.0.0
-[10:34:44] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration saved successfully
-[10:34:44] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations saved
-[10:34:44] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been disabled!
-[10:34:44] [Server thread/INFO]: Saving players
-[10:34:44] [Server thread/INFO]: Saving worlds
-[10:34:44] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
-[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world'
-[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world'
-[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world'
-[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 7 entity chunks, 0 poi chunks in world 'world' in 0,13s
-[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'world'
-[10:34:44] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'world'
-[10:34:45] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_nether]'/minecraft:the_nether
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_nether'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_nether'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_nether'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 1 entity chunks, 0 poi chunks in world 'world_nether' in 0,05s
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'world_nether'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'world_nether'
-[10:34:45] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world_the_end]'/minecraft:the_end
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'world_the_end'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'world_the_end'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'world_the_end'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 10 entity chunks, 0 poi chunks in world 'world_the_end' in 0,03s
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'world_the_end'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'world_the_end'
-[10:34:45] [Server thread/INFO]: Saving chunks for level 'ServerLevel[ngnl_waiting]'/minecraft:ngnl_waiting
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'ngnl_waiting'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'ngnl_waiting'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'ngnl_waiting'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 0 entity chunks, 0 poi chunks in world 'ngnl_waiting' in 0,01s
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'ngnl_waiting'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'ngnl_waiting'
-[10:34:45] [Server thread/INFO]: Saving chunks for level 'ServerLevel[ngnl_mining]'/minecraft:ngnl_mining
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'ngnl_mining'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'ngnl_mining'
-[10:34:45] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'ngnl_mining'
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Saved 597 block chunks, 4 entity chunks, 2 poi chunks in world 'ngnl_mining' in 1,80s
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'ngnl_mining'
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'ngnl_mining'
-[10:34:47] [Server thread/INFO]: Saving chunks for level 'ServerLevel[ngnl_arena]'/minecraft:ngnl_arena
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'ngnl_arena'
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'ngnl_arena'
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'ngnl_arena'
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Saved 323 block chunks, 0 entity chunks, 0 poi chunks in world 'ngnl_arena' in 0,20s
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'ngnl_arena'
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'ngnl_arena'
-[10:34:47] [Server thread/INFO]: Saving chunks for level 'ServerLevel[ngnl_minigame]'/minecraft:ngnl_minigame
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'ngnl_minigame'
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Halted chunk system for world 'ngnl_minigame'
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Saving all chunkholders for world 'ngnl_minigame'
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Saved 0 block chunks, 0 entity chunks, 0 poi chunks in world 'ngnl_minigame' in 0,01s
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'ngnl_minigame'
-[10:34:47] [Server thread/INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'ngnl_minigame'
-[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
-[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (ngnl_waiting): All chunks are saved
-[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (ngnl_mining): All chunks are saved
-[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (ngnl_arena): All chunks are saved
-[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage (ngnl_minigame): All chunks are saved
-[10:34:47] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
-[10:34:47] [Server thread/INFO]: Waiting for I/O tasks to complete...
-[10:34:47] [Server thread/INFO]: All I/O tasks to complete
-[10:34:47] [Server thread/INFO]: [MoonriseCommon] Awaiting termination of worker pool for up to 60s...
-[10:34:47] [Server thread/INFO]: [MoonriseCommon] Awaiting termination of I/O pool for up to 60s...
+[00:00:05] [Server thread/INFO]: [NGNL]       Episode 7 has started!      
+[00:00:49] [Server thread/INFO]: Dev2 lost connection: Disconnected
+[00:00:49] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration saved successfully
+[00:00:49] [Server thread/INFO]: [NoGameNoLifeUHC] Game configuration saved
+[00:00:49] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration loaded successfully
+[00:00:49] [Server thread/INFO]: [NoGameNoLifeUHC] Game configuration reloaded
+[00:00:49] [Server thread/INFO]: Dev2 left the game
+[00:00:53] [Server thread/INFO]: Dev lost connection: Disconnected
+[00:00:53] [Server thread/INFO]: Dev left the game
+[00:01:05] [Server thread/INFO]: [NGNL]       Episode 8 has started!      
+[00:02:05] [Server thread/INFO]: [NGNL]       Episode 9 has started!      
+[00:02:17] [Server thread/INFO]: Stopping server
+[00:02:17] [Server thread/INFO]: [NoGameNoLifeUHC] Disabling NoGameNoLifeUHC v1.0.0
+[00:02:17] [Server thread/INFO]: [NGNL]                     
+[00:02:17] [Server thread/INFO]: [NGNL] The game has been forcefully ended by an administrator.
+[00:02:17] [Server thread/INFO]: [NGNL] Players and Roles:
+[00:02:17] [Server thread/INFO]: [NGNL] ✔ Unknown (Einzig)
+[00:02:17] [Server thread/INFO]: [NGNL] ✔ Unknown (Holou)
+[00:02:17] [Server thread/INFO]: [NGNL]                     
+[00:02:17] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration saved successfully
+[00:02:17] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations saved
+[00:02:17] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been disabled!
+[00:02:17] [Server thread/INFO]: Saving players

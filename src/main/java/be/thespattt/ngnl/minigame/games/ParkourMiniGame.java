@@ -23,6 +23,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+// Working
+// TODO : Fix some weird obstacles and add more
 public class ParkourMiniGame extends MiniGameBase implements Listener {
     private boolean gameActive = false;
     private final Map<UUID, ItemStack[]> playerInventories = new HashMap<>();
@@ -36,7 +38,6 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     private final int courseWidth = 5;
     private final int courseHeight = 20;
     private final int totalCheckpoints = 5;
-    private final int MAX_JUMP_DISTANCE = 4;
 
     private final Map<Integer, Location> player1Checkpoints = new HashMap<>();
     private final Map<Integer, Location> player2Checkpoints = new HashMap<>();
@@ -47,10 +48,6 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     private final List<Integer> checkpointPositions = new ArrayList<>();
     private final List<ParkourSection> courseSections = new ArrayList<>();
 
-    private static final int NUM_OBSTACLE_MODULES = 10;
-    private final List<Integer> availableObstacles = new ArrayList<>();
-
-    // Define obstacle module IDs as constants for clarity
     private static final int SIMPLE_JUMPS = 0;
     private static final int CLIMBING_WALL = 1;
     private static final int SLIME_BOUNCE = 2;
@@ -58,31 +55,24 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     private static final int ICE_PATH = 4;
     private static final int FENCE_JUMPS = 5;
     private static final int WATER_SWIM = 6;
-    private static final int NETHER_PORTAL = 7;
-    private static final int LADDER_CLIMB = 8;
-    private static final int DROPPER = 9;
+    private static final int LADDER_CLIMB = 7;
 
     public class ParkourSection {
         int type;
         int startZ;
         int endZ;
-        int heightOffset;
+        int baseY;
 
-        public ParkourSection(int type, int startZ, int endZ, int heightOffset) {
+        public ParkourSection(int type, int startZ, int endZ, int baseY) {
             this.type = type;
             this.startZ = startZ;
             this.endZ = endZ;
-            this.heightOffset = heightOffset;
+            this.baseY = baseY;
         }
     }
 
     public ParkourMiniGame(NoGameNoLife plugin, UUID player1UUID, UUID player2UUID, boolean player1WonPvP) {
         super(plugin, player1UUID, player2UUID, MiniGameType.PARKOUR, player1WonPvP);
-        if (availableObstacles.isEmpty()) {
-            for (int i = 0; i < NUM_OBSTACLE_MODULES; i++) {
-                availableObstacles.add(i);
-            }
-        }
     }
 
     @Override
@@ -173,17 +163,12 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         World world = getOrCreateMinigameWorld();
         if (world == null) return;
 
-        int x = ThreadLocalRandom.current().nextInt(100, 1001) * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
-        int z = ThreadLocalRandom.current().nextInt(100, 1001) * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
-        int y = 100;
-
-        courseStartLocation = new Location(world, x, y, z);
-
+        generateCourseLocation();
         calculateCheckpointPositions();
         generateCourseDesign();
 
         preloadChunksAndThen(world, courseStartLocation, Math.max(courseLength, courseWidth) * 2, () -> {
-            buildParkourCourse(world, courseStartLocation);
+            buildParkourCourse(world);
             setupCheckpoints(world);
             teleportPlayersToStart();
             giveUtilityItems(getPlayer1());
@@ -194,16 +179,23 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         });
     }
 
+    private void generateCourseLocation() {
+        World world = getOrCreateMinigameWorld();
+        int x = ThreadLocalRandom.current().nextInt(100, 1001) * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
+        int z = ThreadLocalRandom.current().nextInt(100, 1001) * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
+        int y = 100;
+        courseStartLocation = new Location(world, x, y, z);
+    }
+
     private void calculateCheckpointPositions() {
         checkpointPositions.clear();
-
         int segmentLength = courseLength / (totalCheckpoints - 1);
 
         for (int i = 0; i < totalCheckpoints; i++) {
             if (i == 0) {
-                checkpointPositions.add(0); // Start position
+                checkpointPositions.add(0);
             } else if (i == totalCheckpoints - 1) {
-                checkpointPositions.add(courseLength); // Finish line
+                checkpointPositions.add(courseLength);
             } else {
                 checkpointPositions.add(i * segmentLength);
             }
@@ -212,44 +204,29 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
 
     private void generateCourseDesign() {
         courseSections.clear();
+        Random random = new Random();
 
-        if (availableObstacles.isEmpty()) {
-            for (int i = 0; i < NUM_OBSTACLE_MODULES; i++) {
-                availableObstacles.add(i);
-            }
+        int sectionsPerCheckpoint = 3;
+        int totalSections = (totalCheckpoints - 1) * sectionsPerCheckpoint;
+
+        for (int i = 0; i < totalSections; i++) {
+            int checkpointIndex = i / sectionsPerCheckpoint;
+            int sectionInCheckpoint = i % sectionsPerCheckpoint;
+
+            int checkpointStart = checkpointPositions.get(checkpointIndex);
+            int checkpointEnd = checkpointPositions.get(checkpointIndex + 1);
+            int sectionLength = (checkpointEnd - checkpointStart) / sectionsPerCheckpoint;
+
+            int sectionStart = checkpointStart + (sectionInCheckpoint * sectionLength);
+            int sectionEnd = (sectionInCheckpoint == sectionsPerCheckpoint - 1) ?
+                    checkpointEnd : sectionStart + sectionLength;
+
+            int obstacleType = random.nextInt(8);
+            int baseY = courseStartLocation.getBlockY();
+
+            ParkourSection section = new ParkourSection(obstacleType, sectionStart, sectionEnd, baseY);
+            courseSections.add(section);
         }
-
-        Collections.shuffle(availableObstacles);
-
-        int currentZ = 3;
-        int currentY = 0;
-        int obstacleIndex = 0;
-
-        for (int i = 0; i < totalCheckpoints - 1; i++) {
-            int checkpointStart = i == 0 ? 3 : checkpointPositions.get(i);
-            int checkpointEnd = checkpointPositions.get(i + 1);
-            int sectionLength = (checkpointEnd - checkpointStart) / 3;
-
-            for (int j = 0; j < 3; j++) {
-                int obstacleType = availableObstacles.get(obstacleIndex % NUM_OBSTACLE_MODULES);
-                obstacleIndex++;
-
-                int sectionStart = checkpointStart + (j * sectionLength);
-                int sectionEnd = (j == 2) ? checkpointEnd : sectionStart + sectionLength;
-
-                ParkourSection section = new ParkourSection(
-                        obstacleType,
-                        sectionStart,
-                        sectionEnd,
-                        currentY
-                );
-
-                courseSections.add(section);
-                System.out.println("Added obstacle: " + obstacleType + " from Z:" + sectionStart + " to Z:" + sectionEnd);
-            }
-        }
-
-        System.out.println("Generated " + courseSections.size() + " obstacle sections");
     }
 
     public void preloadChunksAndThen(World world, Location center, int radius, Runnable onLoaded) {
@@ -278,18 +255,11 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         return chunksToLoad;
     }
 
-    private void buildParkourCourse(World world, Location startLocation) {
-        int startX = startLocation.getBlockX();
-        int startY = startLocation.getBlockY();
-        int startZ = startLocation.getBlockZ();
-        System.out.println("Building Parkour Course...");
+    private void buildParkourCourse(World world) {
+        int startX = courseStartLocation.getBlockX();
+        int startY = courseStartLocation.getBlockY();
+        int startZ = courseStartLocation.getBlockZ();
 
-        if (availableObstacles.isEmpty()) {
-            for (int i = 0; i < NUM_OBSTACLE_MODULES; i++) {
-                availableObstacles.add(i);
-            }
-            System.out.println("Initialized available obstacles: " + availableObstacles);
-        }
         clearArea(world, startX, startY, startZ);
         buildStartingPlatform(world, startX, startY, startZ);
         buildDividingWall(world, startX, startY, startZ);
@@ -298,9 +268,9 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     }
 
     private void clearArea(World world, int startX, int startY, int startZ) {
-        for (int x = -courseWidth - 1; x <= courseWidth * 2 + 1; x++) {
-            for (int z = -1; z <= courseLength + 1; z++) {
-                for (int y = -10; y <= courseHeight + 5; y++) {
+        for (int x = -courseWidth - 5; x <= courseWidth * 2 + 5; x++) {
+            for (int z = -5; z <= courseLength + 5; z++) {
+                for (int y = -15; y <= courseHeight + 5; y++) {
                     world.getBlockAt(startX + x, startY + y, startZ + z).setType(Material.AIR);
                 }
             }
@@ -308,14 +278,12 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     }
 
     private void buildStartingPlatform(World world, int startX, int startY, int startZ) {
-        // Player 1 side - left
         for (int x = -courseWidth; x <= -1; x++) {
             for (int z = -1; z <= 2; z++) {
                 world.getBlockAt(startX + x, startY, startZ + z).setType(Material.QUARTZ_BLOCK);
             }
         }
 
-        // Player 2 side - right
         for (int x = 1; x <= courseWidth; x++) {
             for (int z = -1; z <= 2; z++) {
                 world.getBlockAt(startX + x, startY, startZ + z).setType(Material.QUARTZ_BLOCK);
@@ -332,119 +300,87 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     }
 
     private void buildCoursesFromDesign(World world, int startX, int startY, int startZ) {
-        long courseSeed = System.currentTimeMillis();
+        int leftCenterX = startX - (courseWidth / 2);
+        int rightCenterX = startX + (courseWidth / 2);
 
-        System.out.println("Building course with " + courseSections.size() + " sections");
         for (ParkourSection section : courseSections) {
-            System.out.println("Building section type " + section.type + " from Z:" + section.startZ + " to Z:" + section.endZ);
-            buildSection(world, startX - (courseWidth / 2), startY, startZ, section, courseSeed);
-            buildSection(world, startX + (courseWidth / 2), startY, startZ, section, courseSeed);
+            buildObstacleSection(world, leftCenterX, startY, startZ, section);
+            buildObstacleSection(world, rightCenterX, startY, startZ, section);
         }
     }
 
-    private void buildSection(World world, int centerX, int baseY, int startZ, ParkourSection section, long seed) {
-        int sectionStartZ = startZ + section.startZ;
-        int sectionEndZ = startZ + section.endZ;
-        int sectionY = baseY + section.heightOffset;
-
+    private void buildObstacleSection(World world, int centerX, int baseY, int baseZ, ParkourSection section) {
         switch (section.type) {
             case SIMPLE_JUMPS:
-                buildSimpleJumpsObstacle(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                buildSimpleJumps(world, centerX, baseY, baseZ, section);
                 break;
             case CLIMBING_WALL:
-                buildClimbingWallObstacle(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                buildClimbingWall(world, centerX, baseY, baseZ, section);
                 break;
             case SLIME_BOUNCE:
-                buildSlimeBounceObstacle(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                buildSlimeBounce(world, centerX, baseY, baseZ, section);
                 break;
             case LAVA_PARKOUR:
-                buildLavaParkourObstacle(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                buildLavaParkour(world, centerX, baseY, baseZ, section);
                 break;
             case ICE_PATH:
-                buildIcePathObstacle(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                buildIcePath(world, centerX, baseY, baseZ, section);
                 break;
             case FENCE_JUMPS:
-                buildFenceJumpsObstacle(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                buildFenceJumps(world, centerX, baseY, baseZ, section);
                 break;
             case WATER_SWIM:
-                buildWaterSwimObstacle(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
-                break;
-            case NETHER_PORTAL:
-                buildNetherPortalJumpObstacle(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                buildWaterSwim(world, centerX, baseY, baseZ, section);
                 break;
             case LADDER_CLIMB:
-                buildLadderClimbObstacle(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
-                break;
-            case DROPPER:
-                buildDropperObstacle(world, centerX, sectionY, startZ, sectionStartZ, sectionEndZ, seed);
+                buildLadderClimb(world, centerX, baseY, baseZ, section);
                 break;
         }
     }
 
-    private void buildSimpleJumpsObstacle(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
-        Random random = new Random(seed + startZ * 31);
-        int[] xOffsets = {0, 1, -1, 0, 0};
+    private void buildSimpleJumps(World world, int centerX, int y, int baseZ, ParkourSection section) {
+        Random random = new Random();
+        int[] xOffsets = {-1, 0, 1};
 
-        world.getBlockAt(centerX, y, baseZ + startZ).setType(Material.OAK_PLANKS);
-        for (int z = startZ + 2; z < endZ; z += 2 + random.nextInt(2)) {
+        for (int z = section.startZ; z < section.endZ; z += 2 + random.nextInt(2)) {
             int xOffset = xOffsets[random.nextInt(xOffsets.length)];
             world.getBlockAt(centerX + xOffset, y, baseZ + z).setType(Material.OAK_PLANKS);
         }
 
-        world.getBlockAt(centerX, y, baseZ + endZ - 1).setType(Material.OAK_PLANKS);
-        System.out.println("Built Simple Jumps from " + startZ + " to " + endZ);
+        world.getBlockAt(centerX, y, baseZ + section.endZ - 1).setType(Material.OAK_PLANKS);
     }
 
-    private void buildClimbingWallObstacle(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
-        world.getBlockAt(centerX, y, baseZ + startZ).setType(Material.STONE_BRICKS);
+    private void buildClimbingWall(World world, int centerX, int y, int baseZ, ParkourSection section) {
+        int wallZ = section.startZ + 2;
 
-        for (int z = startZ + 1; z < startZ + 3; z++) {
-            for (int yOffset = 0; yOffset < 5; yOffset++) {
-                world.getBlockAt(centerX, y + yOffset, baseZ + z).setType(Material.STONE_BRICKS);
-            }
+        for (int yOffset = 0; yOffset <= 5; yOffset++) {
+            world.getBlockAt(centerX, y + yOffset, baseZ + wallZ).setType(Material.STONE_BRICKS);
         }
 
-        Random random = new Random(seed + startZ * 31);
-        for (int i = 0; i < 10; i++) {
-            int wallZ = startZ + 1 + random.nextInt(2);
-            int wallY = y + random.nextInt(5);
-
+        Random random = new Random();
+        for (int i = 0; i < 8; i++) {
+            int wallY = y + 1 + random.nextInt(4);
             Block buttonBlock = world.getBlockAt(centerX, wallY, baseZ + wallZ);
             buttonBlock.setType(Material.STONE_BUTTON);
-            org.bukkit.block.data.Directional buttonData = (org.bukkit.block.data.Directional) buttonBlock.getBlockData();
-            buttonData.setFacing(BlockFace.NORTH);
-            buttonBlock.setBlockData(buttonData);
         }
 
-        world.getBlockAt(centerX, y + 5, baseZ + startZ + 3).setType(Material.STONE_BRICKS);
-        for (int z = startZ + 4; z < endZ; z++) {
-            world.getBlockAt(centerX, y + 5, baseZ + z).setType(Material.STONE_BRICKS);
-        }
-        System.out.println("Built Climbing Wall from " + startZ + " to " + endZ);
+        world.getBlockAt(centerX, y + 5, baseZ + section.endZ - 1).setType(Material.STONE_BRICKS);
     }
 
-    private void buildSlimeBounceObstacle(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
-        world.getBlockAt(centerX, y, baseZ + startZ).setType(Material.OAK_PLANKS);
+    private void buildSlimeBounce(World world, int centerX, int y, int baseZ, ParkourSection section) {
+        world.getBlockAt(centerX, y, baseZ + section.startZ).setType(Material.SLIME_BLOCK);
 
-        Random random = new Random(seed + startZ * 31);
-        int[] heights = {4, 5, 6, 5, 4};
-        int heightIndex = 0;
+        int midZ = section.startZ + (section.endZ - section.startZ) / 2;
+        world.getBlockAt(centerX, y, baseZ + midZ).setType(Material.SLIME_BLOCK);
+        world.getBlockAt(centerX, y + 4, baseZ + midZ + 2).setType(Material.GOLD_BLOCK);
 
-        for (int z = startZ + 3; z < endZ - 3; z += 3) {
-            world.getBlockAt(centerX, y, baseZ + z).setType(Material.SLIME_BLOCK);
-            int targetHeight = heights[heightIndex++ % heights.length];
-            world.getBlockAt(centerX, y + targetHeight, baseZ + z + 1).setType(Material.GOLD_BLOCK);
-            world.getBlockAt(centerX, y + targetHeight, baseZ + z + 2).setType(Material.GOLD_BLOCK);
-        }
-        world.getBlockAt(centerX, y, baseZ + endZ - 1).setType(Material.OAK_PLANKS);
-        System.out.println("Built Slime Bounce from " + startZ + " to " + endZ);
+        world.getBlockAt(centerX, y, baseZ + section.endZ - 1).setType(Material.OAK_PLANKS);
     }
 
-    private void buildLavaParkourObstacle(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
-        world.getBlockAt(centerX, y, baseZ + startZ).setType(Material.NETHERRACK);
-        for (int z = startZ + 1; z < endZ - 1; z++) {
-            for (int x = centerX - 2; x <= centerX + 2; x++) {
-                if (z == startZ + 1 || z == endZ - 2 || x == centerX - 2 || x == centerX + 2) {
+    private void buildLavaParkour(World world, int centerX, int y, int baseZ, ParkourSection section) {
+        for (int x = centerX - 2; x <= centerX + 2; x++) {
+            for (int z = section.startZ; z < section.endZ; z++) {
+                if (x == centerX - 2 || x == centerX + 2) {
                     world.getBlockAt(x, y - 1, baseZ + z).setType(Material.OBSIDIAN);
                 } else {
                     world.getBlockAt(x, y - 1, baseZ + z).setType(Material.LAVA);
@@ -452,52 +388,35 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
             }
         }
 
-        Random random = new Random(seed + startZ * 31);
-        for (int z = startZ + 3; z < endZ - 3; z += 2) {
-            int xOffset = random.nextInt(3) - 1; // -1, 0, or 1
+        Random random = new Random();
+        for (int z = section.startZ; z < section.endZ; z += 3) {
+            int xOffset = random.nextInt(3) - 1;
             world.getBlockAt(centerX + xOffset, y, baseZ + z).setType(Material.NETHERRACK);
         }
-
-        world.getBlockAt(centerX, y, baseZ + endZ - 1).setType(Material.NETHERRACK);
-        System.out.println("Built Lava Parkour from " + startZ + " to " + endZ);
     }
 
-    private void buildIcePathObstacle(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
-        world.getBlockAt(centerX, y, baseZ + startZ).setType(Material.PACKED_ICE);
-        for (int z = startZ + 1; z < endZ; z++) {
+    private void buildIcePath(World world, int centerX, int y, int baseZ, ParkourSection section) {
+        for (int z = section.startZ; z < section.endZ; z++) {
             world.getBlockAt(centerX, y, baseZ + z).setType(Material.BLUE_ICE);
             if (z % 3 != 0) {
                 world.getBlockAt(centerX - 1, y + 1, baseZ + z).setType(Material.SPRUCE_FENCE);
                 world.getBlockAt(centerX + 1, y + 1, baseZ + z).setType(Material.SPRUCE_FENCE);
             }
         }
-        world.getBlockAt(centerX, y, baseZ + endZ - 1).setType(Material.PACKED_ICE);
-        System.out.println("Built Ice Path from " + startZ + " to " + endZ);
     }
 
-    private void buildFenceJumpsObstacle(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
-        for (int z = startZ; z < endZ; z++) {
+    private void buildFenceJumps(World world, int centerX, int y, int baseZ, ParkourSection section) {
+        for (int z = section.startZ; z < section.endZ; z++) {
             world.getBlockAt(centerX, y, baseZ + z).setType(Material.OAK_PLANKS);
-            if ((z - startZ) % 3 == 0 && z > startZ && z < endZ - 1) {
+            if ((z - section.startZ) % 3 == 0 && z > section.startZ) {
                 world.getBlockAt(centerX, y + 1, baseZ + z).setType(Material.OAK_FENCE);
-                if ((z - startZ) % 6 == 0) {
-                    world.getBlockAt(centerX, y + 2, baseZ + z).setType(Material.OAK_FENCE);
-                }
             }
         }
-
-        // Debug
-        System.out.println("Built Fence Jumps from " + startZ + " to " + endZ);
     }
 
-    private void buildWaterSwimObstacle(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
-        // Start platform
-        world.getBlockAt(centerX, y, baseZ + startZ).setType(Material.PRISMARINE);
-
-        // Create a water channel
-        for (int z = startZ + 1; z < endZ - 1; z++) {
+    private void buildWaterSwim(World world, int centerX, int y, int baseZ, ParkourSection section) {
+        for (int z = section.startZ; z < section.endZ; z++) {
             for (int x = centerX - 1; x <= centerX + 1; x++) {
-                // Create prismarine borders
                 if (x == centerX - 1 || x == centerX + 1) {
                     world.getBlockAt(x, y - 1, baseZ + z).setType(Material.PRISMARINE);
                     world.getBlockAt(x, y, baseZ + z).setType(Material.PRISMARINE_WALL);
@@ -507,75 +426,17 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
                     world.getBlockAt(x, y + 1, baseZ + z).setType(Material.WATER);
                 }
             }
-
-            // Add some obstacles in the water like soul sand to slow down or magma to pull down
-            if ((z - startZ) % 4 == 0) {
-                world.getBlockAt(centerX, y - 1, baseZ + z).setType(Material.SOUL_SAND);
-            } else if ((z - startZ) % 4 == 2) {
-                world.getBlockAt(centerX, y - 1, baseZ + z).setType(Material.MAGMA_BLOCK);
-            }
         }
-
-        // End platform
-        world.getBlockAt(centerX, y, baseZ + endZ - 1).setType(Material.PRISMARINE);
-
-        // Debug
-        System.out.println("Built Water Swim from " + startZ + " to " + endZ);
     }
 
-    private void buildNetherPortalJumpObstacle(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
-        // Start platform
-        world.getBlockAt(centerX, y, baseZ + startZ).setType(Material.OBSIDIAN);
+    private void buildLadderClimb(World world, int centerX, int y, int baseZ, ParkourSection section) {
+        int wallZ = section.startZ + 1;
 
-        // Create an obsidian frame with portal-like appearance
-        for (int z = startZ + 2; z <= startZ + 3; z++) {
-            // Bottom of the frame
-            world.getBlockAt(centerX - 1, y, baseZ + z).setType(Material.OBSIDIAN);
-            world.getBlockAt(centerX, y, baseZ + z).setType(Material.OBSIDIAN);
-            world.getBlockAt(centerX + 1, y, baseZ + z).setType(Material.OBSIDIAN);
+        for (int yOffset = 0; yOffset <= 6; yOffset++) {
+            world.getBlockAt(centerX, y + yOffset, baseZ + wallZ).setType(Material.STONE_BRICKS);
 
-            // Top of the frame
-            world.getBlockAt(centerX - 1, y + 3, baseZ + z).setType(Material.OBSIDIAN);
-            world.getBlockAt(centerX, y + 3, baseZ + z).setType(Material.OBSIDIAN);
-            world.getBlockAt(centerX + 1, y + 3, baseZ + z).setType(Material.OBSIDIAN);
-        }
-
-        // Sides of the frame
-        for (int yOffset = 1; yOffset <= 2; yOffset++) {
-            for (int z = startZ + 2; z <= startZ + 3; z++) {
-                world.getBlockAt(centerX - 1, y + yOffset, baseZ + z).setType(Material.OBSIDIAN);
-                world.getBlockAt(centerX + 1, y + yOffset, baseZ + z).setType(Material.OBSIDIAN);
-            }
-        }
-
-        // Purple glass to simulate portal
-        for (int yOffset = 1; yOffset <= 2; yOffset++) {
-            for (int z = startZ + 2; z <= startZ + 3; z++) {
-                world.getBlockAt(centerX, y + yOffset, baseZ + z).setType(Material.PURPLE_STAINED_GLASS);
-            }
-        }
-
-        // Platform on the other side of the "portal"
-        for (int z = startZ + 5; z < endZ; z++) {
-            world.getBlockAt(centerX, y + 3, baseZ + z).setType(Material.OBSIDIAN);
-        }
-
-        // Debug
-        System.out.println("Built Nether Portal Jump from " + startZ + " to " + endZ);
-    }
-
-    private void buildLadderClimbObstacle(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
-        // Start platform
-        world.getBlockAt(centerX, y, baseZ + startZ).setType(Material.STONE_BRICKS);
-
-        // Build a vertical wall with ladders
-        for (int yOffset = 0; yOffset <= 7; yOffset++) {
-            // Wall
-            world.getBlockAt(centerX, y + yOffset, baseZ + startZ + 1).setType(Material.STONE_BRICKS);
-
-            // Ladder on the wall
             if (yOffset > 0) {
-                Block ladderBlock = world.getBlockAt(centerX + 1, y + yOffset, baseZ + startZ + 1);
+                Block ladderBlock = world.getBlockAt(centerX + 1, y + yOffset, baseZ + wallZ);
                 ladderBlock.setType(Material.LADDER);
                 org.bukkit.block.data.Directional ladderData = (org.bukkit.block.data.Directional) ladderBlock.getBlockData();
                 ladderData.setFacing(BlockFace.EAST);
@@ -583,67 +444,26 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
             }
         }
 
-        // Platform at the top
-        for (int z = startZ + 2; z < endZ; z++) {
-            world.getBlockAt(centerX, y + 7, baseZ + z).setType(Material.STONE_BRICKS);
+        for (int z = section.startZ + 2; z < section.endZ; z++) {
+            world.getBlockAt(centerX, y + 6, baseZ + z).setType(Material.STONE_BRICKS);
         }
-
-        // Debug
-        System.out.println("Built Ladder Climb from " + startZ + " to " + endZ);
-    }
-
-    private void buildDropperObstacle(World world, int centerX, int y, int baseZ, int startZ, int endZ, long seed) {
-        // Start platform
-        world.getBlockAt(centerX, y, baseZ + startZ).setType(Material.QUARTZ_BLOCK);
-
-        // Hole to drop through
-        world.getBlockAt(centerX, y, baseZ + startZ + 1).setType(Material.AIR);
-
-        // Ensure all blocks below are air to drop through
-        for (int yOffset = 1; yOffset <= 5; yOffset++) {
-            world.getBlockAt(centerX, y - yOffset, baseZ + startZ + 1).setType(Material.AIR);
-        }
-
-        // Target pool at the bottom (water surrounded by quartz)
-        for (int xOffset = -1; xOffset <= 1; xOffset++) {
-            for (int zOffset = 0; zOffset <= 2; zOffset++) {
-                if (xOffset == 0 && zOffset == 1) {
-                    // Water in the middle
-                    world.getBlockAt(centerX + xOffset, y - 5, baseZ + startZ + 1 + zOffset).setType(Material.WATER);
-                } else {
-                    // Quartz blocks around
-                    world.getBlockAt(centerX + xOffset, y - 6, baseZ + startZ + 1 + zOffset).setType(Material.QUARTZ_BLOCK);
-                }
-            }
-        }
-
-        // Path after the drop
-        for (int z = startZ + 3; z < endZ; z++) {
-            world.getBlockAt(centerX, y - 5, baseZ + z).setType(Material.QUARTZ_BLOCK);
-        }
-
-        // Debug
-        System.out.println("Built Dropper from " + startZ + " to " + endZ);
     }
 
     private void buildFinishLine(World world, int startX, int startY, int startZ) {
-        // Left side finish platform
         for (int x = -courseWidth; x <= -1; x++) {
             for (int z = courseLength; z <= courseLength + 3; z++) {
                 world.getBlockAt(startX + x, startY, startZ + z).setType(Material.GOLD_BLOCK);
             }
         }
 
-        // Right side finish platform
         for (int x = 1; x <= courseWidth; x++) {
             for (int z = courseLength; z <= courseLength + 3; z++) {
                 world.getBlockAt(startX + x, startY, startZ + z).setType(Material.GOLD_BLOCK);
             }
         }
 
-        // Victory decorations
         for (int x = -courseWidth; x <= courseWidth; x++) {
-            if (x == 0) continue; // Skip the dividing wall
+            if (x == 0) continue;
             world.getBlockAt(startX + x, startY + 3, startZ + courseLength + 2).setType(Material.GLOWSTONE);
         }
     }
@@ -653,75 +473,21 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         int startY = courseStartLocation.getBlockY();
         int startZ = courseStartLocation.getBlockZ();
 
-        // Set start checkpoints (checkpoint 0)
-        player1Checkpoints.put(0, new Location(
-                world,
-                startX - (courseWidth / 2),
-                startY + 1,
-                startZ + 1
-        ));
+        player1Checkpoints.put(0, new Location(world, startX - (courseWidth / 2), startY + 1, startZ + 1));
+        player2Checkpoints.put(0, new Location(world, startX + (courseWidth / 2), startY + 1, startZ + 1));
 
-        player2Checkpoints.put(0, new Location(
-                world,
-                startX + (courseWidth / 2),
-                startY + 1,
-                startZ + 1
-        ));
-
-        // Set finish line checkpoints (last checkpoint)
-        player1Checkpoints.put(totalCheckpoints - 1, new Location(
-                world,
-                startX - (courseWidth / 2),
-                startY + 1,
-                startZ + courseLength + 1
-        ));
-
-        player2Checkpoints.put(totalCheckpoints - 1, new Location(
-                world,
-                startX + (courseWidth / 2),
-                startY + 1,
-                startZ + courseLength + 1
-        ));
-
-        // Set intermediate checkpoints
         for (int i = 1; i < totalCheckpoints - 1; i++) {
             int checkpointZ = checkpointPositions.get(i);
 
-            // Find the height at this position by checking the course sections
-            int checkpointY = getHeightAtPosition(checkpointZ);
+            world.getBlockAt(startX - (courseWidth / 2), startY, startZ + checkpointZ).setType(Material.EMERALD_BLOCK);
+            world.getBlockAt(startX + (courseWidth / 2), startY, startZ + checkpointZ).setType(Material.EMERALD_BLOCK);
 
-            // Make sure there's a block under the checkpoint (fix for teleport issues)
-            world.getBlockAt(startX - (courseWidth / 2), startY + checkpointY, startZ + checkpointZ).setType(Material.EMERALD_BLOCK);
-            world.getBlockAt(startX + (courseWidth / 2), startY + checkpointY, startZ + checkpointZ).setType(Material.EMERALD_BLOCK);
-
-            // Make checkpoint blocks 2 blocks long for easier hitting
-            world.getBlockAt(startX - (courseWidth / 2), startY + checkpointY, startZ + checkpointZ + 1).setType(Material.EMERALD_BLOCK);
-            world.getBlockAt(startX + (courseWidth / 2), startY + checkpointY, startZ + checkpointZ + 1).setType(Material.EMERALD_BLOCK);
-
-            // Record checkpoint locations (1 block above the emerald blocks)
-            player1Checkpoints.put(i, new Location(
-                    world,
-                    startX - (courseWidth / 2),
-                    startY + checkpointY + 1,
-                    startZ + checkpointZ
-            ));
-
-            player2Checkpoints.put(i, new Location(
-                    world,
-                    startX + (courseWidth / 2),
-                    startY + checkpointY + 1,
-                    startZ + checkpointZ
-            ));
+            player1Checkpoints.put(i, new Location(world, startX - (courseWidth / 2), startY + 1, startZ + checkpointZ));
+            player2Checkpoints.put(i, new Location(world, startX + (courseWidth / 2), startY + 1, startZ + checkpointZ));
         }
-    }
 
-    private int getHeightAtPosition(int z) {
-        for (ParkourSection section : courseSections) {
-            if (z >= section.startZ && z <= section.endZ) {
-                return section.heightOffset;
-            }
-        }
-        return 0;
+        player1Checkpoints.put(totalCheckpoints - 1, new Location(world, startX - (courseWidth / 2), startY + 1, startZ + courseLength + 1));
+        player2Checkpoints.put(totalCheckpoints - 1, new Location(world, startX + (courseWidth / 2), startY + 1, startZ + courseLength + 1));
     }
 
     private void teleportPlayersToStart() {
@@ -830,7 +596,6 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         Player player = event.getPlayer();
         if (!isParticipant(player)) return;
 
-        // Only handle right clicks with items
         if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
         ItemStack item = event.getItem();
@@ -871,11 +636,9 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         Block blockBelow = player.getLocation().subtract(0, 1, 0).getBlock();
 
         if (blockBelow.getType() == Material.EMERALD_BLOCK) {
-            // Check all checkpoints (except finish line)
             for (int i = 1; i < totalCheckpoints - 1; i++) {
                 Location checkpointLoc = checkpoints.get(i);
 
-                // Check if the emerald block is at this checkpoint position (or one block ahead)
                 if (isBlockNearCheckpoint(blockBelow, checkpointLoc.clone().subtract(0, 1, 0))) {
                     if (i > currentCheckpoint) {
                         playerCheckpoints.put(playerUUID, i);
@@ -902,21 +665,9 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     }
 
     private boolean isBlockNearCheckpoint(Block block, Location checkpointLoc) {
-        // Check the exact position
-        if (block.getX() == checkpointLoc.getBlockX() &&
+        return block.getX() == checkpointLoc.getBlockX() &&
                 block.getY() == checkpointLoc.getBlockY() &&
-                block.getZ() == checkpointLoc.getBlockZ()) {
-            return true;
-        }
-
-        // Also check one block ahead (for 2-block wide checkpoints)
-        if (block.getX() == checkpointLoc.getBlockX() &&
-                block.getY() == checkpointLoc.getBlockY() &&
-                block.getZ() == checkpointLoc.getBlockZ() + 1) {
-            return true;
-        }
-
-        return false;
+                block.getZ() == checkpointLoc.getBlockZ();
     }
 
     private void handleFalling(Player player) {
@@ -943,33 +694,27 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
     private void handleFinish(Player player) {
         UUID playerUUID = player.getUniqueId();
 
-        // Check if player already finished
         if (playerCompletionTimes.containsKey(playerUUID)) {
             return;
         }
 
-        // Record completion time
         long finishTime = System.currentTimeMillis();
         long startTime = playerStartTimes.getOrDefault(playerUUID, finishTime);
         long completionTime = finishTime - startTime;
         playerCompletionTimes.put(playerUUID, completionTime);
 
-        // Show finish message
         String timeString = formatTime(completionTime);
         MessageUtil.sendMessage(player, "&6You finished the parkour in " + timeString + "!");
 
-        // Visual and sound effects
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
         createFinishFireworks(player.getLocation());
 
-        // Check if this ends the race
         checkRaceEnd();
     }
 
     private String formatTime(long millis) {
         long seconds = millis / 1000;
         long ms = millis % 1000;
-
         return seconds + "." + ms + "s";
     }
 
@@ -986,7 +731,6 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         boolean player2Finished = playerCompletionTimes.containsKey(player2UUID);
 
         if (player1Finished && player2Finished) {
-            // Both players finished - compare times
             long player1Time = playerCompletionTimes.get(player1UUID);
             long player2Time = playerCompletionTimes.get(player2UUID);
 
@@ -998,7 +742,6 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
             return;
         }
 
-        // If only one player finished, start timeout for the other
         if (player1Finished && !player2Finished) {
             startFinishTimeout(player2UUID);
         } else if (player2Finished && !player1Finished) {
@@ -1017,20 +760,17 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
                     return;
                 }
 
-                // Cancel timeout if player finished during countdown
                 if (playerCompletionTimes.containsKey(playerUUID)) {
                     this.cancel();
-                    checkRaceEnd(); // Re-check in case both finished now
+                    checkRaceEnd();
                     return;
                 }
 
                 Player player = Bukkit.getPlayer(playerUUID);
 
-                // Time's up
                 if (countdown <= 0) {
                     this.cancel();
 
-                    // Determine winner (the player who did finish)
                     UUID winnerUUID = playerUUID.equals(player1UUID) ? player2UUID : player1UUID;
                     endGame(winnerUUID);
 
@@ -1040,7 +780,6 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
                     return;
                 }
 
-                // Countdown warnings
                 if (countdown <= 5 || countdown == 10 || countdown == 20) {
                     if (player != null) {
                         MessageUtil.sendMessage(player, "&eYour opponent already finished! You have " + countdown + " seconds left.");
@@ -1066,17 +805,13 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
         Player player2 = getPlayer2();
         Player winner = Bukkit.getPlayer(winnerUUID);
 
-        // Call parent method to handle the game ending logic
         super.endGame(winnerUUID);
 
-        // Display result messages
         if (player1 != null && player2 != null && winner != null) {
-            // Main win announcement
             String winnerName = winner.getName();
             MessageUtil.sendMessage(player1, "&6Parkour Race has ended! &aWinner: &e" + winnerName);
             MessageUtil.sendMessage(player2, "&6Parkour Race has ended! &aWinner: &e" + winnerName);
 
-            // Show completion times if available
             if (playerCompletionTimes.containsKey(player1UUID)) {
                 String timeStr = formatTime(playerCompletionTimes.get(player1UUID));
                 MessageUtil.sendMessage(player1, "&eYour time: &b" + timeStr);
@@ -1095,7 +830,6 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
                 MessageUtil.sendMessage(player2, "&eYou did not finish the course.");
             }
 
-            // Play sounds
             winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
 
             Player loser = winner.equals(player1) ? player2 : player1;
@@ -1104,11 +838,9 @@ public class ParkourMiniGame extends MiniGameBase implements Listener {
             }
         }
 
-        // Cleanup and return players
         teleportToSafeLocation();
         restorePlayerInventories();
 
-        // Unregister events
         PlayerMoveEvent.getHandlerList().unregister(this);
         PlayerInteractEvent.getHandlerList().unregister(this);
     }
