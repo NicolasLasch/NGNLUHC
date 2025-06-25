@@ -147,7 +147,6 @@ public class RandomMiniGameSelector implements Listener {
 
     private Material getMaterialForMiniGameType(MiniGameType type) {
         switch (type) {
-            case SPEED_BEDWARS: return Material.RED_BED;
             case SPLEEF: return Material.DIAMOND_SHOVEL;
             case TNT_RUN: return Material.TNT;
             case PARKOUR: return Material.FEATHER;
@@ -161,7 +160,7 @@ public class RandomMiniGameSelector implements Listener {
             case LOGICAL_DEDUCTION: return Material.COMPASS;
             case MENTAL_CHESS: return Material.CHEST;
             case MEMORY_GAME: return Material.CLOCK;
-            case MATERIALIZATION_SHIRITORI: return Material.ENCHANTED_BOOK;
+            case ORACLE_CARD: return Material.ENCHANTED_BOOK;
             default: return Material.PAPER;
         }
     }

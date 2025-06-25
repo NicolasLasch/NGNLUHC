@@ -71,10 +71,11 @@ minigames:
     DES_A_COUDRE: true
     ANVIL_RAIN: true
     WORD_CHAIN_BATTLE: true
-    LOGICAL_DEDUCTION: false
+    LOGICAL_DEDUCTION: true
     MENTAL_CHESS: true
     MEMORY_GAME: true
     MATERIALIZATION_SHIRITORI: false
+    ORACLE_CARD: true
 
 # Scoreboard settings
 scoreboard:

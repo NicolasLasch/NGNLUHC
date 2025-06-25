@@ -131,11 +131,11 @@ public class TNTRunMiniGame extends MiniGameBase implements Listener {
         int centerZ = center.getBlockZ();
 
         for (int layer = 0; layer < arenaLayers; layer++) {
-            int layerY = centerY - (layer * 3);
+            int layerY = centerY - (layer * 5);
             buildLayer(world, centerX, layerY, centerZ, layer);
         }
 
-        buildWaterLayer(world, centerX, centerY - (arenaLayers * 3) + 1, centerZ);
+        buildWaterLayer(world, centerX, centerY - (arenaLayers * 5) + 1, centerZ);
     }
 
     private void buildLayer(World world, int centerX, int layerY, int centerZ, int layer) {
@@ -262,22 +262,41 @@ public class TNTRunMiniGame extends MiniGameBase implements Listener {
     }
 
     private void scheduleBlockRemoval(Player player) {
-        Location blockLoc = player.getLocation().clone().subtract(0, 1, 0);
-        Block blockBelow = blockLoc.getBlock();
+        Location playerLoc = player.getLocation();
+        double playerX = playerLoc.getX();
+        double playerZ = playerLoc.getZ();
+        int playerY = playerLoc.getBlockY();
 
-        if (removedBlocks.contains(blockLoc) || blockBelow.getType() != Material.PURPLE_WOOL) {
-            return;
-        }
+        // Check blocks in a small radius around player's position
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                Location blockLoc = new Location(playerLoc.getWorld(),
+                        playerLoc.getBlockX() + x, playerY - 1, playerLoc.getBlockZ() + z);
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (blockBelow.getType() == Material.PURPLE_WOOL) {
-                    blockBelow.setType(Material.AIR);
-                    removedBlocks.add(blockLoc);
+                double blockCenterX = blockLoc.getBlockX() + 0.5;
+                double blockCenterZ = blockLoc.getBlockZ() + 0.5;
+                double distance = Math.sqrt(Math.pow(playerX - blockCenterX, 2) + Math.pow(playerZ - blockCenterZ, 2));
+
+                if (distance <= 1) {
+                    Block block = blockLoc.getBlock();
+
+                    if (removedBlocks.contains(blockLoc) || block.getType() != Material.PURPLE_WOOL) {
+                        continue;
+                    }
+
+                    // Schedule removal for this block
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if (block.getType() == Material.PURPLE_WOOL) {
+                                block.setType(Material.AIR);
+                                removedBlocks.add(blockLoc);
+                            }
+                        }
+                    }.runTaskLater(plugin, 5L);
                 }
             }
-        }.runTaskLater(plugin, 5L);
+        }
     }
 
     private boolean isParticipant(Player player) {

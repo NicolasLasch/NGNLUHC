@@ -204,7 +204,7 @@ public class MiniGameConfigScreen extends ConfigScreen {
                 case MEMORY_GAME:
                     material = Material.MAP;
                     break;
-                case MATERIALIZATION_SHIRITORI:
+                case ORACLE_CARD:
                     material = Material.NETHER_STAR;
                     break;
                 default:

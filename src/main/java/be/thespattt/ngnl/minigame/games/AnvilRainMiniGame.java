@@ -60,10 +60,10 @@ public class AnvilRainMiniGame extends MiniGameBase implements Listener {
     private boolean arenaReady = false;
     private int currentDifficulty = 1;
 
-    private final int ANVIL_DROP_INTERVAL = 8; // ticks (0.4 seconds) - Much faster!
+    private final int ANVIL_DROP_INTERVAL = 4; // ticks (0.4 seconds) - Much faster!
     private final int POWERUP_DROP_INTERVAL = 80; // ticks (4 seconds)
     private final int GAME_DURATION = 1800; // ticks (90 seconds)
-    private final int PLAYER_LIVES = 5;
+    private final int PLAYER_LIVES = 1;
     private final int INVULNERABILITY_TIME = 2000; // 2 seconds in milliseconds
 
     public AnvilRainMiniGame(NoGameNoLife plugin, UUID player1UUID, UUID player2UUID, boolean player1WonPvP) {

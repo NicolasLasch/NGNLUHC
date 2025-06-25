@@ -204,7 +204,7 @@ public class MiniGameManager {
         }
 
         switch (miniGameType) {
-            case MATERIALIZATION_SHIRITORI:
+            case ORACLE_CARD:
             case LOGICAL_DEDUCTION:
             case MENTAL_CHESS:
             case MEMORY_GAME:

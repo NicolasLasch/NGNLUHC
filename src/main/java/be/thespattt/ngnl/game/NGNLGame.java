@@ -246,9 +246,8 @@ public class NGNLGame {
      */
     private void resetPlayers() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            // Reset player state
             player.setGameMode(GameMode.ADVENTURE);
-            player.setHealth(20.0);
+            player.setHealth(player.getMaxHealth());
             player.setFoodLevel(20);
             player.getInventory().clear();
             player.setLevel(0);

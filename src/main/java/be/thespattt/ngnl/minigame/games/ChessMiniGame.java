@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 // Working
-// TODO : Add rock & Check carefule
+// TODO : Add rock & Check careful + Ressource pack
 public class ChessMiniGame extends MiniGameBase implements Listener {
 
     // Game state

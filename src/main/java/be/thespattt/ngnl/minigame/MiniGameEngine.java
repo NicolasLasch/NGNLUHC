@@ -60,12 +60,10 @@ public class MiniGameEngine {
             return false;
         }
 
-        // Prepare players for mini-game
         preparePlayersForMiniGame(killer, victim);
 
-        // Create mini-game instance
         MiniGameBase miniGame;
-        boolean killerWonPvP = true; // The killer always won the PVP
+        boolean killerWonPvP = true;
 
         switch (miniGameType) {
             case MENTAL_CHESS:
@@ -97,6 +95,18 @@ public class MiniGameEngine {
                 break;
             case ANVIL_RAIN:
                 miniGame = new AnvilRainMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
+            case ORACLE_CARD:
+                miniGame = new OracleCardMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
+            case WORD_CHAIN_BATTLE:
+                miniGame = new WordChainBattleMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
+            case LOGICAL_DEDUCTION:
+                miniGame = new LogicalDeductionMiniGame(plugin, killerId, victimId, killerWonPvP);
+                break;
+            case DES_A_COUDRE:
+                miniGame = new DesACoudreMiniGame(plugin, killerId, victimId, killerWonPvP);
                 break;
             default:
                 miniGame = new ChessMiniGame(plugin, killerId, victimId, killerWonPvP);

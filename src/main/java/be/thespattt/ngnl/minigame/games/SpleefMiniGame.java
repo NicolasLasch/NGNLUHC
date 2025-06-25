@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 // Working
-// TODO : Put the mode to Best of 3
+// TODO : Put the mode to Best of 3 &
 public class SpleefMiniGame extends MiniGameBase implements Listener {
     private int player1Score = 0;
     private int player2Score = 0;

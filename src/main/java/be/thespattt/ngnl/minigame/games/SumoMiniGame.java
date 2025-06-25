@@ -159,24 +159,36 @@ public class SumoMiniGame extends MiniGameBase implements Listener {
         // Build the circular platform
         for (int x = -ARENA_RADIUS; x <= ARENA_RADIUS; x++) {
             for (int z = -ARENA_RADIUS; z <= ARENA_RADIUS; z++) {
-                // Calculate distance from center
                 double distance = Math.sqrt(x * x + z * z);
 
                 if (distance <= ARENA_RADIUS) {
-                    // Inside the circle - platform
                     world.getBlockAt(center.getBlockX() + x, center.getBlockY(), center.getBlockZ() + z).setType(Material.GRAY_CONCRETE);
                 }
             }
         }
 
-        // Add water pool below
+        // Build walls around water area to prevent overflow
+        for (int x = -ARENA_RADIUS - 2; x <= ARENA_RADIUS + 2; x++) {
+            for (int z = -ARENA_RADIUS - 2; z <= ARENA_RADIUS + 2; z++) {
+                if (Math.abs(x) == ARENA_RADIUS + 2 || Math.abs(z) == ARENA_RADIUS + 2) {
+                    for (int y = -5; y <= -1; y++) {
+                        world.getBlockAt(center.getBlockX() + x, center.getBlockY() + y, center.getBlockZ() + z).setType(Material.BLACK_CONCRETE);
+                        world.getBlockAt(center.getBlockX() + x, center.getBlockY() + y + 5, center.getBlockZ() + z).setType(Material.BARRIER);
+                    }
+                } else {
+                    world.getBlockAt(center.getBlockX() + x, center.getBlockY() - 4, center.getBlockZ() + z).setType(Material.BLACK_CONCRETE);
+                }
+            }
+        }
+
+        // Add contained water pool
         for (int x = -ARENA_RADIUS - 1; x <= ARENA_RADIUS + 1; x++) {
             for (int z = -ARENA_RADIUS - 1; z <= ARENA_RADIUS + 1; z++) {
                 world.getBlockAt(center.getBlockX() + x, center.getBlockY() - 3, center.getBlockZ() + z).setType(Material.WATER);
             }
         }
 
-        // Add some decoration
+        // Add decoration
         world.getBlockAt(center.getBlockX(), center.getBlockY() + 1, center.getBlockZ()).setType(Material.YELLOW_CONCRETE);
     }
 
