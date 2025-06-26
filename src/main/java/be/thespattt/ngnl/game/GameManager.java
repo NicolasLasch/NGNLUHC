@@ -149,4 +149,13 @@ public class GameManager {
 
         this.game = new NGNLGame(plugin);
     }
+
+    public void forceArenaPhaseForTesting() {
+        if (game.getGameState() == GameState.MINING_PHASE) {
+            MessageUtil.logInfo("Force triggering arena phase for testing...");
+            game.forceArenaPhaseForTesting();
+        } else {
+            MessageUtil.logWarning("Cannot force arena phase from state: " + game.getGameState());
+        }
+    }
 }

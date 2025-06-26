@@ -101,7 +101,8 @@ public class PlayerListener implements Listener {
         double finalHealth = victim.getHealth() - event.getFinalDamage();
         if (finalHealth <= 0) {
             UUID killerId = plugin.getCombatTracker().getLastDamager(victim.getUniqueId());
-            if (killerId != null) {
+            GameState gameState = plugin.getGameManager().getGameState();
+            if (killerId != null && gameState == GameState.MINING_PHASE) {
                 Player killer = Bukkit.getPlayer(killerId);
                 event.setCancelled(true);
                 victim.setHealth(victim.getMaxHealth());
@@ -135,7 +136,7 @@ public class PlayerListener implements Listener {
             deathMessage += " &7(Killed by " + killer.getName() + ")";
         }
 
-        event.setDeathMessage(null); // Remove default death message
+        event.setDeathMessage(null);
         MessageUtil.broadcast(deathMessage);
 
         if (plugin.getGameManager().getGame().getLastMiniGameLostBy(player.getUniqueId()) != null) {
@@ -203,7 +204,6 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        // Handle damage based on phase
         switch (gameState) {
             case WAITING:
             case STARTING:
@@ -212,17 +212,14 @@ public class PlayerListener implements Listener {
                 break;
 
             case MINING_PHASE:
-                // Normal damage during mining phase except specific rules
                 handleMiningPhaseDamage(event);
                 break;
 
             case ARENA_PHASE:
-                // Special rules for arena phase
                 handleArenaPhaseDamage(event);
                 break;
 
             case ENDED:
-                // No damage after game has ended
                 event.setCancelled(true);
                 break;
         }
@@ -249,7 +246,6 @@ public class PlayerListener implements Listener {
                 break;
 
             case MINING_PHASE:
-                // PvP during mining phase depends on settings and time
                 if (!pvpEnabled) {
                     // Check if PvP grace period has ended
                     int currentEpisode = plugin.getGameManager().getGame().getEpisodeManager().getCurrentEpisode();

@@ -39,6 +39,12 @@ public class NGNLCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("forcearena") && sender.isOp()) {
+            plugin.getGameManager().forceArenaPhaseForTesting();
+            sender.sendMessage("§aForce arena phase triggered!");
+            return true;
+        }
+
         // Main command handler
         switch (args[0].toLowerCase()) {
             case "start":

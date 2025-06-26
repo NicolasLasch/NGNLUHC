@@ -81,6 +81,17 @@ public class GameConfig {
     private boolean betrayalPenaltyEnabled;
     private Map<String, Boolean> enabledFactions;
 
+    // Arena settings
+    private String arenaWorldName;
+    private int initialArenaBorderSize;
+    private int finalArenaBorderSize;
+    private int borderShrinkInterval;
+    private int arenaTotalDuration;
+    private double quakeWeaponDamage;
+    private long quakeWeaponCooldown;
+    private double quakeWeaponKnockback;
+    private int quakeWeaponRange;
+
     /**
      * Constructor
      *
@@ -260,15 +271,16 @@ public class GameConfig {
         miniGameBookReward = config.getBoolean("mini-games.book-reward", true);
 
         // Load arena settings
-        arenaSize = config.getInt("arena.size", 300);
-        arenaShrinking = config.getBoolean("arena.shrinking", true);
-        arenaShrinkTime = config.getInt("arena.shrink-time", 30);
-        arenaFinalSize = config.getInt("arena.final-size", 100);
-        specialItemsEnabled = config.getBoolean("arena.special-items", true);
-        arenaGracePeriod = config.getInt("arena.grace-period", 30);
-        abilityCooldownMultiplier = config.getDouble("arena.ability-cooldown-multiplier", 1.0);
-        arenaEventsEnabled = config.getBoolean("arena.events-enabled", true);
-
+        arenaWorldName = config.getString("arena.world-name", "ngnl_arena_city");
+        initialArenaBorderSize = config.getInt("arena.initial-border-size", 300);
+        finalArenaBorderSize = config.getInt("arena.final-border-size", 50);
+        borderShrinkInterval = config.getInt("arena.border-shrink-interval", 120);
+        arenaTotalDuration = config.getInt("arena.total-duration", 1200);
+        quakeWeaponDamage = config.getDouble("arena.quake-weapon.damage", 4.0);
+        quakeWeaponCooldown = config.getLong("arena.quake-weapon.cooldown", 1000);
+        quakeWeaponKnockback = config.getDouble("arena.quake-weapon.knockback", 1.5);
+        quakeWeaponRange = config.getInt("arena.quake-weapon.range", 100);
+        
         // Load role settings
         roleAbilityStrength = config.getDouble("roles.ability-strength", 1.0);
 
@@ -314,14 +326,15 @@ public class GameConfig {
         config.set("mini-games.book-reward", miniGameBookReward);
 
         // Save arena settings
-        config.set("arena.size", arenaSize);
-        config.set("arena.shrinking", arenaShrinking);
-        config.set("arena.shrink-time", arenaShrinkTime);
-        config.set("arena.final-size", arenaFinalSize);
-        config.set("arena.special-items", specialItemsEnabled);
-        config.set("arena.grace-period", arenaGracePeriod);
-        config.set("arena.ability-cooldown-multiplier", abilityCooldownMultiplier);
-        config.set("arena.events-enabled", arenaEventsEnabled);
+        config.set("arena.world-name", arenaWorldName);
+        config.set("arena.initial-border-size", initialArenaBorderSize);
+        config.set("arena.final-border-size", finalArenaBorderSize);
+        config.set("arena.border-shrink-interval", borderShrinkInterval);
+        config.set("arena.total-duration", arenaTotalDuration);
+        config.set("arena.quake-weapon.damage", quakeWeaponDamage);
+        config.set("arena.quake-weapon.cooldown", quakeWeaponCooldown);
+        config.set("arena.quake-weapon.knockback", quakeWeaponKnockback);
+        config.set("arena.quake-weapon.range", quakeWeaponRange);
 
         // Save role settings
         config.set("roles.ability-strength", roleAbilityStrength);
@@ -341,6 +354,8 @@ public class GameConfig {
         for (Map.Entry<String, Boolean> entry : enabledFactions.entrySet()) {
             config.set("factions.enabled." + entry.getKey(), entry.getValue());
         }
+
+
     }
 
     // Original getters and setters
@@ -993,4 +1008,31 @@ public class GameConfig {
     public void setFactionEnabled(FactionType factionType, boolean enabled) {
         enabledFactions.put(factionType.name().toLowerCase(), enabled);
     }
+
+    public String getArenaWorldName() { return arenaWorldName; }
+    public void setArenaWorldName(String name) { this.arenaWorldName = name; }
+
+    public int getInitialArenaBorderSize() { return initialArenaBorderSize; }
+    public void setInitialArenaBorderSize(int size) { this.initialArenaBorderSize = size; }
+
+    public int getFinalArenaBorderSize() { return finalArenaBorderSize; }
+    public void setFinalArenaBorderSize(int size) { this.finalArenaBorderSize = size; }
+
+    public int getBorderShrinkInterval() { return borderShrinkInterval; }
+    public void setBorderShrinkInterval(int interval) { this.borderShrinkInterval = interval; }
+
+    public int getArenaTotalDuration() { return arenaTotalDuration; }
+    public void setArenaTotalDuration(int duration) { this.arenaTotalDuration = duration; }
+
+    public double getQuakeWeaponDamage() { return quakeWeaponDamage; }
+    public void setQuakeWeaponDamage(double damage) { this.quakeWeaponDamage = damage; }
+
+    public long getQuakeWeaponCooldown() { return quakeWeaponCooldown; }
+    public void setQuakeWeaponCooldown(long cooldown) { this.quakeWeaponCooldown = cooldown; }
+
+    public double getQuakeWeaponKnockback() { return quakeWeaponKnockback; }
+    public void setQuakeWeaponKnockback(double knockback) { this.quakeWeaponKnockback = knockback; }
+
+    public int getQuakeWeaponRange() { return quakeWeaponRange; }
+    public void setQuakeWeaponRange(int range) { this.quakeWeaponRange = range; }
 }

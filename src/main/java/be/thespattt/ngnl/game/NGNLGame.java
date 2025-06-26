@@ -1,6 +1,9 @@
 package be.thespattt.ngnl.game;
 
 import be.thespattt.ngnl.NoGameNoLife;
+import be.thespattt.ngnl.arena.ArenaBorderShrinkTask;
+import be.thespattt.ngnl.arena.ArenaCombatManager;
+import be.thespattt.ngnl.arena.ArenaWorldHandler;
 import be.thespattt.ngnl.event.custom.PhaseChangeEvent;
 import be.thespattt.ngnl.game.episode.EpisodeManager;
 import be.thespattt.ngnl.game.scoreboard.NGNLScoreboardManager;
@@ -42,6 +45,10 @@ public class NGNLGame {
     private final Map<UUID, UUID> scheduledMiniGames = new HashMap<>();
     private final Map<String, MiniGameType> scheduledMiniGameTypes = new HashMap<>();
 
+    private ArenaCombatManager arenaCombatManager;
+    private ArenaWorldHandler arenaWorldHandler;
+    private ArenaBorderShrinkTask borderShrinkTask;
+
     /**
      * Constructor
      *
@@ -58,6 +65,9 @@ public class NGNLGame {
         this.episodeManager = new EpisodeManager(plugin);
         this.scoreboardManager = new NGNLScoreboardManager(plugin);
 
+        this.arenaCombatManager = new ArenaCombatManager(plugin);
+        this.arenaWorldHandler = new ArenaWorldHandler(plugin);
+
         // Load config values
         loadConfigValues();
     }
@@ -68,6 +78,8 @@ public class NGNLGame {
     private void loadConfigValues() {
         // Load from config
         this.remainingPlayersForArena = plugin.getConfigManager().getGameConfig().getArenaPlayerThreshold();
+        if (plugin.getConfigManager().getGameConfig().getArenaPlayerThreshold() == 0) this.remainingPlayersForArena = 2;
+        else this.remainingPlayersForArena = plugin.getConfigManager().getGameConfig().getArenaPlayerThreshold();
     }
 
     /**
@@ -180,37 +192,87 @@ public class NGNLGame {
      */
     public void startArenaPhase() {
         if (gameState != GameState.MINING_PHASE) {
+            MessageUtil.logWarning("Cannot start arena phase from state: " + gameState);
             return;
         }
+
+        MessageUtil.logInfo("Starting arena phase...");
 
         // Fire event
         PhaseChangeEvent event = new PhaseChangeEvent(GameState.MINING_PHASE, GameState.ARENA_PHASE);
         Bukkit.getPluginManager().callEvent(event);
 
         if (event.isCancelled()) {
+            MessageUtil.logWarning("Arena phase start was cancelled by event");
             return;
         }
 
+        // Initialiser le monde arène
+        MessageUtil.logInfo("Initializing arena world...");
+        arenaWorldHandler.initializeArenaWorld();
+
+        // Nettoyer les mobs
+        arenaWorldHandler.clearHostileMobs();
+
+        // Activer le système de combat
+        MessageUtil.logInfo("Activating arena combat...");
+        arenaCombatManager.activateArenaCombat();
+
         // Broadcast phase change
-        MessageUtil.broadcast("&fQualifications complete! &5Arena &fphase has begun!");
-        MessageUtil.broadcast("&fAll Pledges are now void. The &5final battle &fbegins!");
+        MessageUtil.broadcast("&5&m═══════════════════════════════════════════════");
+        MessageUtil.broadcast("&5&l            LOVE FIGHT COMMENCÉ");
+        MessageUtil.broadcast("&f Les qualifications sont terminées !");
+        MessageUtil.broadcast("&f Bienvenue dans l'arène finale !");
+        MessageUtil.broadcast("&c Les armes traditionnelles sont désactivées !");
+        MessageUtil.broadcast("&6 Utilisez votre Love Gun pour combattre !");
+        MessageUtil.broadcast("&5&m═══════════════════════════════════════════════");
 
         // Deactivate pledges
         pledgesActive = false;
 
-        // Teleport remaining players to arena
-        teleportPlayersToArenaWorld();
+        // Téléporter les joueurs vers l'arène
+        List<Player> alivePlayers = new ArrayList<>();
+        for (UUID playerId : this.alivePlayers) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) {
+                alivePlayers.add(player);
+                MessageUtil.logInfo("Adding player to arena: " + player.getName());
+            }
+        }
+
+        MessageUtil.logInfo("Teleporting " + alivePlayers.size() + " players to arena");
+        arenaWorldHandler.teleportPlayersToArena(alivePlayers);
+
+        // Donner l'équipement d'arène avec un délai
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            for (Player player : alivePlayers) {
+                if (player.isOnline()) {
+                    arenaCombatManager.giveArenaEquipment(player);
+                    MessageUtil.logInfo("Gave arena equipment to: " + player.getName());
+                }
+            }
+        }, 40L); // 2 secondes après téléportation
 
         // Update roles for arena phase
         plugin.getRoleManager().activateArenaPhaseAbilities();
 
+        // Démarrer la tâche de rétrécissement de bordure avec un délai
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (borderShrinkTask != null) {
+                borderShrinkTask.cancel();
+            }
+            borderShrinkTask = new ArenaBorderShrinkTask(plugin, arenaWorldHandler.getArenaWorld());
+            borderShrinkTask.runTaskTimer(plugin, 20L, 20L); // Chaque seconde
+            MessageUtil.logInfo("Started border shrink task");
+        }, 100L); // 5 secondes après téléportation
+
         // Update game state
         gameState = GameState.ARENA_PHASE;
+        MessageUtil.logInfo("Arena phase started successfully!");
 
         // Update scoreboard
         scoreboardManager.updateScoreboardsForAllPlayers();
     }
-
     /**
      * Initialize players for the game
      */
@@ -319,6 +381,9 @@ public class NGNLGame {
         //        plugin.getMiniGameManager().startMiniGame(killer, playerId);
         //    }
 
+        MessageUtil.logInfo("Player eliminated. Alive players: " + alivePlayers.size() + "/" + remainingPlayersForArena);
+        MessageUtil.logInfo("Current game state: " + gameState);
+
         checkArenaPhase();
 
         checkGameEnd();
@@ -328,7 +393,10 @@ public class NGNLGame {
      * Check if arena phase should start
      */
     private void checkArenaPhase() {
+        MessageUtil.logInfo("Checking arena phase: " + alivePlayers.size() + " players alive, threshold: " + remainingPlayersForArena);
+
         if (gameState == GameState.MINING_PHASE && alivePlayers.size() <= remainingPlayersForArena) {
+            MessageUtil.logInfo("Arena phase triggered!");
             startArenaPhase();
         }
     }
@@ -367,8 +435,25 @@ public class NGNLGame {
      * Clean up resources
      */
     private void cleanup() {
-        // Any additional cleanup
+        // Cleanup existant
         episodeManager.stopEpisodeTimer();
+
+        // Nouveau nettoyage arena
+        if (borderShrinkTask != null) {
+            borderShrinkTask.cancel();
+            borderShrinkTask = null;
+            MessageUtil.logInfo("Cancelled border shrink task");
+        }
+
+        if (arenaCombatManager != null) {
+            arenaCombatManager.deactivateArenaCombat();
+            MessageUtil.logInfo("Deactivated arena combat");
+        }
+    }
+
+    public void forceArenaPhaseForTesting() {
+        MessageUtil.logInfo("FORCING ARENA PHASE FOR TESTING");
+        startArenaPhase();
     }
 
     /**

@@ -1,6 +1,7 @@
 package be.thespattt.ngnl.game.world;
 
 import be.thespattt.ngnl.NoGameNoLife;
+import be.thespattt.ngnl.arena.ArenaWorldHandler;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.*;
@@ -30,6 +31,8 @@ public class WorldManager {
     private World miningWorld;
     private World arenaWorld;
     private World minigameWorld;
+    private ArenaWorldHandler arenaWorldHandler;
+
 
     private final Map<be.thespattt.ngnl.game.world.WorldType, List<Location>> spawnLocations = new HashMap<>();
 
@@ -40,6 +43,7 @@ public class WorldManager {
      */
     public WorldManager(NoGameNoLife plugin) {
         this.plugin = plugin;
+        this.arenaWorldHandler = new ArenaWorldHandler(plugin);
 
         // Initialize spawn location lists
         for (be.thespattt.ngnl.game.world.WorldType type : be.thespattt.ngnl.game.world.WorldType.values()) {
@@ -453,5 +457,14 @@ public class WorldManager {
      */
     public String getArenaWorldName() {
         return arenaWorldName;
+    }
+
+    public void initializeArenaWorld() {
+        arenaWorldHandler.initializeArenaWorld();
+    }
+
+    // Ajouter ces getters
+    public ArenaWorldHandler getArenaWorldHandler() {
+        return arenaWorldHandler;
     }
 }

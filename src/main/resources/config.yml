@@ -6,10 +6,10 @@
 # Game settings
 game:
   # Length of episodes in minutes
-  episode_length: 20
+  episode_length: 1
 
   # Number of players remaining to trigger arena phase
-  arena_player_threshold: 8
+  arena_player_threshold: 2
 
   # Minimum number of players required to start the game
   minimum_players: 4
@@ -48,14 +48,10 @@ world:
     # Seed for arena world (leave empty for random)
     arena_seed: ""
 
-# Mini-game settings
 minigames:
-  # Default time limit for mini-games in seconds
   default_time: 300
 
-  # List of enabled mini-games
   enabled:
-    SPEED_BEDWARS: true
     SPLEEF: true
     TNT_RUN: true
     PARKOUR: true
@@ -113,6 +109,18 @@ items:
 
   # Whether Old Deus Fragment should appear
   old_deus_fragment_enabled: true
+
+arena:
+  world-name: "ngnl_arena_city"
+  initial-border-size: 300
+  final-border-size: 50
+  border-shrink-interval: 120
+  total-duration: 1200
+  quake-weapon:
+    damage: 4.0
+    cooldown: 1000
+    knockback: 1.5
+    range: 100
 
 # Debug settings
 debug:

@@ -24,6 +24,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.UUID;
+import be.thespattt.ngnl.arena.ArenaCombatManager;
 
 /**
  * Event listener for game-related events
@@ -59,8 +60,10 @@ public class GameListener implements Listener {
         }
     }
 
+    // Todo : Verify that it's of use
     /**
      * Handle transition from mining phase to arena phase
+     * Not sure if needed...
      */
     private void handleMiningToArenaTransition() {
         // Deactivate pledges
@@ -68,10 +71,7 @@ public class GameListener implements Listener {
             plugin.getCommandManager().getPledgeCommand().clearAllPledges();
         }
 
-        // Activate arena phase abilities for all roles
         plugin.getRoleManager().activateArenaPhaseAbilities();
-
-        // Teleport players to arena
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (plugin.getGameManager().isPlayerAlive(player.getUniqueId())) {
                 if (plugin.getWorldManager().getRandomSpawnLocation(be.thespattt.ngnl.game.world.WorldType.ARENA) != null) {
@@ -85,22 +85,11 @@ public class GameListener implements Listener {
             }
         }
 
-        // Set world border for arena
         int borderSize = plugin.getConfigManager().getGameConfig().getArenaWorldBorderSize();
         if (plugin.getWorldManager().getArenaWorld() != null) {
             plugin.getWorldManager().getArenaWorld().getWorldBorder().setSize(borderSize * 2);
         }
-
-        // Update scoreboards
         plugin.getGameManager().getGame().getScoreboardManager().updateScoreboardsForAllPlayers();
-
-        // Broadcast phase change
-        MessageUtil.broadcastTitle("&c&lARENA PHASE", "&eThe final battle begins!", 10, 70, 20);
-        MessageUtil.broadcast("&c&l=========================");
-        MessageUtil.broadcast("&c&lARENA PHASE HAS BEGUN!");
-        MessageUtil.broadcast("&eThe qualifying rounds are over, and the final battle begins!");
-        MessageUtil.broadcast("&eAll pledges are now void. Only the strongest will survive!");
-        MessageUtil.broadcast("&c&l=========================");
     }
 
     /**
@@ -276,6 +265,20 @@ public class GameListener implements Listener {
             event.setCancelled(true);
             handleSpecialItem(player, itemId, item);
         }
+
+        if (plugin.getGameManager().getGameState() == GameState.ARENA_PHASE) {
+
+            String arenaWorldName = plugin.getConfigManager().getGameConfig().getArenaWorldName();
+            if (player.getWorld().getName().equals(arenaWorldName)) {
+                if (item.getType() == Material.BOW ||
+                        item.getType() == Material.CROSSBOW ||
+                        item.getType().name().contains("SWORD")) {
+                    event.setCancelled(true);
+                    MessageUtil.sendMessage(player, "&cUtilisez votre Love Gun !");
+                    return;
+                }
+            }
+        }
     }
 
     /**
@@ -365,12 +368,8 @@ public class GameListener implements Listener {
         // Check game state
         GameState gameState = plugin.getGameManager().getGameState();
 
-        // In arena phase, only certain blocks might be breakable
         if (gameState == GameState.ARENA_PHASE) {
-            // Example: Only allow breaking placed blocks
-            if (block.getType() != Material.OBSIDIAN &&
-                    block.getType() != Material.TNT &&
-                    block.getType() != Material.FIRE) {
+            if (block.getType() == Material.GRASS_BLOCK) {
                 event.setCancelled(true);
                 return;
             }

@@ -520,8 +520,6 @@ public class WordChainBattleMiniGame extends MiniGameBase implements Listener {
 
             String responseText = response.toString();
 
-            System.out.println(responseText);
-
             if (responseText.contains("Aucun résultat") ||
                     responseText.contains("Page introuvable") ||
                     responseText.contains("Cette forme est introuvable !") ||
@@ -529,8 +527,6 @@ public class WordChainBattleMiniGame extends MiniGameBase implements Listener {
                     responseText.contains("n'a pas été trouvé")) {
                 return false;
             }
-
-            System.out.println(responseText.contains("class=\"definition\"") || responseText.contains("class=\"tlf_cdefinition\"") || responseText.contains("class=\"zone-contenu\""));
 
             return responseText.contains("class=\"definition\"") ||
                     responseText.contains("class=\"tlf_cdefinition\"") ||
