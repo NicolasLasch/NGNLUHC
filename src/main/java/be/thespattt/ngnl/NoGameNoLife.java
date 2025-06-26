@@ -9,13 +9,12 @@ import be.thespattt.ngnl.event.listener.MiniGameListener;
 import be.thespattt.ngnl.game.GameManager;
 import be.thespattt.ngnl.game.world.WorldManager;
 import be.thespattt.ngnl.item.ItemManager;
-import be.thespattt.ngnl.minigame.MiniGameEngine;
-import be.thespattt.ngnl.minigame.MiniGameManager;
-import be.thespattt.ngnl.minigame.MiniGameSessionManager;
+import be.thespattt.ngnl.minigame.*;
 import be.thespattt.ngnl.player.PlayerManager;
 import be.thespattt.ngnl.player.faction.FactionManager;
 import be.thespattt.ngnl.role.RoleManager;
 import be.thespattt.ngnl.command.commands.PledgeCommand;
+import be.thespattt.ngnl.util.AdvancedCloneManager;
 import be.thespattt.ngnl.util.MessageUtil;
 import be.thespattt.ngnl.gui.ConfigGUIManager;
 
@@ -46,6 +45,11 @@ public class NoGameNoLife extends JavaPlugin {
     private CombatTracker combatTracker;
     private MiniGameSessionManager miniGameSessionManager;
     private ConfigGUIManager configGUIManager;
+    private AdvancedCloneManager cloneManager;
+    private MiniGameSelectionManager miniGameSelectionManager;
+    private MiniGameStatsTracker miniGameStatsTracker;
+
+
     // Register commands
     private MiniGameEngine miniGameEngine;
     private NamespacedKey namespacedKey;
@@ -71,6 +75,11 @@ public class NoGameNoLife extends JavaPlugin {
         this.namespacedKey = new NamespacedKey(this, "ngnl");
         this.miniGameSessionManager = new MiniGameSessionManager();
         this.miniGameEngine = new MiniGameEngine(this);
+        this.cloneManager = new AdvancedCloneManager(this);
+        this.miniGameSelectionManager = new MiniGameSelectionManager(this);
+        this.miniGameStatsTracker = new MiniGameStatsTracker(this);
+
+
 
         // Register event listeners
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
@@ -108,6 +117,10 @@ public class NoGameNoLife extends JavaPlugin {
 
         if (miniGameEngine != null) {
             miniGameEngine.cleanup();
+        }
+
+        if (cloneManager != null) {
+            cloneManager.cleanup();
         }
 
         MessageUtil.logInfo("No Game No Life UHC has been disabled!");
@@ -251,5 +264,17 @@ public class NoGameNoLife extends JavaPlugin {
 
     public MiniGameEngine getMiniGameEngine() {
         return miniGameEngine;
+    }
+
+    public AdvancedCloneManager getCloneManager() {
+        return cloneManager;
+    }
+
+    public MiniGameSelectionManager getMiniGameSelectionManager() {
+        return miniGameSelectionManager;
+    }
+
+    public MiniGameStatsTracker getMiniGameStatsTracker() {
+        return miniGameStatsTracker;
     }
 }

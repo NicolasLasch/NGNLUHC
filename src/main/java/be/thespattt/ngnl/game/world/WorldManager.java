@@ -24,7 +24,6 @@ public class WorldManager {
 
     private final String waitingWorldName = "ngnl_waiting";
     private final String miningWorldName = "ngnl_mining";
-    private final String arenaWorldName = "ngnl_arena";
     private final String minigameWorldName = "ngnl_minigame";
 
     private World waitingWorld;
@@ -66,14 +65,9 @@ public class WorldManager {
             setupMiningWorld(miningWorld);
         }
 
-        arenaWorld = getOrCreateWorld(arenaWorldName, World.Environment.NORMAL, WorldType.FLAT);
-        if (arenaWorld != null) {
-            setupArenaWorld(arenaWorld);
-        }
-
         minigameWorld = getOrCreateWorld(minigameWorldName, World.Environment.NORMAL, WorldType.FLAT);
         if (minigameWorld != null) {
-            setupMiniGameWorld(arenaWorld);
+            setupMiniGameWorld(minigameWorld);
         }
 
         // Load spawn locations
@@ -163,41 +157,6 @@ public class WorldManager {
 
         // Generate spawn locations
         generateSpawnLocations(world, be.thespattt.ngnl.game.world.WorldType.MINING, 16);
-    }
-
-    /**
-     * Create arena world for the game
-     */
-    public void createArenaWorld() {
-        // Check if world already exists
-        if (arenaWorld != null) {
-            MessageUtil.logInfo("Arena world already exists");
-            return;
-        }
-
-        // Create new arena world
-        arenaWorld = getOrCreateWorld(arenaWorldName, World.Environment.NORMAL, WorldType.FLAT);
-
-        if (arenaWorld != null) {
-            setupArenaWorld(arenaWorld);
-        }
-    }
-
-    public void setupArenaWorld(World world) {
-        // Set game rules
-        world.setGameRuleValue("doDaylightCycle", "false");
-        world.setGameRuleValue("doWeatherCycle", "false");
-        world.setGameRuleValue("doMobSpawning", "false");
-        world.setTime(6000); // Midday
-
-        // Set world border
-        int borderSize = plugin.getConfigManager().getGameConfig().getArenaWorldBorderSize();
-        world.getWorldBorder().setSize(borderSize * 2);
-        world.getWorldBorder().setWarningDistance(20);
-        world.getWorldBorder().setCenter(0, 0);
-
-        // Generate spawn locations
-        generateSpawnLocations(world, be.thespattt.ngnl.game.world.WorldType.ARENA, 8);
     }
 
 
@@ -375,15 +334,6 @@ public class WorldManager {
             // Delete world folder
             deleteWorldFolder(miningWorldName);
         }
-
-        // Unload and delete arena world
-        if (arenaWorld != null) {
-            Bukkit.unloadWorld(arenaWorld, false);
-            arenaWorld = null;
-
-            // Delete world folder
-            deleteWorldFolder(arenaWorldName);
-        }
     }
 
     /**
@@ -455,9 +405,6 @@ public class WorldManager {
      *
      * @return Arena world name
      */
-    public String getArenaWorldName() {
-        return arenaWorldName;
-    }
 
     public void initializeArenaWorld() {
         arenaWorldHandler.initializeArenaWorld();

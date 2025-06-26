@@ -47,10 +47,10 @@ public class ArenaConfigScreen extends ConfigScreen {
     protected void initialize() {
         // Load current values
         GameConfig config = getConfig();
-        arenaSize = config.getArenaSize();
-        arenaShrink = config.isArenaShrinking();
-        arenaShrinkTime = config.getArenaShrinkTime();
-        arenaFinalSize = config.getArenaFinalSize();
+        arenaSize = config.getInitialArenaBorderSize();
+        arenaShrink = config.getBorderShrinkInterval() > 0;
+        arenaShrinkTime = config.getBorderShrinkInterval();
+        arenaFinalSize = config.getFinalArenaBorderSize();
         specialItems = config.areSpecialItemsEnabled();
         arenaGracePeriod = config.getArenaGracePeriod();
         abilityCooldownMultiplier = config.getAbilityCooldownMultiplier();
@@ -284,14 +284,9 @@ public class ArenaConfigScreen extends ConfigScreen {
         }
 
         GameConfig config = getConfig();
-        config.setArenaSize(arenaSize);
-        config.setArenaShrinking(arenaShrink);
-        config.setArenaShrinkTime(arenaShrinkTime);
-        config.setArenaFinalSize(arenaFinalSize);
-        config.setSpecialItemsEnabled(specialItems);
-        config.setArenaGracePeriod(arenaGracePeriod);
-        config.setAbilityCooldownMultiplier(abilityCooldownMultiplier);
-        config.setArenaEventsEnabled(arenaEvents);
+        config.setInitialArenaBorderSize(arenaSize);
+        config.setBorderShrinkInterval(arenaShrinkTime);
+        config.setFinalArenaBorderSize(arenaFinalSize);
 
         plugin.getConfigManager().saveConfig();
     }

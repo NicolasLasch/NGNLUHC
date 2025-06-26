@@ -18,9 +18,8 @@ commands:
     permission: ngnl.player
 
   duo:
-    description: Send a message to your duo partner
-    usage: /duo <message>
-    permission: ngnl.player
+    description: Commands for duo roles
+    usage: /duo <substitute|bonus|message>
 
   alliance:
     description: Form an alliance with another solo player

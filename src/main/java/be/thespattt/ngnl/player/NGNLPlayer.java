@@ -325,4 +325,10 @@ public class NGNLPlayer {
     public void setLastHealth(double lastHealth) {
         this.lastHealth = lastHealth;
     }
+
+    public void decrementMiniGamesLost() {
+        if (this.miniGamesLost > 0) {
+            this.miniGamesLost--;
+        }
+    }
 }

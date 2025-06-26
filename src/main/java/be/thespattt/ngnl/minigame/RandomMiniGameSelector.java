@@ -27,6 +27,8 @@ public class RandomMiniGameSelector implements Listener {
     private final Map<UUID, Boolean> canReroll = new HashMap<>();
     private final Map<UUID, Integer> animationTasks = new HashMap<>();
     private final Set<UUID> inTeleport = new HashSet<>();
+    private final Map<UUID, Set<UUID>> guiViewers = new HashMap<>(); // controller -> set of viewers
+    private final Set<UUID> mustStayInGui = new HashSet<>(); // players who cannot leave GUI
 
     private static final int GUI_SIZE = 27;
     private static final int REROLL_SLOT = 0;
@@ -44,19 +46,29 @@ public class RandomMiniGameSelector implements Listener {
         playerSelections.put(killerUUID, victim.getUniqueId());
         canReroll.put(killerUUID, true);
         inTeleport.add(killerUUID);
+
+        // NEW: Track both players in GUI
+        Set<UUID> viewers = new HashSet<>();
+        viewers.add(killer.getUniqueId());
+        viewers.add(victim.getUniqueId());
+        guiViewers.put(killerUUID, viewers);
+        mustStayInGui.addAll(viewers);
+
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (killer.isOnline()) {
+                if (killer.isOnline() && victim.isOnline()) {
                     Inventory gui = Bukkit.createInventory(null, GUI_SIZE, ChatColor.DARK_PURPLE + "Random Mini-Game Selector");
                     fillBackground(gui);
                     gui.setItem(REROLL_SLOT, createRerollButton(true));
                     gui.setItem(START_SLOT, createStartButton(false));
 
+                    // Open GUI for both players
                     killer.openInventory(gui);
+                    victim.openInventory(gui);
+
                     startRouletteAnimation(killer, gui);
 
-                    // Remove from teleport tracking after GUI is opened
                     new BukkitRunnable() {
                         @Override
                         public void run() {
@@ -65,7 +77,7 @@ public class RandomMiniGameSelector implements Listener {
                     }.runTaskLater(plugin, 5);
                 }
             }
-        }.runTaskLater(plugin, 10); // Wait half a second after teleport
+        }.runTaskLater(plugin, 10);
     }
 
     private void fillBackground(Inventory gui) {
@@ -270,6 +282,20 @@ public class RandomMiniGameSelector implements Listener {
             boolean isSelected = (slot == CENTER_SLOT);
             gui.setItem(slot, createMiniGameItem(miniGameTypes.get(gameIndex), isSelected));
         }
+
+        // NEW: Update for all viewers
+        UUID controllerUUID = findControllerForGui();
+        if (controllerUUID != null) {
+            updateGuiForAllViewers(controllerUUID, gui);
+        }
+    }
+
+    private UUID findControllerForGui() {
+        // Find the controller based on current animation tasks
+        for (UUID uuid : animationTasks.keySet()) {
+            return uuid;
+        }
+        return null;
     }
 
     private void playTickSound(Player player, int currentIteration, int totalIterations) {
@@ -339,6 +365,14 @@ public class RandomMiniGameSelector implements Listener {
 
         if (event.getView().getTitle().contains("Random Mini-Game Selector")) {
             event.setCancelled(true);
+
+            boolean canControl = playerSelections.containsKey(playerUUID);
+
+            if (!canControl) {
+                // Player can only watch, not interact
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.5f, 1.0f);
+                return;
+            }
 
             if (event.getRawSlot() == REROLL_SLOT) {
                 handleRerollClick(player, event.getClickedInventory());
@@ -418,7 +452,24 @@ public class RandomMiniGameSelector implements Listener {
         Player player = (Player) event.getPlayer();
         UUID playerUUID = player.getUniqueId();
 
-        if (!event.getView().getTitle().contains("Random Mini-Game Selector") || inTeleport.contains(playerUUID)) {
+        if (!event.getView().getTitle().contains("Random Mini-Game Selector")) {
+            return;
+        }
+
+        if (mustStayInGui.contains(playerUUID) && !inTeleport.contains(playerUUID)) {
+            // Force reopen GUI after 1 tick
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (!player.isOnline()) return;
+
+                    // Check if they still need to stay in GUI
+                    if (mustStayInGui.contains(playerUUID)) {
+                        reopenSelectionGui(player, playerUUID);
+                        MessageUtil.sendMessage(player, "&eYou must wait for the mini-game selection to complete!");
+                    }
+                }
+            }.runTaskLater(plugin, 1);
             return;
         }
 
@@ -453,8 +504,14 @@ public class RandomMiniGameSelector implements Listener {
                 gui.setItem(START_SLOT, createStartButton(true));
 
                 MiniGameType selectedGame = selectedGames.get(playerUUID);
-                for (int slot : ROULETTE_SLOTS) {
-                    gui.setItem(slot, createMiniGameItem(selectedGame, slot == CENTER_SLOT));
+                if (selectedGame != null) {
+                    for (int slot : ROULETTE_SLOTS) {
+                        gui.setItem(slot, createMiniGameItem(selectedGame, slot == CENTER_SLOT));
+                    }
+                } else {
+                    for (int slot : ROULETTE_SLOTS) {
+                        gui.setItem(slot, createGuiItem(Material.GRAY_STAINED_GLASS_PANE, " "));
+                    }
                 }
 
                 player.openInventory(gui);
@@ -469,6 +526,11 @@ public class RandomMiniGameSelector implements Listener {
         canReroll.remove(playerUUID);
         inTeleport.remove(playerUUID);
 
+        Set<UUID> viewers = guiViewers.remove(playerUUID);
+        if (viewers != null) {
+            mustStayInGui.removeAll(viewers);
+        }
+
         cancelExistingAnimation(playerUUID);
     }
 
@@ -482,5 +544,23 @@ public class RandomMiniGameSelector implements Listener {
         canReroll.clear();
         animationTasks.clear();
         inTeleport.clear();
+    }
+
+    private void updateGuiForAllViewers(UUID controllerUUID, Inventory gui) {
+        Set<UUID> viewers = guiViewers.get(controllerUUID);
+        if (viewers == null) return;
+
+        for (UUID viewerUUID : viewers) {
+            Player viewer = Bukkit.getPlayer(viewerUUID);
+            if (viewer != null && viewer.isOnline()) {
+                // Update the viewer's inventory view
+                if (viewer.getOpenInventory().getTitle().contains("Random Mini-Game Selector")) {
+                    // Copy the controller's GUI to the viewer
+                    for (int i = 0; i < GUI_SIZE; i++) {
+                        viewer.getOpenInventory().getTopInventory().setItem(i, gui.getItem(i));
+                    }
+                }
+            }
+        }
     }
 }

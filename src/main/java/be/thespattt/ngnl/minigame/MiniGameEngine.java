@@ -247,6 +247,8 @@ public class MiniGameEngine {
         // Record which mini-game the loser lost on
         plugin.getGameManager().getGame().setLastMiniGameLostBy(loserId, miniGameType);
 
+        plugin.getMiniGameStatsTracker().recordWin(winnerId, miniGameType);
+        plugin.getMiniGameStatsTracker().recordLoss(loserId, miniGameType);
         // Broadcast result
         String winnerName = winner != null ? winner.getName() : "Unknown";
         String loserName = loser != null ? loser.getName() : "Unknown";

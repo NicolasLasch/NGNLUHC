@@ -1,305 +1,235 @@
-[14:44:32] [ServerMain/INFO]: [bootstrap] Running Java 21 (OpenJDK 64-Bit Server VM 21.0.7+6-LTS; Microsoft Microsoft-11369939) on Mac OS X 15.5 (aarch64)
-[14:44:32] [ServerMain/INFO]: [bootstrap] Loading Purpur 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) for Minecraft 1.21.4
-[14:44:32] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
-[14:44:32] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar'...
-[14:44:32] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar' in 326ms.
-[14:44:33] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
-[14:44:33] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
+[18:55:40] [ServerMain/INFO]: [bootstrap] Running Java 21 (OpenJDK 64-Bit Server VM 21.0.7+6-LTS; Microsoft Microsoft-11369939) on Mac OS X 15.5 (aarch64)
+[18:55:40] [ServerMain/INFO]: [bootstrap] Loading Purpur 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) for Minecraft 1.21.4
+[18:55:40] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
+[18:55:40] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar'...
+[18:55:41] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins/NGNL-1.0-SNAPSHOT.jar' in 342ms.
+[18:55:41] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
+[18:55:41] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
  - NoGameNoLifeUHC (1.0.0)
-[14:44:34] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
-[14:44:35] [ServerMain/INFO]: Loaded 1370 recipes
-[14:44:35] [ServerMain/INFO]: Loaded 1481 advancements
-[14:44:35] [ServerMain/INFO]: [MCTypeRegistry] Initialising converters for DataConverter...
-[14:44:35] [ServerMain/INFO]: [MCTypeRegistry] Finished initialising converters for DataConverter in 83,1ms
-[14:44:35] [Server thread/INFO]: Starting minecraft server version 1.21.4
-[14:44:35] [Server thread/INFO]: Loading properties
-[14:44:35] [Server thread/INFO]: This server is running Purpur version 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) (Implementing API version 1.21.4-R0.1-SNAPSHOT)
-[14:44:35] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
-[14:44:35] [Server thread/INFO]: Server Ping Player Sample Count: 12
-[14:44:35] [Server thread/INFO]: Using 4 threads for Netty based IO
-[14:44:35] [Server thread/INFO]: [MoonriseCommon] Paper is using 2 worker threads, 1 I/O threads
-[14:44:35] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using population gen parallelism: true
-[14:44:35] [Server thread/INFO]: Default game type: SURVIVAL
-[14:44:35] [Server thread/INFO]: Generating keypair
-[14:44:35] [Server thread/INFO]: Starting Minecraft server on *:25565
-[14:44:35] [Server thread/INFO]: Using default channel type
-[14:44:36] [Server thread/INFO]: Paper: Using libdeflate (macOS ARM64 / Apple Silicon) compression from Velocity.
-[14:44:36] [Server thread/INFO]: Paper: Using native (macOS ARM64 / Apple Silicon) cipher from Velocity.
-[14:44:36] [Server thread/INFO]: [NoGameNoLifeUHC] Loading server plugin NoGameNoLifeUHC v1.0.0
-[14:44:36] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
-[14:44:36] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
-[14:44:36] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
-[14:44:36] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
-[14:44:36] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
-[14:44:36] [Server thread/INFO]: Preparing level "world"
-[14:44:36] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
-[14:44:36] [Server thread/INFO]: Preparing spawn area: 0%
-[14:44:36] [Server thread/INFO]: Time elapsed: 414 ms
-[14:44:36] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
-[14:44:36] [Server thread/INFO]: Preparing spawn area: 0%
-[14:44:36] [Server thread/INFO]: Time elapsed: 58 ms
-[14:44:36] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
-[14:44:36] [Server thread/INFO]: Preparing spawn area: 0%
-[14:44:37] [Server thread/INFO]: Time elapsed: 33 ms
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Enabling NoGameNoLifeUHC v1.0.0
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] All commands registered
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration loaded successfully
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations loaded
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 7 factions
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 29 roles
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 14 mini-games
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 13 special items
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_waiting
-[14:44:37] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_waiting
-[14:44:37] [Server thread/INFO]: Preparing spawn area: 0%
-[14:44:37] [Server thread/INFO]: Time elapsed: 35 ms
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_mining
-[14:44:37] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_mining
-[14:44:37] [Server thread/INFO]: Preparing spawn area: 0%
-[14:44:37] [Server thread/INFO]: Time elapsed: 82 ms
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_arena
-[14:44:37] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_arena
-[14:44:37] [Server thread/INFO]: Preparing spawn area: 0%
-[14:44:37] [Server thread/INFO]: Time elapsed: 27 ms
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_minigame
-[14:44:37] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_minigame
-[14:44:37] [Server thread/INFO]: Preparing spawn area: 0%
-[14:44:37] [Server thread/INFO]: Time elapsed: 25 ms
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] Worlds initialized
-[14:44:37] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been enabled!
-[14:44:37] [Server thread/INFO]: [spark] Starting background profiler...
-[14:44:38] [Server thread/INFO]: Done preparing level "world" (1.944s)
-[14:44:38] [Server thread/INFO]: Running delayed init tasks
-[14:44:38] [Server thread/INFO]: Done (6.390s)! For help, type "help"
-[14:44:46] [User Authenticator #0/INFO]: UUID of player Dev is 380df991-f603-344c-a090-369bad2a924a
-[14:44:46] [Server thread/INFO]: Dev joined the game
-[14:44:46] [Server thread/INFO]: Dev[/192.168.1.39:56739] logged in with entity id 59 at ([ngnl_waiting]0.5, -57.0, 0.5)
-[14:44:55] [User Authenticator #0/INFO]: UUID of player Dev2 is 21cc3e25-481e-3cfa-8770-c5693a3e93a4
-[14:44:55] [Server thread/INFO]: Dev2 joined the game
-[14:44:55] [Server thread/INFO]: Dev2[/192.168.1.39:56749] logged in with entity id 78 at ([ngnl_waiting]0.5, -57.0, 0.5)
-[14:44:59] [User Authenticator #0/INFO]: UUID of player Dev3 is 1509e314-2d7b-365a-bf72-c0cfae062d80
-[14:44:59] [Server thread/INFO]: Dev3 joined the game
-[14:44:59] [Server thread/INFO]: Dev3[/192.168.1.39:56763] logged in with entity id 104 at ([ngnl_waiting]0.5, -57.0, 0.5)
-[14:45:07] [User Authenticator #0/INFO]: UUID of player Dev4 is 1133a83a-438e-35ab-86fc-1af8c706b3cf
-[14:45:07] [Server thread/INFO]: Dev4 joined the game
-[14:45:07] [Server thread/INFO]: Dev4[/192.168.1.39:56777] logged in with entity id 109 at ([ngnl_waiting]0.5, -57.0, 0.5)
-[14:45:12] [Server thread/INFO]: Dev issued server command: /ngnl start
-[14:45:12] [Server thread/INFO]: [NGNL]       Episode 1 has started!      
-[14:45:12] [Server thread/INFO]: [NGNL] No Game No Life UHC has begun!
-[14:45:12] [Server thread/INFO]: [NGNL] Good luck and remember: In this world, games decide everything!
-[14:45:22] [Server thread/INFO]: Dev issued server command: /tp @a @s
-[14:45:22] [Server thread/INFO]: [Dev: Teleported 4 entities to Dev]
-[14:45:33] [Server thread/INFO]: Dev issued server command: /give @a minecraft:water_bucket
-[14:45:33] [Server thread/INFO]: [Dev: Gave 1 [Water Bucket] to 4]
-[14:45:38] [Server thread/INFO]: Dev issued server command: /give @a minecraft:diamond_axe
-[14:45:38] [Server thread/INFO]: [Dev: Gave 1 [Diamond Axe] to 4]
-[14:45:46] [Server thread/INFO]: Dev issued server command: /give @a minecraft:cooked_beef 32
-[14:45:46] [Server thread/INFO]: [Dev: Gave 32 [Steak] to 4]
-[14:45:50] [Server thread/INFO]: Dev issued server command: /give @a minecraft:diamond_chestplate
-[14:45:50] [Server thread/INFO]: [Dev: Gave 1 [Diamond Chestplate] to 4]
-[14:46:12] [Server thread/INFO]: [NGNL]       Episode 2 has started!      
-[14:46:12] [Server thread/INFO]: [NoGameNoLifeUHC] Randomly assigned 4 roles to 4 players
-[14:46:12] [Server thread/INFO]: [NGNL] PvP is now enabled!
-[14:46:28] [Server thread/INFO]: [NGNL] A mini-game has started: Mental Chess
-[14:46:28] [Server thread/INFO]: [NGNL] Dev3 vs Dev4
-[14:46:28] [Server thread/INFO]: [NGNL] A mini-game has started: Mental Chess
-[14:46:28] [Server thread/INFO]: [NGNL] Dev3 vs Dev4
-[14:46:28] [Server thread/INFO]: [NGNL] A mini-game has started: Mental Chess
-[14:46:28] [Server thread/INFO]: [NGNL] Dev3 vs Dev4
-[14:46:58] [Server thread/INFO]: [NGNL] Mini-game has ended: Mental Chess
-[14:46:58] [Server thread/INFO]: [NGNL] Winner: Dev3 | Loser: Dev4
-[14:47:06] [Server thread/INFO]: [NGNL] A mini-game has started: Spleef
-[14:47:06] [Server thread/INFO]: [NGNL] Dev2 vs Dev
-[14:47:06] [Server thread/INFO]: [NGNL] A mini-game has started: Spleef
-[14:47:06] [Server thread/INFO]: [NGNL] Dev2 vs Dev
-[14:47:06] [Server thread/INFO]: [NGNL] A mini-game has started: Spleef
-[14:47:06] [Server thread/INFO]: [NGNL] Dev2 vs Dev
-[14:47:12] [Server thread/INFO]: [NGNL]       Episode 3 has started!      
-[14:47:35] [Server thread/INFO]: [NGNL] Mini-game has ended: Spleef
-[14:47:35] [Server thread/INFO]: [NGNL] Winner: Dev2 | Loser: Dev
-[14:47:50] [Server thread/INFO]: Dev2 issued server command: /tp @a @s
-[14:47:50] [Server thread/INFO]: [Dev2: Teleported 4 entities to Dev2]
-[14:48:12] [Server thread/INFO]: [NGNL]       Episode 4 has started!      
-[14:48:13] [Server thread/INFO]: [NGNL] A mini-game has started: The Floor is Lava
-[14:48:13] [Server thread/INFO]: [NGNL] Dev2 vs Dev
-[14:48:13] [Server thread/INFO]: [NGNL] A mini-game has started: The Floor is Lava
-[14:48:13] [Server thread/INFO]: [NGNL] Dev2 vs Dev
-[14:48:13] [Server thread/INFO]: [NGNL] A mini-game has started: The Floor is Lava
-[14:48:13] [Server thread/INFO]: [NGNL] Dev2 vs Dev
-[14:48:29] [Server thread/INFO]: [NGNL] Mini-game has ended: The Floor is Lava
-[14:48:29] [Server thread/INFO]: [NGNL] Winner: Dev2 | Loser: Dev
-[14:48:29] [Server thread/INFO]: [NGNL] Dev has been eliminated due to losing all hearts!
-[14:48:29] [Server thread/INFO]: [NoGameNoLifeUHC] Player eliminated. Alive players: 3/2
-[14:48:29] [Server thread/INFO]: [NoGameNoLifeUHC] Current game state: MINING_PHASE
-[14:48:29] [Server thread/INFO]: [NoGameNoLifeUHC] Checking arena phase: 3 players alive, threshold: 2
-[14:48:49] [Server thread/INFO]: [NGNL] A mini-game has started: Dés à Coudre
-[14:48:49] [Server thread/INFO]: [NGNL] Dev3 vs Dev4
-[14:48:49] [Server thread/INFO]: [NGNL] A mini-game has started: Dés à Coudre
-[14:48:49] [Server thread/INFO]: [NGNL] Dev3 vs Dev4
-[14:48:49] [Server thread/INFO]: [NGNL] A mini-game has started: Dés à Coudre
-[14:48:49] [Server thread/INFO]: [NGNL] Dev3 vs Dev4
-[14:49:12] [Server thread/INFO]: [NGNL]       Episode 5 has started!      
-[14:49:39] [Server thread/WARN]: Dev3 moved too quickly! -685.9125879848287,-33.090541350740864,754.6976780522513
-[14:50:10] [Server thread/INFO]: [NGNL] Mini-game has ended: Dés à Coudre
-[14:50:10] [Server thread/INFO]: [NGNL] Winner: Dev3 | Loser: Dev4
-[14:50:10] [Server thread/INFO]: [NGNL] Dev4 has been eliminated due to losing all hearts!
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Player eliminated. Alive players: 2/2
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Current game state: MINING_PHASE
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Checking arena phase: 2 players alive, threshold: 2
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Arena phase triggered!
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Starting arena phase...
-[14:50:10] [Server thread/INFO]: [NGNL] All pledges have been dissolved! The arena phase has begun!
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Initializing arena world...
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Chargement du monde arène: ngnl_arena_city
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Map personnalisée trouvée, chargement...
-[14:50:10] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_arena_city
-[14:50:10] [Server thread/INFO]: Preparing spawn area: 0%
-[14:50:10] [Server thread/INFO]: Time elapsed: 34 ms
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Monde arène configuré - Bordure initiale: 300x300
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Générés 8 points de spawn autour du centre
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Centre de l'arène défini à: X=0, Y=80, Z=0
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Bordure centrée sur: X=0, Z=0
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Monde arène initialisé avec succès !
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Mobs hostiles supprimés du monde arène
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Activating arena combat...
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Mode combat arène activé
-[14:50:10] [Server thread/INFO]: [NGNL] ═══════════════════════════════════════════════
-[14:50:10] [Server thread/INFO]: [NGNL]             LOVE FIGHT COMMENCÉ
-[14:50:10] [Server thread/INFO]: [NGNL]  Les qualifications sont terminées !
-[14:50:10] [Server thread/INFO]: [NGNL]  Bienvenue dans l'arène finale !
-[14:50:10] [Server thread/INFO]: [NGNL]  Les armes traditionnelles sont désactivées !
-[14:50:10] [Server thread/INFO]: [NGNL]  Utilisez votre Love Gun pour combattre !
-[14:50:10] [Server thread/INFO]: [NGNL] ═══════════════════════════════════════════════
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Adding player to arena: Dev2
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Adding player to arena: Dev3
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Teleporting 2 players to arena
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Téléportation de 2 joueurs vers l'arène
-[14:50:10] [Server thread/INFO]: [NoGameNoLifeUHC] Arena phase started successfully!
-[14:50:12] [Server thread/INFO]: [NoGameNoLifeUHC] Gave arena equipment to: Dev2
-[14:50:12] [Server thread/INFO]: [NoGameNoLifeUHC] Gave arena equipment to: Dev3
-[14:50:13] [Server thread/INFO]: [NGNL]       Episode 6 has started!      
-[14:50:15] [Server thread/INFO]: [NoGameNoLifeUHC] Tâche de rétrécissement de bordure initialisée:
-[14:50:15] [Server thread/INFO]: [NoGameNoLifeUHC] - Taille initiale: 300x300
-[14:50:15] [Server thread/INFO]: [NoGameNoLifeUHC] - Taille finale: 50x50
-[14:50:15] [Server thread/INFO]: [NoGameNoLifeUHC] - Intervalle: 120 secondes
-[14:50:15] [Server thread/INFO]: [NoGameNoLifeUHC] - Durée totale: 1200 secondes
-[14:50:15] [Server thread/INFO]: [NoGameNoLifeUHC] Started border shrink task
-[14:50:33] [Server thread/INFO]: Dev issued server command: /gamemode creative
-[14:50:33] [Server thread/INFO]: [Dev: Set own game mode to Creative Mode]
-[14:50:41] [Server thread/INFO]: Dev4 issued server command: /gamemode creative
-[14:50:47] [Server thread/INFO]: Dev issued server command: /gamemode creative Dev4
-[14:50:47] [Server thread/INFO]: [Dev: Set Dev4's game mode to Creative Mode]
-[14:50:51] [Server thread/INFO]: Dev issued server command: /gamemode spectator
-[14:50:51] [Server thread/INFO]: [Dev: Set own game mode to Spectator Mode]
-[14:50:54] [Server thread/INFO]: Dev4 issued server command: /gamemode
-[14:51:12] [Server thread/INFO]: Dev2 issued server command: /tp Dev3 Dev
-[14:51:12] [Server thread/INFO]: [Dev2: Teleported Dev3 to Dev]
-[14:51:13] [Server thread/INFO]: [NGNL]       Episode 7 has started!      
-[14:51:14] [Server thread/INFO]: Dev2 issued server command: /tp Dev3 Dev2
-[14:51:14] [Server thread/INFO]: [Dev2: Teleported Dev3 to Dev2]
-[14:51:20] [Server thread/INFO]: [NoGameNoLifeUHC] Player eliminated. Alive players: 1/2
-[14:51:20] [Server thread/INFO]: [NoGameNoLifeUHC] Current game state: ARENA_PHASE
-[14:51:20] [Server thread/INFO]: [NoGameNoLifeUHC] Checking arena phase: 1 players alive, threshold: 2
-[14:51:20] [Server thread/INFO]: [NGNL]                     
-[14:51:20] [Server thread/INFO]: [NGNL] Winner: Dev2
-[14:51:20] [Server thread/INFO]: [NGNL]    (Plum)
-[14:51:20] [Server thread/INFO]: [NGNL] Players and Roles:
-[14:51:20] [Server thread/INFO]: [NGNL] ✘ Dev4 (Kainas)
-[14:51:20] [Server thread/INFO]: [NGNL] ✘ Dev3 (Corone Dola)
-[14:51:20] [Server thread/INFO]: [NGNL] ✘ Dev (179 Ghost)
-[14:51:20] [Server thread/INFO]: [NGNL] ✔ Dev2 (Plum)
-[14:51:20] [Server thread/INFO]: [NGNL]                     
-[14:51:20] [Server thread/INFO]: [NoGameNoLifeUHC] Cancelled border shrink task
-[14:51:20] [Server thread/INFO]: [NoGameNoLifeUHC] Mode combat arène désactivé
-[14:51:20] [Server thread/INFO]: [NoGameNoLifeUHC] Deactivated arena combat
-[14:51:20] [Server thread/INFO]: [NGNL] Dev3 has been eliminated!
-[14:51:20] [Server thread/ERROR]: Could not pass event ProjectileHitEvent to NoGameNoLifeUHC v1.0.0
-java.lang.IllegalArgumentException: x not finite
-	at org.bukkit.util.NumberConversions.checkFinite(NumberConversions.java:118) ~[purpur-api-1.21.4-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.util.Vector.checkFinite(Vector.java:872) ~[purpur-api-1.21.4-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.entity.CraftEntity.setVelocity(CraftEntity.java:165) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at NGNL-1.0-SNAPSHOT.jar/be.thespattt.ngnl.arena.QuakeWeapon.applyKnockback(QuakeWeapon.java:239) ~[NGNL-1.0-SNAPSHOT.jar:?]
-	at NGNL-1.0-SNAPSHOT.jar/be.thespattt.ngnl.arena.QuakeWeapon.applyQuakeDamage(QuakeWeapon.java:216) ~[NGNL-1.0-SNAPSHOT.jar:?]
-	at NGNL-1.0-SNAPSHOT.jar/be.thespattt.ngnl.arena.QuakeWeapon.handleDirectHit(QuakeWeapon.java:205) ~[NGNL-1.0-SNAPSHOT.jar:?]
-	at NGNL-1.0-SNAPSHOT.jar/be.thespattt.ngnl.arena.QuakeWeapon.onProjectileHit(QuakeWeapon.java:172) ~[NGNL-1.0-SNAPSHOT.jar:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:80) ~[purpur-api-1.21.4-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:70) ~[purpur-api-1.21.4-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:131) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:628) ~[purpur-api-1.21.4-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.event.CraftEventFactory.callProjectileHitEvent(CraftEventFactory.java:1539) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.world.entity.projectile.Projectile.preHitTargetOrDeflectSelf(Projectile.java:309) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.world.entity.projectile.ThrowableProjectile.tick(ThrowableProjectile.java:62) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.level.ServerLevel.tickNonPassenger(ServerLevel.java:1366) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.world.level.Level.guardEntityTick(Level.java:1545) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.level.ServerLevel.lambda$tick$4(ServerLevel.java:838) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.world.level.entity.EntityTickList.forEach(EntityTickList.java:39) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.level.ServerLevel.tick(ServerLevel.java:820) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.tickChildren(MinecraftServer.java:1771) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.tickServer(MinecraftServer.java:1575) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1291) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:313) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at java.base/java.lang.Thread.run(Thread.java:1583) ~[?:?]
-[14:52:56] [Server thread/INFO]: Dev issued server command: /ngnl reload
-[14:52:56] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration loaded successfully
-[14:52:56] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations loaded
-[14:52:56] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations reloaded
-[14:52:58] [Server thread/INFO]: Dev issued server command: /ngnl reloa
-[14:53:01] [Server thread/INFO]: Dev issued server command: /ngnl start
-[14:53:01] [Server thread/ERROR]: Command exception: /ngnl start
-org.bukkit.command.CommandException: Unhandled exception executing command 'ngnl' in plugin NoGameNoLifeUHC v1.0.0
-	at org.bukkit.command.PluginCommand.execute(PluginCommand.java:47) ~[purpur-api-1.21.4-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.command.brigadier.bukkit.BukkitCommandNode$BukkitBrigCommand.run(BukkitCommandNode.java:82) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at com.mojang.brigadier.context.ContextChain.runExecutable(ContextChain.java:73) ~[brigadier-1.3.10.jar:?]
-	at net.minecraft.commands.execution.tasks.ExecuteCommand.execute(ExecuteCommand.java:30) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.commands.execution.tasks.ExecuteCommand.execute(ExecuteCommand.java:13) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.commands.execution.UnboundEntryAction.lambda$bind$0(UnboundEntryAction.java:8) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.commands.execution.CommandQueueEntry.execute(CommandQueueEntry.java:5) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.commands.execution.ExecutionContext.runCommandQueue(ExecutionContext.java:105) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.commands.Commands.executeCommandInContext(Commands.java:458) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.commands.Commands.performCommand(Commands.java:365) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.commands.Commands.performCommand(Commands.java:355) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.commands.Commands.performCommand(Commands.java:349) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.performUnsignedChatCommand(ServerGamePacketListenerImpl.java:2295) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.lambda$handleChatCommand$14(ServerGamePacketListenerImpl.java:2268) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.TickTask.run(TickTask.java:18) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.util.thread.BlockableEventLoop.doRunTask(BlockableEventLoop.java:155) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.util.thread.ReentrantBlockableEventLoop.doRunTask(ReentrantBlockableEventLoop.java:24) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.doRunTask(MinecraftServer.java:1494) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.doRunTask(MinecraftServer.java:176) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.util.thread.BlockableEventLoop.pollTask(BlockableEventLoop.java:129) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.pollTaskInternal(MinecraftServer.java:1474) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.pollTask(MinecraftServer.java:1468) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.util.thread.BlockableEventLoop.managedBlock(BlockableEventLoop.java:139) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.managedBlock(MinecraftServer.java:1425) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.waitUntilNextTick(MinecraftServer.java:1433) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1310) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:313) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at java.base/java.lang.Thread.run(Thread.java:1583) ~[?:?]
-Caused by: java.lang.IllegalArgumentException: Health value (20.0) must be between 0 and 2.0. (attribute base value: 2.0, player: Dev4)
-	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:483) ~[guava-33.3.1-jre.jar:?]
-	at org.bukkit.craftbukkit.entity.CraftLivingEntity.setHealth(CraftLivingEntity.java:112) ~[purpur-1.21.4.jar:1.21.4-2416-51aafbc]
-	at NGNL-1.0-SNAPSHOT.jar/be.thespattt.ngnl.game.NGNLGame.initializePlayers(NGNLGame.java:298) ~[NGNL-1.0-SNAPSHOT.jar:?]
-	at NGNL-1.0-SNAPSHOT.jar/be.thespattt.ngnl.game.NGNLGame.startGame(NGNLGame.java:96) ~[NGNL-1.0-SNAPSHOT.jar:?]
-	at NGNL-1.0-SNAPSHOT.jar/be.thespattt.ngnl.game.GameManager.startGame(GameManager.java:42) ~[NGNL-1.0-SNAPSHOT.jar:?]
-	at NGNL-1.0-SNAPSHOT.jar/be.thespattt.ngnl.command.commands.NGNLCommand.handleStart(NGNLCommand.java:135) ~[NGNL-1.0-SNAPSHOT.jar:?]
-	at NGNL-1.0-SNAPSHOT.jar/be.thespattt.ngnl.command.commands.NGNLCommand.onCommand(NGNLCommand.java:51) ~[NGNL-1.0-SNAPSHOT.jar:?]
-	at org.bukkit.command.PluginCommand.execute(PluginCommand.java:45) ~[purpur-api-1.21.4-R0.1-SNAPSHOT.jar:?]
-	... 27 more
-[14:53:03] [Server thread/INFO]: Dev issued server command: /ngnl stop
-[14:53:05] [Server thread/INFO]: Dev issued server command: /ngnl start
-[14:53:05] [Server thread/INFO]: [NGNL] The game is already running!
-[14:53:09] [Server thread/INFO]: Dev issued server command: /ngnl start
-[14:53:09] [Server thread/INFO]: [NGNL] The game is already running!
-[14:53:12] [Server thread/INFO]: Dev issued server command: /ngnl stop
-[14:53:13] [Server thread/INFO]: Dev issued server command: /ngnl start
-[14:53:13] [Server thread/INFO]: [NGNL] The game is already running!
-[14:53:22] [Server thread/INFO]: Dev issued server command: /ngnl info
-[14:54:43] [Server thread/INFO]: Dev issued server command: /execute in minecraft:ngnl_arena run tp @s ~ ~ ~
-[14:54:43] [Server thread/INFO]: [Dev: Teleported Dev to 10.300000, -57.000000, -3.658122]
-[14:55:02] [Server thread/INFO]: Dev issued server command: /execute in minecraft:ngnl_arena_city run tp @s ~ ~ ~
-[14:55:02] [Server thread/INFO]: [Dev: Teleported Dev to 11.294734, -60.000000, 33.471807]
-[14:55:05] [Server thread/INFO]: Dev issued server command: /gamemode creative
-[14:55:05] [Server thread/INFO]: [Dev: Set own game mode to Creative Mode]
-[14:55:09] [Server thread/INFO]: Dev issued server command: /execute in minecraft:ngnl_arena_city run tp @s ~ ~1000 ~
-[14:55:09] [Server thread/INFO]: [Dev: Teleported Dev to 10.673557, 534.803057, 33.470691]
+[18:55:42] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, name=PROD]
+[18:55:43] [ServerMain/INFO]: Loaded 1370 recipes
+[18:55:43] [ServerMain/INFO]: Loaded 1481 advancements
+[18:55:43] [ServerMain/INFO]: [MCTypeRegistry] Initialising converters for DataConverter...
+[18:55:43] [ServerMain/INFO]: [MCTypeRegistry] Finished initialising converters for DataConverter in 81,0ms
+[18:55:43] [Server thread/INFO]: Starting minecraft server version 1.21.4
+[18:55:43] [Server thread/INFO]: Loading properties
+[18:55:43] [Server thread/INFO]: This server is running Purpur version 1.21.4-2416-HEAD@51aafbc (2025-04-12T23:37:33Z) (Implementing API version 1.21.4-R0.1-SNAPSHOT)
+[18:55:43] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[18:55:43] [Server thread/INFO]: Using 4 threads for Netty based IO
+[18:55:43] [Server thread/INFO]: Server Ping Player Sample Count: 12
+[18:55:43] [Server thread/INFO]: [MoonriseCommon] Paper is using 2 worker threads, 1 I/O threads
+[18:55:43] [Server thread/INFO]: [ChunkTaskScheduler] Chunk system is using population gen parallelism: true
+[18:55:43] [Server thread/INFO]: Default game type: SURVIVAL
+[18:55:43] [Server thread/INFO]: Generating keypair
+[18:55:43] [Server thread/INFO]: Starting Minecraft server on *:25565
+[18:55:43] [Server thread/INFO]: Using default channel type
+[18:55:44] [Server thread/INFO]: Paper: Using libdeflate (macOS ARM64 / Apple Silicon) compression from Velocity.
+[18:55:44] [Server thread/INFO]: Paper: Using native (macOS ARM64 / Apple Silicon) cipher from Velocity.
+[18:55:44] [Server thread/INFO]: [NoGameNoLifeUHC] Loading server plugin NoGameNoLifeUHC v1.0.0
+[18:55:44] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[18:55:44] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[18:55:44] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[18:55:44] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[18:55:44] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[18:55:44] [Server thread/INFO]: Preparing level "world"
+[18:55:44] [Server thread/INFO]: Preparing start region for dimension minecraft:overworld
+[18:55:44] [Server thread/INFO]: Preparing spawn area: 0%
+[18:55:44] [Server thread/INFO]: Time elapsed: 386 ms
+[18:55:44] [Server thread/INFO]: Preparing start region for dimension minecraft:the_nether
+[18:55:44] [Server thread/INFO]: Preparing spawn area: 0%
+[18:55:45] [Server thread/INFO]: Time elapsed: 91 ms
+[18:55:45] [Server thread/INFO]: Preparing start region for dimension minecraft:the_end
+[18:55:45] [Server thread/INFO]: Preparing spawn area: 0%
+[18:55:45] [Server thread/INFO]: Time elapsed: 41 ms
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] Enabling NoGameNoLifeUHC v1.0.0
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] All commands registered
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration loaded successfully
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations loaded
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 7 factions
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 29 roles
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 14 mini-games
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] Loaded 13 special items
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_waiting
+[18:55:45] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_waiting
+[18:55:45] [Server thread/INFO]: Preparing spawn area: 0%
+[18:55:45] [Server thread/INFO]: Time elapsed: 29 ms
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_mining
+[18:55:45] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_mining
+[18:55:45] [Server thread/INFO]: Preparing spawn area: 0%
+[18:55:45] [Server thread/INFO]: Time elapsed: 56 ms
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] Creating world: ngnl_minigame
+[18:55:45] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_minigame
+[18:55:45] [Server thread/INFO]: Preparing spawn area: 0%
+[18:55:45] [Server thread/INFO]: Time elapsed: 21 ms
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] Worlds initialized
+[18:55:45] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been enabled!
+[18:55:45] [Server thread/INFO]: [spark] Starting background profiler...
+[18:55:46] [Server thread/INFO]: Done preparing level "world" (1.855s)
+[18:55:46] [Server thread/INFO]: Running delayed init tasks
+[18:55:46] [Server thread/INFO]: Done (6.443s)! For help, type "help"
+[18:56:21] [User Authenticator #0/INFO]: UUID of player Dev is 380df991-f603-344c-a090-369bad2a924a
+[18:56:21] [Server thread/INFO]: Dev joined the game
+[18:56:21] [Server thread/INFO]: Dev[/192.168.1.39:55041] logged in with entity id 53 at ([ngnl_waiting]0.5, -57.0, 0.5)
+[18:56:28] [User Authenticator #0/INFO]: UUID of player Dev3 is 1509e314-2d7b-365a-bf72-c0cfae062d80
+[18:56:28] [Server thread/INFO]: Dev3 joined the game
+[18:56:28] [Server thread/INFO]: Dev3[/192.168.1.39:55058] logged in with entity id 60 at ([ngnl_waiting]0.5, -57.0, 0.5)
+[18:56:37] [User Authenticator #0/INFO]: UUID of player Dev2 is 21cc3e25-481e-3cfa-8770-c5693a3e93a4
+[18:56:37] [Server thread/INFO]: Dev2 joined the game
+[18:56:37] [Server thread/INFO]: Dev2[/192.168.1.39:55081] logged in with entity id 102 at ([ngnl_waiting]0.5, -57.0, 0.5)
+[18:56:46] [User Authenticator #0/INFO]: UUID of player Dev4 is 1133a83a-438e-35ab-86fc-1af8c706b3cf
+[18:56:46] [Server thread/INFO]: Dev4 joined the game
+[18:56:46] [Server thread/INFO]: Dev4[/192.168.1.39:55095] logged in with entity id 103 at ([ngnl_waiting]0.5, -57.0, 0.5)
+[18:56:56] [Server thread/INFO]: Dev4 issued server command: /ngnl start
+[18:56:59] [Server thread/INFO]: Dev issued server command: /op Dev3
+[18:56:59] [Server thread/INFO]: [Dev: Made Dev3 a server operator]
+[18:57:01] [Server thread/INFO]: Dev issued server command: /op Dev4
+[18:57:01] [Server thread/INFO]: [Dev: Made Dev4 a server operator]
+[18:57:05] [Server thread/INFO]: Dev issued server command: /ngnl start
+[18:57:05] [Server thread/INFO]: [NGNL]       Episode 1 has started!      
+[18:57:05] [Server thread/INFO]: [NGNL] No Game No Life UHC has begun!
+[18:57:05] [Server thread/INFO]: [NGNL] Good luck and remember: In this world, games decide everything!
+[18:57:08] [Server thread/INFO]: Dev issued server command: /tp
+[18:57:12] [Server thread/INFO]: Dev issued server command: /tp @a @s
+[18:57:12] [Server thread/INFO]: [Dev: Teleported 4 entities to Dev]
+[18:57:22] [Server thread/INFO]: Dev issued server command: /role
+[18:57:27] [Server thread/INFO]: Dev issued server command: /give @a minecraft:diamond_axe
+[18:57:27] [Server thread/INFO]: [Dev: Gave 1 [Diamond Axe] to 4]
+[18:58:05] [Server thread/INFO]: [NGNL]       Episode 2 has started!      
+[18:58:05] [Server thread/INFO]: [NoGameNoLifeUHC] Randomly assigned 4 roles to 4 players
+[18:58:05] [Server thread/INFO]: [NGNL] PvP is now enabled!
+[18:58:28] [Server thread/INFO]: [NGNL] A mini-game has started: Memory Game
+[18:58:28] [Server thread/INFO]: [NGNL] Dev vs Dev2
+[18:58:28] [Server thread/INFO]: [NGNL] A mini-game has started: Memory Game
+[18:58:28] [Server thread/INFO]: [NGNL] Dev vs Dev2
+[18:58:28] [Server thread/INFO]: [NGNL] A mini-game has started: Memory Game
+[18:58:28] [Server thread/INFO]: [NGNL] Dev vs Dev2
+[18:58:41] [Server thread/INFO]: Dev issued server command: /worldborder set 181631
+[18:58:41] [Server thread/INFO]: [Dev: Set the world border to 181631.0 block(s) wide]
+[18:59:05] [Server thread/INFO]: [NGNL]       Episode 3 has started!      
+[18:59:24] [Server thread/INFO]: [NGNL] A mini-game has started: Splegg
+[18:59:24] [Server thread/INFO]: [NGNL] Dev4 vs Dev3
+[18:59:24] [Server thread/INFO]: [NGNL] A mini-game has started: Splegg
+[18:59:24] [Server thread/INFO]: [NGNL] Dev4 vs Dev3
+[18:59:24] [Server thread/INFO]: [NGNL] A mini-game has started: Splegg
+[18:59:24] [Server thread/INFO]: [NGNL] Dev4 vs Dev3
+[18:59:24] [Server thread/WARN]: Dev4 moved too quickly! 496.5,-2.0,-2.0
+[18:59:24] [Server thread/WARN]: Dev3 moved too quickly! 503.5,-2.0,2.0
+[18:59:53] [Server thread/INFO]: [NGNL] Mini-game has ended: Splegg
+[18:59:53] [Server thread/INFO]: [NGNL] Winner: Dev4 | Loser: Dev3
+[18:59:53] [Server thread/WARN]: Dev4 moved too quickly! -632.708064998472,-18.0,-657.5117557455919
+[19:00:03] [Server thread/INFO]: [NGNL] Mini-game has ended: Memory Game
+[19:00:03] [Server thread/INFO]: [NGNL] Winner: Dev | Loser: Dev2
+[19:00:05] [Server thread/INFO]: [NGNL]       Episode 4 has started!      
+[19:00:18] [Server thread/INFO]: Dev2 issued server command: /tp @a @s
+[19:00:18] [Server thread/INFO]: [Dev2: Teleported 4 entities to Dev2]
+[19:01:05] [Server thread/INFO]: [NGNL]       Episode 5 has started!      
+[19:01:54] [Server thread/INFO]: [NGNL] A mini-game has started: Logical Deduction
+[19:01:54] [Server thread/INFO]: [NGNL] Dev3 vs Dev
+[19:01:54] [Server thread/INFO]: [NGNL] A mini-game has started: Logical Deduction
+[19:01:54] [Server thread/INFO]: [NGNL] Dev3 vs Dev
+[19:01:54] [Server thread/INFO]: [NGNL] A mini-game has started: Logical Deduction
+[19:01:54] [Server thread/INFO]: [NGNL] Dev3 vs Dev
+[19:02:05] [Server thread/INFO]: [NGNL]       Episode 6 has started!      
+[19:02:48] [Server thread/INFO]: [NGNL] A mini-game has started: Word Chain Battle
+[19:02:48] [Server thread/INFO]: [NGNL] Dev4 vs Dev2
+[19:02:48] [Server thread/INFO]: [NGNL] A mini-game has started: Word Chain Battle
+[19:02:48] [Server thread/INFO]: [NGNL] Dev4 vs Dev2
+[19:02:48] [Server thread/INFO]: [NGNL] A mini-game has started: Word Chain Battle
+[19:02:48] [Server thread/INFO]: [NGNL] Dev4 vs Dev2
+[19:03:00] [Async Chat Thread - #1/INFO]: [Not Secure] <Dev2> Run
+[19:03:05] [Server thread/INFO]: [NGNL]       Episode 7 has started!      
+[19:03:13] [Async Chat Thread - #0/INFO]: [Not Secure] <Dev2> Ecole
+[19:03:57] [Async Chat Thread - #0/INFO]: [Not Secure] <Dev> A
+[19:04:05] [Server thread/INFO]: [NGNL]       Episode 8 has started!      
+[19:04:08] [Async Chat Thread - #0/INFO]: [Not Secure] <Dev2> Rotir
+[19:04:19] [Server thread/INFO]: [NGNL] Mini-game has ended: Word Chain Battle
+[19:04:19] [Server thread/INFO]: [NGNL] Winner: Dev4 | Loser: Dev2
+[19:04:19] [Server thread/INFO]: [NGNL] Dev2 has been eliminated due to losing all hearts!
+[19:04:19] [Server thread/INFO]: [NoGameNoLifeUHC] Player eliminated. Alive players: 3/2
+[19:04:19] [Server thread/INFO]: [NoGameNoLifeUHC] Current game state: MINING_PHASE
+[19:04:19] [Server thread/INFO]: [NoGameNoLifeUHC] Checking arena phase: 3 players alive, threshold: 2
+[19:05:05] [Server thread/INFO]: [NGNL]       Episode 9 has started!      
+[19:05:16] [Server thread/INFO]: [NGNL] Mini-game has ended: Logical Deduction
+[19:05:16] [Server thread/INFO]: [NGNL] Winner: Dev3 | Loser: Dev
+[19:05:30] [Server thread/INFO]: Dev issued server command: /tp @a @s
+[19:05:30] [Server thread/INFO]: [Dev: Teleported 4 entities to Dev]
+[19:05:59] [Server thread/INFO]: [NGNL] A mini-game has started: Oracle Card
+[19:05:59] [Server thread/INFO]: [NGNL] Dev vs Dev3
+[19:05:59] [Server thread/INFO]: [NGNL] A mini-game has started: Oracle Card
+[19:05:59] [Server thread/INFO]: [NGNL] Dev vs Dev3
+[19:05:59] [Server thread/INFO]: [NGNL] A mini-game has started: Oracle Card
+[19:05:59] [Server thread/INFO]: [NGNL] Dev vs Dev3
+[19:06:05] [Server thread/INFO]: [NGNL]       Episode 10 has started!      
+[19:06:58] [Server thread/INFO]: [NGNL] Mini-game has ended: Oracle Card
+[19:06:58] [Server thread/INFO]: [NGNL] Winner: Dev | Loser: Dev3
+[19:06:58] [Server thread/INFO]: [NGNL] Dev3 has been eliminated due to losing all hearts!
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Player eliminated. Alive players: 2/2
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Current game state: MINING_PHASE
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Checking arena phase: 2 players alive, threshold: 2
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Arena phase triggered!
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Starting arena phase...
+[19:06:58] [Server thread/INFO]: [NGNL] All pledges have been dissolved! The arena phase has begun!
+[19:06:58] [Server thread/INFO]: [NGNL] Dev3 and Dev4 have formed an emergency alliance!
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Initializing arena world...
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Chargement du monde arène: ngnl_arena_city
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Map personnalisée trouvée, chargement...
+[19:06:58] [Server thread/INFO]: Preparing start region for dimension minecraft:ngnl_arena_city
+[19:06:58] [Server thread/INFO]: Preparing spawn area: 0%
+[19:06:58] [Server thread/INFO]: Time elapsed: 69 ms
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Monde arène configuré - Bordure initiale: 300x300
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Générés 8 points de spawn autour du centre
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Centre de l'arène défini à: X=0, Y=80, Z=0
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Bordure centrée sur: X=0, Z=0
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Monde arène initialisé avec succès !
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Mobs hostiles supprimés du monde arène
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Activating arena combat...
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Mode combat arène activé
+[19:06:58] [Server thread/INFO]: [NGNL] ═══════════════════════════════════════════════
+[19:06:58] [Server thread/INFO]: [NGNL]             LOVE FIGHT COMMENCÉ
+[19:06:58] [Server thread/INFO]: [NGNL]  Les qualifications sont terminées !
+[19:06:58] [Server thread/INFO]: [NGNL]  Bienvenue dans l'arène finale !
+[19:06:58] [Server thread/INFO]: [NGNL]  Les armes traditionnelles sont désactivées !
+[19:06:58] [Server thread/INFO]: [NGNL]  Utilisez votre Love Gun pour combattre !
+[19:06:58] [Server thread/INFO]: [NGNL] ═══════════════════════════════════════════════
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Adding player to arena: Dev
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Adding player to arena: Dev4
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Teleporting 2 players to arena
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Téléportation de 2 joueurs vers l'arène
+[19:06:58] [Server thread/INFO]: [NGNL] Dev3 and Dev4 have formed an emergency alliance!
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Arena phase started successfully!
+[19:06:58] [Server thread/INFO]: [NGNL]                     
+[19:06:58] [Server thread/INFO]: [NGNL] Winners: Dev and Dev4
+[19:06:58] [Server thread/INFO]: [NGNL]    (Shiro / Sora)
+[19:06:58] [Server thread/INFO]: [NGNL] Players and Roles:
+[19:06:58] [Server thread/INFO]: [NGNL] ✔ Dev4 (Sora)
+[19:06:58] [Server thread/INFO]: [NGNL] ✘ Dev3 (Makoto Dola)
+[19:06:58] [Server thread/INFO]: [NGNL] ✔ Dev (Shiro)
+[19:06:58] [Server thread/INFO]: [NGNL] ✘ Dev2 (Stephanie Dola)
+[19:06:58] [Server thread/INFO]: [NGNL]                     
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Mode combat arène désactivé
+[19:06:58] [Server thread/INFO]: [NoGameNoLifeUHC] Deactivated arena combat
+[19:07:00] [Server thread/INFO]: [NoGameNoLifeUHC] Gave arena equipment to: Dev
+[19:07:00] [Server thread/INFO]: [NoGameNoLifeUHC] Gave arena equipment to: Dev4
+[19:07:03] [Server thread/INFO]: [NoGameNoLifeUHC] Tâche de rétrécissement de bordure initialisée:
+[19:07:03] [Server thread/INFO]: [NoGameNoLifeUHC] - Taille initiale: 300x300
+[19:07:03] [Server thread/INFO]: [NoGameNoLifeUHC] - Taille finale: 50x50
+[19:07:03] [Server thread/INFO]: [NoGameNoLifeUHC] - Intervalle: 120 secondes
+[19:07:03] [Server thread/INFO]: [NoGameNoLifeUHC] - Durée totale: 1200 secondes
+[19:07:03] [Server thread/INFO]: [NoGameNoLifeUHC] Started border shrink task
+[19:07:42] [Server thread/INFO]: Dev3 issued server command: /duo cancel
+[19:07:54] [Server thread/INFO]: Dev issued server command: /alliance
+[19:07:56] [Server thread/INFO]: Dev issued server command: /alliance break
+[19:10:36] [Server thread/INFO]: Dev4 lost connection: Disconnected
+[19:10:36] [Server thread/INFO]: Dev4 left the game
+[19:10:38] [Server thread/INFO]: Dev lost connection: Disconnected
+[19:10:38] [Server thread/INFO]: Dev left the game
+[19:10:39] [Server thread/INFO]: Dev2 lost connection: Disconnected
+[19:10:39] [Server thread/INFO]: Dev2 left the game
+[19:10:40] [Server thread/INFO]: Dev3 lost connection: Disconnected
+[19:10:40] [Server thread/INFO]: Dev3 left the game
+[19:12:35] [Server thread/INFO]: Stopping server
+[19:12:35] [Server thread/INFO]: [NoGameNoLifeUHC] Disabling NoGameNoLifeUHC v1.0.0
+[19:12:35] [Server thread/INFO]: [NoGameNoLifeUHC] Configuration saved successfully
+[19:12:35] [Server thread/INFO]: [NoGameNoLifeUHC] All configurations saved
+[19:12:35] [Server thread/INFO]: [NoGameNoLifeUHC] No Game No Life UHC has been disabled!
+[19:12:35] [Server thread/INFO]: Saving players

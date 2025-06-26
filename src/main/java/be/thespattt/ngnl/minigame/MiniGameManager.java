@@ -495,12 +495,13 @@ public class MiniGameManager {
 
         plugin.getMiniGameSessionManager().registerPendingSession(killer.getUniqueId(), victim.getUniqueId());
 
-        MessageUtil.sendMessage(killer, "&eChoose a mini-game to challenge &c" + victim.getName());
-        openMiniGameSelectionGUI(killer, victim);
+        // NEW: Use the selection manager instead of direct message
+        plugin.getMiniGameSelectionManager().handleMiniGameSelection(killer, victim);
     }
 
     public void openMiniGameSelectionGUI(Player killer, Player victim) {
         plugin.getMiniGameSessionManager().registerPendingSession(killer.getUniqueId(), victim.getUniqueId());
+        MessageUtil.sendMessage(killer, "&eChoose a mini-game to challenge &c" + victim.getName());
         miniGameSelector.openMiniGameSelectionGUI(killer, victim);
     }
 

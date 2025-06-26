@@ -484,9 +484,6 @@ public class GameListener implements Listener {
         if (worldName.equals(plugin.getWorldManager().getMiningWorldName())) {
             // Setup mining world
             plugin.getWorldManager().setupMiningWorld(event.getWorld());
-        } else if (worldName.equals(plugin.getWorldManager().getArenaWorldName())) {
-            // Setup arena world
-            plugin.getWorldManager().setupArenaWorld(event.getWorld());
         }
     }
 

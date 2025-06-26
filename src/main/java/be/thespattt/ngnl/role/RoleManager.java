@@ -193,13 +193,13 @@ public class RoleManager {
         switch (roleType) {
             // Duo roles
             case SORA:
-                return new SoraRole(plugin, playerId, RoleType.SORA);
+                return new SoraRole(plugin, playerId);
             case SHIRO:
-                return new ShiroRole(plugin, playerId, RoleType.SHIRO);
+                return new ShiroRole(plugin, playerId);
             case STEPHANIE:
-                return new StephanieRole(plugin, playerId, RoleType.STEPHANIE);
+                return new StephanieRole(plugin, playerId);
             case MAKOTO:
-                return new MakotoRole(plugin, playerId, RoleType.MAKOTO);
+                return new MakotoRole(plugin, playerId);
             case KURAMI:
                 return new KuramiRole(plugin, playerId, RoleType.KURAMI);
             case FEEL:

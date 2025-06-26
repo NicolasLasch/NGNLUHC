@@ -17,152 +17,125 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Implementation of the Sora role
- */
 public class SoraRole extends DuoRole {
 
-    private static final int CLONE_COOLDOWN = 20 * 60; // 20 minutes in seconds
-    private static final int CLONE_DURATION = 10; // 10 seconds
-    private static final int PARTNER_PROXIMITY_RANGE = 30; // 30 blocks
+    private static final int CLONE_COOLDOWN = 20 * 60;
+    private static final int CLONE_DURATION = 10;
+    private static final int PARTNER_PROXIMITY_RANGE = 30;
 
     private long lastCloneUsage = 0;
-    private boolean miniGameSubstitutionUsed = false;
+    private int proximityCheckTaskId = -1;
 
-    /**
-     * Constructor
-     *
-     * @param plugin Plugin instance
-     * @param playerId UUID of the player
-     */
-    public SoraRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
-        super(plugin, playerId, roleType);
+    public SoraRole(NoGameNoLife plugin, UUID playerId) {
+        super(plugin, playerId, RoleType.SORA);
     }
 
     @Override
     protected void onRoleSetup() {
         Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
+        if (player == null) return;
 
-        // Send additional role-specific information
-        MessageUtil.sendMessage(player, "&eYou know Shiro's identity from the start.");
-
-        // Find Shiro's player
-        UUID partnerUUID = getPartnerUUID();
-        if (partnerUUID != null) {
-            Player partnerPlayer = Bukkit.getPlayer(partnerUUID);
-            if (partnerPlayer != null) {
-                MessageUtil.sendMessage(player, "&eShiro is: &a" + partnerPlayer.getName());
+        UUID shiroUUID = getPartnerUUID();
+        if (shiroUUID != null) {
+            Player shiroPlayer = Bukkit.getPlayer(shiroUUID);
+            if (shiroPlayer != null) {
+                MessageUtil.sendMessage(player, "&eShiro is: &a" + shiroPlayer.getName());
+                MessageUtil.sendMessage(player, "&eYou know their identity and position from the start.");
             }
         }
 
-        // Schedule proximity check task
-        Bukkit.getScheduler().runTaskTimer(plugin, this::checkPartnerProximity, 20L, 20L);
+        startProximityCheck();
+    }
+
+    private void startProximityCheck() {
+        if (proximityCheckTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(proximityCheckTaskId);
+        }
+
+        proximityCheckTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin,
+                this::checkPartnerProximity, 20L, 20L);
+    }
+
+    private void checkPartnerProximity() {
+        Player player = getPlayer();
+        if (player == null) return;
+
+        Player shiro = getPartnerPlayer();
+        if (shiro == null || !plugin.getGameManager().isPlayerAlive(getPartnerUUID())) {
+            applyNegativeEffects(player);
+            return;
+        }
+
+        if (!player.getWorld().equals(shiro.getWorld())) {
+            applyNegativeEffects(player);
+            return;
+        }
+
+        double distance = player.getLocation().distance(shiro.getLocation());
+
+        if (distance <= PARTNER_PROXIMITY_RANGE) {
+            applyPositiveEffects(player);
+        } else {
+            applyNegativeEffects(player);
+        }
+    }
+
+    private void applyPositiveEffects(Player player) {
+        player.removePotionEffect(PotionEffectType.WEAKNESS);
+
+        if (!player.hasPotionEffect(PotionEffectType.SPEED)) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
+        }
+
+        if (!player.hasPotionEffect(PotionEffectType.RESISTANCE)) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, Integer.MAX_VALUE, 0, false, false));
+        }
+    }
+
+    private void applyNegativeEffects(Player player) {
+        player.removePotionEffect(PotionEffectType.SPEED);
+        player.removePotionEffect(PotionEffectType.RESISTANCE);
+
+        if (!player.hasPotionEffect(PotionEffectType.WEAKNESS)) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, false, false));
+        }
     }
 
     @Override
     public void onMiniGameStart(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        // Check if we want to use ability to have Shiro substitute
         Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
+        if (player == null) return;
 
-        // In a real implementation, this would open a menu to ask if Sora wants Shiro to substitute
-        MessageUtil.sendMessage(player, "&6You have 30 seconds to ask Shiro to participate in the mini-game instead of you.");
-        MessageUtil.sendMessage(player, "&6Use &e/duo substitute &6to request this.");
-    }
-
-    /**
-     * Request Shiro to substitute in the mini-game
-     *
-     * @return True if substitution request was successful
-     */
-    public boolean requestSubstitution() {
-        if (miniGameSubstitutionUsed) {
-            MessageUtil.sendMessage(getPlayer(), "&cYou've already used your substitution ability for this game.");
-            return false;
-        }
-
-        Player player = getPlayer();
-        Player partner = getPartnerPlayer();
-
-        if (player == null || partner == null) {
-            return false;
-        }
-
-        // Ask Shiro to substitute
-        MessageUtil.sendMessage(partner, "&a" + player.getName() + " is requesting you to substitute in their mini-game.");
-        MessageUtil.sendMessage(partner, "&aUse &e/duo acceptsubstitute &ato accept.");
-        MessageUtil.sendMessage(player, "&aSent substitution request to Shiro.");
-
-        return true;
-    }
-
-    /**
-     * Complete the substitution process
-     *
-     * @return True if substitution was completed
-     */
-    public boolean completeSubstitution() {
-        miniGameSubstitutionUsed = true;
-
-        // This would actually swap the players in the mini-game
-        // Implementation depends on how mini-games are structured
-
-        return true;
-    }
-
-    @Override
-    public void onMiniGameEnd(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        // Handle mini-game result
-        if (isWinner) {
-            MessageUtil.sendMessage(getPlayer(), "&aYou won the mini-game!");
-        } else {
-            MessageUtil.sendMessage(getPlayer(), "&cYou lost the mini-game!");
-        }
+        MessageUtil.sendMessage(player, "&6Mini-game starting: &e" + miniGameType.getDisplayName());
+        MessageUtil.sendMessage(player, "&6You have 30 seconds to ask Shiro to substitute!");
+        MessageUtil.sendMessage(player, "&eUse &a/substitute &eto request Shiro to play for you.");
     }
 
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-
-        // Reset cooldowns for arena phase
         lastCloneUsage = 0;
     }
 
     @Override
     public void onPartnerDeath(UUID partnerId, UUID killerId) {
         Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
+        if (player == null) return;
 
         MessageUtil.sendMessage(player, "&c&lShiro has been eliminated!");
         MessageUtil.sendMessage(player, "&cYou feel significantly weaker without your partner...");
 
-        // Apply permanent weakness effect since partner is dead
         player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, false, false));
     }
 
-    /**
-     * Use the clone ability
-     *
-     * @return True if ability was used successfully
-     */
     public boolean useCloneAbility() {
         if (!isArenaPhaseActive()) {
             return false;
         }
 
         Player player = getPlayer();
-        if (player == null) {
-            return false;
-        }
+        if (player == null) return false;
 
-        // Check cooldown
         long currentTime = System.currentTimeMillis() / 1000;
         if (currentTime - lastCloneUsage < CLONE_COOLDOWN) {
             long remainingCooldown = CLONE_COOLDOWN - (currentTime - lastCloneUsage);
@@ -170,73 +143,29 @@ public class SoraRole extends DuoRole {
             return false;
         }
 
-        // Update cooldown
         lastCloneUsage = currentTime;
 
-        // Spawn 5 clones around the player (would be implemented with entities or particles)
-        MessageUtil.sendMessage(player, "&a&lYou summoned 5 clones around yourself!");
-        MessageUtil.broadcastNearby(player.getLocation(), 30, "&c" + player.getName() + " has summoned clones!");
+        boolean success = plugin.getCloneManager().spawnClones(player, 5, CLONE_DURATION);
 
-        // This would be implemented with actual clone entities
-        // spawnClones(player, 5, CLONE_DURATION);
+        if (success) {
+            MessageUtil.sendMessage(player, "&a&lYou summoned 5 clones around yourself!");
+            MessageUtil.broadcast("&c" + player.getName() + " has summoned clones!");
 
-        // Schedule cleanup after duration
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            MessageUtil.sendMessage(player, "&eYour clones have disappeared.");
-        }, CLONE_DURATION * 20L);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (player.isOnline()) {
+                    MessageUtil.sendMessage(player, "&eYour clones have disappeared.");
+                }
+            }, CLONE_DURATION * 20L);
+        } else {
+            MessageUtil.sendMessage(player, "&cFailed to create clones!");
+            return false;
+        }
 
         return true;
     }
 
-    /**
-     * Check partner proximity and apply effects
-     */
-    private void checkPartnerProximity() {
-        Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
-
-        Player partner = Bukkit.getPlayer(getPartnerUUID());
-        if (partner == null || !plugin.getGameManager().isPlayerAlive(getPartnerUUID())) {
-            // Apply weakness effect if partner is not present
-            player.removePotionEffect(PotionEffectType.SPEED);
-            player.removePotionEffect(PotionEffectType.RESISTANCE);
-
-            if (!player.hasPotionEffect(PotionEffectType.WEAKNESS)) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, false, false));
-            }
-            return;
-        }
-
-        // Check distance to partner
-        double distance = player.getLocation().distance(partner.getLocation());
-
-        if (distance <= PARTNER_PROXIMITY_RANGE) {
-            // Within range - apply positive effects
-            player.removePotionEffect(PotionEffectType.WEAKNESS);
-
-            if (!player.hasPotionEffect(PotionEffectType.SPEED)) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
-            }
-
-            if (!player.hasPotionEffect(PotionEffectType.RESISTANCE)) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, Integer.MAX_VALUE, 0, false, false));
-            }
-        } else {
-            // Out of range - apply negative effects
-            player.removePotionEffect(PotionEffectType.SPEED);
-            player.removePotionEffect(PotionEffectType.RESISTANCE);
-
-            if (!player.hasPotionEffect(PotionEffectType.WEAKNESS)) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, false, false));
-            }
-        }
-    }
-
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        // Create and give crown item
         ItemStack crown = new ItemBuilder(Material.GOLDEN_HELMET)
                 .name("&6&lSora's Crown")
                 .lore(
@@ -247,12 +176,10 @@ public class SoraRole extends DuoRole {
                         "&cCooldown: 20 minutes"
                 )
                 .glow(true)
+                .setTag("role_item", "SORA")
                 .build();
 
-        // Add to player's inventory
         player.getInventory().addItem(crown);
-
-        // Explain how to use
         MessageUtil.sendMessage(player, "&aYou received &6Sora's Crown&a!");
         MessageUtil.sendMessage(player, "&eRight-click to create clones. (Cooldown: 20 minutes)");
     }
@@ -260,7 +187,6 @@ public class SoraRole extends DuoRole {
     @Override
     public boolean onItemUse(ItemStack item) {
         if (item != null && item.getType() == Material.GOLDEN_HELMET) {
-            // Check if this is Sora's crown (would need better verification in real implementation)
             return useCloneAbility();
         }
         return false;
@@ -271,7 +197,7 @@ public class SoraRole extends DuoRole {
         return Arrays.asList(
                 "You are Sora.",
                 "Your goal is to win with Shiro.",
-                "For this, during the launch of a mini-game, you have 30 seconds",
+                "During mini-game launches, you have 30 seconds",
                 "to ask Shiro to go in your place.",
                 "You know Shiro's identity and position from the start."
         );
@@ -295,16 +221,19 @@ public class SoraRole extends DuoRole {
         return "Win the game with Shiro.";
     }
 
-    /**
-     * Format seconds into a readable time string
-     *
-     * @param seconds Time in seconds
-     * @return Formatted time string
-     */
     private String formatTime(long seconds) {
         long minutes = seconds / 60;
         long remainingSeconds = seconds % 60;
-
         return String.format("%d:%02d", minutes, remainingSeconds);
+    }
+
+    @Override
+    public void onDeath(UUID killerId) {
+        super.onDeath(killerId);
+
+        if (proximityCheckTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(proximityCheckTaskId);
+            proximityCheckTaskId = -1;
+        }
     }
 }

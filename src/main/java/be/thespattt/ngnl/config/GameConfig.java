@@ -213,7 +213,6 @@ public class GameConfig {
 
         // Default mini-game settings
         List<String> defaultMiniGames = new ArrayList<>();
-        defaultMiniGames.add("SPEED_BEDWARS");
         defaultMiniGames.add("SPLEEF");
         defaultMiniGames.add("TNT_RUN");
         defaultMiniGames.add("PARKOUR");
@@ -280,7 +279,17 @@ public class GameConfig {
         quakeWeaponCooldown = config.getLong("arena.quake-weapon.cooldown", 1000);
         quakeWeaponKnockback = config.getDouble("arena.quake-weapon.knockback", 1.5);
         quakeWeaponRange = config.getInt("arena.quake-weapon.range", 100);
-        
+
+
+        arenaSize = config.getInt("arena.initial-border-size", 300);
+        arenaShrinking = config.getBoolean("world.border-shrinking", true);
+        arenaShrinkTime = config.getInt("arena.border-shrink-interval", 120);
+        arenaFinalSize = config.getInt("arena.final-border-size", 50);
+        specialItemsEnabled = true; // You can add this to config later
+        arenaGracePeriod = 30; // You can add this to config later
+        abilityCooldownMultiplier = 1.0; // You can add this to config later
+        arenaEventsEnabled = true; // You can add this to config later
+
         // Load role settings
         roleAbilityStrength = config.getDouble("roles.ability-strength", 1.0);
 
@@ -335,6 +344,9 @@ public class GameConfig {
         config.set("arena.quake-weapon.cooldown", quakeWeaponCooldown);
         config.set("arena.quake-weapon.knockback", quakeWeaponKnockback);
         config.set("arena.quake-weapon.range", quakeWeaponRange);
+        config.set("arena.initial-border-size", arenaSize);
+        config.set("arena.border-shrink-interval", arenaShrinkTime);
+        config.set("arena.final-border-size", arenaFinalSize);
 
         // Save role settings
         config.set("roles.ability-strength", roleAbilityStrength);
