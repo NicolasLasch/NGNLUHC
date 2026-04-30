@@ -3,10 +3,21 @@ package be.thespattt.ngnl.event.listener;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.game.GameState;
 import be.thespattt.ngnl.player.NGNLPlayer;
+import be.thespattt.ngnl.role.duo.IzunaRole;
+import be.thespattt.ngnl.role.duo.ShiroRole;
+import be.thespattt.ngnl.role.duo.SoraRole;
+import be.thespattt.ngnl.role.solo.GhostRole;
+import be.thespattt.ngnl.role.solo.KainasRole;
+import be.thespattt.ngnl.role.solo.OkeinRole;
+import be.thespattt.ngnl.role.solo.TetoRole;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -88,15 +99,25 @@ public class PlayerListener implements Listener {
             if (ngnlPlayer != null) {
                 // Save current health
                 ngnlPlayer.setLastHealth(player.getHealth());
-                ngnlPlayer.setLastLocation(player.getLocation());
+                if (!isMiniGameWorld(player.getWorld())) {
+                    ngnlPlayer.setLastLocation(player.getLocation());
+                }
             }
         }
+    }
+
+    private boolean isMiniGameWorld(World world) {
+        World miniGameWorld = plugin.getWorldManager().getMinigameWorld();
+        return world != null && miniGameWorld != null && world.getUID().equals(miniGameWorld.getUID());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerShouldDie(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player victim)) return;
         if (event.isCancelled()) return;
+        if (isMiniGameWorld(victim.getWorld()) || plugin.getMiniGameEngine().isPlayerInMiniGame(victim.getUniqueId())) {
+            return;
+        }
 
         double finalHealth = victim.getHealth() - event.getFinalDamage();
         if (finalHealth <= 0) {
@@ -117,6 +138,10 @@ public class PlayerListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
+
+        if (isMiniGameWorld(player.getWorld()) || plugin.getMiniGameEngine().isPlayerInMiniGame(player.getUniqueId())) {
+            return;
+        }
 
         if (!plugin.getGameManager().isGameRunning()) {
             return;
@@ -139,7 +164,7 @@ public class PlayerListener implements Listener {
         event.setDeathMessage(null);
         MessageUtil.broadcast(deathMessage);
 
-        if (plugin.getGameManager().getGame().getLastMiniGameLostBy(player.getUniqueId()) != null) {
+        if (killer == null && plugin.getGameManager().getGame().getLastMiniGameLostBy(player.getUniqueId()) != null) {
             String miniGameName = plugin.getGameManager().getGame().getLastMiniGameLostBy(player.getUniqueId()).getDisplayName();
             MessageUtil.broadcast("&7They were defeated in: &f" + miniGameName);
         }
@@ -180,6 +205,27 @@ public class PlayerListener implements Listener {
         }
 
         Player player = (Player) event.getEntity();
+
+        NGNLPlayer damagedNGNL = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
+        if (damagedNGNL != null && damagedNGNL.getRole() instanceof KainasRole) {
+            switch (event.getCause()) {
+                case FIRE:
+                case FIRE_TICK:
+                case LAVA:
+                    event.setDamage(event.getDamage() * 2.0);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (event.getFinalDamage() > 0) {
+            for (var role : plugin.getRoleManager().getAllRoles()) {
+                if (role instanceof OkeinRole okeinRole) {
+                    okeinRole.registerFirstDamagedPlayer(player.getUniqueId());
+                }
+            }
+        }
 
         // Check if game is running
         if (!plugin.getGameManager().isGameRunning()) {
@@ -235,6 +281,29 @@ public class PlayerListener implements Listener {
         Player victim = (Player) event.getEntity();
         Player attacker = (Player) event.getDamager();
 
+        NGNLPlayer preCheckAttacker = plugin.getPlayerManager().getNGNLPlayer(attacker.getUniqueId());
+        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof IzunaRole izunaRole && izunaRole.isProtectedByShield()) {
+            event.setDamage(0);
+            MessageUtil.sendMessage(attacker, "&cYou cannot attack while protected by the Hatsuse Shield.");
+            return;
+        }
+        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof GhostRole ghostRole && ghostRole.isHidden()) {
+            event.setDamage(0);
+            MessageUtil.sendMessage(attacker, "&cYou cannot attack while hidden as 179 Ghost.");
+            return;
+        }
+        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof TetoRole tetoRole && tetoRole.isAttackLocked()) {
+            event.setDamage(0);
+            MessageUtil.sendMessage(attacker, "&cThe King's Piece prevents you from attacking right now.");
+            return;
+        }
+        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof SoraRole soraRole && soraRole.isDistancePenaltyActive()) {
+            event.setDamage(event.getDamage() * 0.75);
+        }
+        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof ShiroRole shiroRole && shiroRole.isDistancePenaltyActive()) {
+            event.setDamage(event.getDamage() * 0.75);
+        }
+
         // Check if PvP is allowed
         boolean pvpEnabled = plugin.getConfigManager().getGameConfig().isForceEnablePvP();
 
@@ -271,7 +340,7 @@ public class PlayerListener implements Listener {
                                 attackerNGNL.getRole().getPartnerUUID() != null &&
                                 attackerNGNL.getRole().getPartnerUUID().equals(victim.getUniqueId())) {
                             // Players are duo partners, cancel damage
-                            event.setCancelled(true);
+                            event.setDamage(0);
                             MessageUtil.sendMessage(attacker, "&cYou cannot attack your duo partner!");
                             return;
                         }
@@ -281,7 +350,7 @@ public class PlayerListener implements Listener {
                     if (attackerNGNL.hasAlliancePartner() &&
                             attackerNGNL.getAlliancePartner().equals(victim.getUniqueId())) {
                         // Players are in an alliance
-                        event.setCancelled(true);
+                        event.setDamage(0);
                         MessageUtil.sendMessage(attacker, "&cYou cannot attack your alliance partner!");
                         return;
                     }
@@ -355,14 +424,25 @@ public class PlayerListener implements Listener {
             // This would be better implemented in the role classes themselves
             // but we'll add a simple example here
             if (ngnlPlayer.getRole().getRoleType() == be.thespattt.ngnl.role.RoleType.OKEIN) {
-                // Okein takes damage from water
-                if (player.getLocation().getBlock().isLiquid() &&
-                        event.getCause() == EntityDamageEvent.DamageCause.DROWNING) {
-                    // Increase drowning damage
-                    event.setDamage(event.getDamage() * 1.5);
-                }
+                startWaterDamageTask(ngnlPlayer.getPlayer());
             }
         }
+    }
+
+    private void startWaterDamageTask(Player player) {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            Block block = player.getLocation().getBlock();
+            Block blockAbove = player.getLocation().add(0, 1, 0).getBlock();
+
+            if (block.getType() == Material.WATER || blockAbove.getType() == Material.WATER) {
+                player.damage(1.5);
+            }
+
+            else if (player.getWorld().hasStorm() &&
+                    player.getLocation().getBlock().getLightFromSky() == 15) {
+                player.damage(1.5);
+            }
+        }, 0L, 20L);
     }
 
     /**

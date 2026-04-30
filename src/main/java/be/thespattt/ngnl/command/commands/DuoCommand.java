@@ -6,6 +6,10 @@ import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.role.Role;
 import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.role.duo.ShiroRole;
+import be.thespattt.ngnl.role.duo.FeelRole;
+import be.thespattt.ngnl.role.duo.IzunaRole;
+import be.thespattt.ngnl.role.duo.KuramiRole;
+import be.thespattt.ngnl.role.duo.NonnaRole;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.command.Command;
@@ -93,6 +97,22 @@ public class DuoCommand implements CommandExecutor {
                 handleMessage(player, ngnlPlayer.getRole(), message.toString().trim());
                 break;
 
+            case "together":
+                handleTogether(player, ngnlPlayer.getRole());
+                break;
+
+            case "joincorone":
+                handleJoinCorone(player, ngnlPlayer.getRole());
+                break;
+
+            case "joinriku":
+                handleJoinRiku(player, ngnlPlayer.getRole());
+                break;
+
+            case "joinmiko":
+                handleJoinMiko(player, ngnlPlayer.getRole());
+                break;
+
             default:
                 showHelp(player, ngnlPlayer.getRole());
                 break;
@@ -113,6 +133,13 @@ public class DuoCommand implements CommandExecutor {
             MessageUtil.sendMessage(player, "&e/duo choosegame <type> &7- Choose mini-game type (once per game)");
         } else if (role.getRoleType() == RoleType.MAKOTO) {
             MessageUtil.sendMessage(player, "&e/duo cancel &7- Cancel mini-game defeat (once per game)");
+        } else if (role.getRoleType() == RoleType.KURAMI || role.getRoleType() == RoleType.FEEL) {
+            MessageUtil.sendMessage(player, "&e/duo together &7- Link your next mini-game to your partner");
+        } else if (role.getRoleType() == RoleType.NONNA) {
+            MessageUtil.sendMessage(player, "&e/duo joincorone &7- Join Corone if Ivan is dead");
+            MessageUtil.sendMessage(player, "&e/duo joinriku &7- Join Riku and Schwi if Ivan is dead");
+        } else if (role.getRoleType() == RoleType.IZUNA) {
+            MessageUtil.sendMessage(player, "&e/duo joinmiko &7- Join Miko after Ino's death");
         }
 
         if (role.isDuo()) {
@@ -224,5 +251,41 @@ public class DuoCommand implements CommandExecutor {
             be.thespattt.ngnl.role.duo.DuoRole duoRole = (be.thespattt.ngnl.role.duo.DuoRole) role;
             duoRole.sendDuoMessage(message);
         }
+    }
+
+    private void handleTogether(Player player, Role role) {
+        if (role instanceof KuramiRole kuramiRole) {
+            kuramiRole.armJointMiniGame();
+            return;
+        }
+        if (role instanceof FeelRole feelRole) {
+            feelRole.armJointMiniGame();
+            return;
+        }
+        MessageUtil.sendMessage(player, "&cOnly Kurami or Feel can use this command.");
+    }
+
+    private void handleJoinCorone(Player player, Role role) {
+        if (role instanceof NonnaRole nonnaRole) {
+            nonnaRole.joinCoroneCamp();
+            return;
+        }
+        MessageUtil.sendMessage(player, "&cOnly Nonna can use this command.");
+    }
+
+    private void handleJoinRiku(Player player, Role role) {
+        if (role instanceof NonnaRole nonnaRole) {
+            nonnaRole.joinRikuCamp();
+            return;
+        }
+        MessageUtil.sendMessage(player, "&cOnly Nonna can use this command.");
+    }
+
+    private void handleJoinMiko(Player player, Role role) {
+        if (role instanceof IzunaRole izunaRole) {
+            izunaRole.joinMikoCamp();
+            return;
+        }
+        MessageUtil.sendMessage(player, "&cOnly Izuna can use this command.");
     }
 }

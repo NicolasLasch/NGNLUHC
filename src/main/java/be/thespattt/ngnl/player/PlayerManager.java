@@ -3,6 +3,7 @@ package be.thespattt.ngnl.player;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.util.MessageUtil;
 
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.Collection;
@@ -163,9 +164,16 @@ public class PlayerManager {
             NGNLPlayer ngnlPlayer = getOrCreateNGNLPlayer(player.getUniqueId());
 
             // Update player data
-            ngnlPlayer.setLastLocation(player.getLocation());
+            if (!isMiniGameWorld(player.getWorld())) {
+                ngnlPlayer.setLastLocation(player.getLocation());
+            }
             ngnlPlayer.setLastHealth(player.getHealth());
         }
+    }
+
+    private boolean isMiniGameWorld(World world) {
+        World miniGameWorld = plugin.getWorldManager().getMinigameWorld();
+        return world != null && miniGameWorld != null && world.getUID().equals(miniGameWorld.getUID());
     }
 
     /**

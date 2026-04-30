@@ -6,13 +6,16 @@ import be.thespattt.ngnl.event.custom.MiniGameStartEvent;
 import be.thespattt.ngnl.game.GameState;
 import be.thespattt.ngnl.minigame.games.*;
 import be.thespattt.ngnl.player.NGNLPlayer;
+import be.thespattt.ngnl.role.Role;
+import be.thespattt.ngnl.role.duo.FeelRole;
+import be.thespattt.ngnl.role.duo.KuramiRole;
 import be.thespattt.ngnl.util.MessageUtil;
 
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
@@ -123,10 +126,6 @@ public class MiniGameEngine {
         // Start the mini-game
         miniGame.startGame();
 
-        // Broadcast mini-game start
-        MessageUtil.broadcast("&6A mini-game has started: &e" + miniGameType.getDisplayName());
-        MessageUtil.broadcast("&6" + killer.getName() + " vs " + victim.getName());
-
         return true;
     }
 
@@ -176,20 +175,17 @@ public class MiniGameEngine {
         boolean player1Winner = player1UUID.equals(winnerUUID);
         boolean player1WonPvP = miniGame.didPlayer1WinPvP();
 
-        // Fire mini-game end event
         MiniGameEndEvent endEvent = new MiniGameEndEvent(
                 player1UUID, player2UUID, miniGame.getMiniGameType(), player1Winner, player1WonPvP);
 
         Bukkit.getPluginManager().callEvent(endEvent);
 
-        // Handle mini-game results
         handleMiniGameResults(player1UUID, player2UUID, player1Winner, player1WonPvP, miniGame.getMiniGameType());
 
-        // Return players to the game world
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             returnPlayerToGame(player1UUID);
             returnPlayerToGame(player2UUID);
-        }, 60L); // 3 seconds delay
+        }, 100L);
     }
 
     /**
@@ -207,48 +203,60 @@ public class MiniGameEngine {
         UUID loserId = player1Winner ? player2UUID : player1UUID;
 
         boolean winnerWonPvP = (player1Winner == player1WonPvP);
+        NGNLPlayer loserNGNLPlayer = plugin.getPlayerManager().getNGNLPlayer(loserId);
+        Role loserRole = loserNGNLPlayer != null ? loserNGNLPlayer.getRole() : null;
+
+        if (loserRole instanceof KuramiRole kuramiRole && kuramiRole.consumeExtraLife(miniGameType)) {
+            MessageUtil.broadcast("&aKurami's special extra life negated the mini-game punishment.");
+            plugin.getMiniGameStatsTracker().recordWin(winnerId, miniGameType);
+            return;
+        }
+
+        if (loserRole instanceof FeelRole feelRole && feelRole.consumeExtraLife(miniGameType)) {
+            MessageUtil.broadcast("&aFeel's special extra life negated the mini-game punishment.");
+            plugin.getMiniGameStatsTracker().recordWin(winnerId, miniGameType);
+            return;
+        }
 
         if (recentHeartChange.contains(loserId)) {
             MessageUtil.logWarning("Skipping heart loss for " + loserId + " (already applied recently)");
             return;
         }
 
-        // Début du traitement
         recentHeartChange.add(loserId);
         Bukkit.getScheduler().runTaskLater(plugin, () -> recentHeartChange.remove(loserId), 20L * 30); // 30s cooldown
 
 
-        // Apply heart loss based on rules
         Player loser = Bukkit.getPlayer(loserId);
         if (loser != null) {
             double heartsToLose = winnerWonPvP ? 5.0 : 3;
-
-            NGNLPlayer loserNGNLPlayer = plugin.getPlayerManager().getNGNLPlayer(loserId);
             if (loserNGNLPlayer != null) {
                 loserNGNLPlayer.recordHeartsLost((int) Math.ceil(heartsToLose));
 
                 plugin.getGameManager().removePlayerHearts(loserId, heartsToLose);
             }
 
-            // Notify player
             MessageUtil.sendMessage(loser, "&cYou lost " + heartsToLose + " hearts!");
         }
 
-        // Give reward to winner
         Player winner = Bukkit.getPlayer(winnerId);
         if (winner != null) {
             MessageUtil.sendMessage(winner, "&aYou won the mini-game!");
-            // Here you could add additional rewards
             if (plugin.getConfigManager().getGameConfig().isMiniGameBookReward()) {
-                //giveRandomRewardBook(winner);
+                Bukkit.getScheduler().runTaskLater(plugin, () -> giveRandomRewardBook(winnerId), 5L);
             }
         }
 
-        // Record which mini-game the loser lost on
         plugin.getGameManager().getGame().setLastMiniGameLostBy(loserId, miniGameType);
 
         plugin.getMiniGameStatsTracker().recordWin(winnerId, miniGameType);
         plugin.getMiniGameStatsTracker().recordLoss(loserId, miniGameType);
+
+        if (loserRole instanceof KuramiRole kuramiRole) {
+            kuramiRole.handleJointLossIfNeeded();
+        } else if (loserRole instanceof FeelRole feelRole) {
+            feelRole.handleJointLossIfNeeded();
+        }
         // Broadcast result
         String winnerName = winner != null ? winner.getName() : "Unknown";
         String loserName = loser != null ? loser.getName() : "Unknown";
@@ -256,16 +264,112 @@ public class MiniGameEngine {
         MessageUtil.broadcast("&6Mini-game has ended: &e" + miniGameType.getDisplayName());
         MessageUtil.broadcast("&6Winner: &a" + winnerName + " &7| Loser: &c" + loserName);
 
-        // Check if loser died from health loss - but do this check AFTER heart loss is applied
         if (loser != null) {
             double maxHealth = loser.getMaxHealth();
             if (maxHealth <= 2.0) {
-                // Player died from heart loss
                 MessageUtil.broadcast("&c" + loserName + " has been eliminated due to losing all hearts!");
                 plugin.getGameManager().handlePlayerElimination(loserId, winnerId);
                 loser.setGameMode(GameMode.SPECTATOR);
             }
         }
+    }
+
+    private void giveRandomRewardBook(UUID winnerId) {
+        Player winner = Bukkit.getPlayer(winnerId);
+        if (winner == null || !winner.isOnline()) {
+            return;
+        }
+
+        ItemStack book = new ItemStack(Material.ENCHANTED_BOOK);
+        if (!(book.getItemMeta() instanceof EnchantmentStorageMeta meta)) {
+            return;
+        }
+
+        Enchantment randomEnchant = getRandomEnchantment();
+        int level = getWeightedRandomLevel(randomEnchant.getMaxLevel());
+
+        meta.addStoredEnchant(randomEnchant, level, true);
+        meta.setDisplayName("§6§lReward Book");
+        meta.setLore(Arrays.asList(
+                "§7Enchantment: §e" + getEnchantmentName(randomEnchant),
+                "§7Level: §b" + level
+        ));
+
+        book.setItemMeta(meta);
+        winner.getInventory().addItem(book);
+        winner.sendMessage("§a§lYou received a reward for winning the minigame book!");
+    }
+
+    private Enchantment getRandomEnchantment() {
+        List<Enchantment> enchantments = Arrays.asList(
+                Enchantment.SHARPNESS,
+                Enchantment.PROTECTION,
+                Enchantment.POWER,
+                Enchantment.EFFICIENCY,
+                Enchantment.UNBREAKING,
+                Enchantment.KNOCKBACK,
+                Enchantment.LOOTING,
+                Enchantment.FORTUNE,
+                Enchantment.INFINITY,
+                Enchantment.MENDING,
+                Enchantment.FEATHER_FALLING,
+                Enchantment.BLAST_PROTECTION,
+                Enchantment.PROJECTILE_PROTECTION,
+                Enchantment.RESPIRATION,
+                Enchantment.AQUA_AFFINITY,
+                Enchantment.THORNS,
+                Enchantment.DEPTH_STRIDER,
+                Enchantment.FROST_WALKER,
+                Enchantment.PUNCH,
+                Enchantment.LUCK_OF_THE_SEA
+        );
+
+        return enchantments.get(new Random().nextInt(enchantments.size()));
+    }
+
+    private int getWeightedRandomLevel(int maxLevel) {
+        if (maxLevel == 1) return 1;
+
+        Random random = new Random();
+        int roll = random.nextInt(100);
+
+        if (maxLevel == 2) {
+            return (roll < 70) ? 1 : 2;
+        }
+
+        if (maxLevel == 3) {
+            if (roll < 50) return 1;
+            if (roll < 85) return 2;
+            if (roll < 99) return 3;
+            return 4;
+        }
+
+        if (maxLevel == 4) {
+            if (roll < 40) return 1;
+            if (roll < 70) return 2;
+            if (roll < 90) return 3;
+            if (roll < 99) return 4;
+            return 5;
+        }
+
+        if (maxLevel >= 5) {
+            if (roll < 35) return 1;
+            if (roll < 60) return 2;
+            if (roll < 80) return 3;
+            if (roll < 93) return 4;
+            if (roll < 99) return 5;
+            return 6;
+        }
+
+        return random.nextInt(maxLevel) + 1;
+    }
+
+    private String getEnchantmentName(Enchantment enchant) {
+        String name = enchant.getKey().getKey();
+        return Arrays.stream(name.split("_"))
+                .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase())
+                .reduce((a, b) -> a + " " + b)
+                .orElse(name);
     }
 
     /**
@@ -301,8 +405,16 @@ public class MiniGameEngine {
         // Get NGNL player
         be.thespattt.ngnl.player.NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
         if (ngnlPlayer != null) {
+            if (isMiniGameWorld(player.getWorld())) {
+                return;
+            }
             ngnlPlayer.setLastLocation(player.getLocation());
         }
+    }
+
+    private boolean isMiniGameWorld(World world) {
+        World miniGameWorld = plugin.getWorldManager().getMinigameWorld();
+        return world != null && miniGameWorld != null && world.getUID().equals(miniGameWorld.getUID());
     }
 
     /**
@@ -318,31 +430,26 @@ public class MiniGameEngine {
         NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
         if (ngnlPlayer == null) return;
 
-        World world = Bukkit.getWorld("ngnl_waiting");
         GameState gameState = plugin.getGameManager().getGameState();
-        if (gameState == GameState.MINING_PHASE) {
-            world = plugin.getWorldManager().getMiningWorld();
-        } else if (gameState == GameState.ARENA_PHASE) {
-            world = plugin.getWorldManager().getArenaWorld();
-        }
-
-        if (world == null) {
-            MessageUtil.logWarning("No suitable world found to return player to game.");
-            return;
-        }
-
-        // Générer une position aléatoire autour du centre (rayon 200)
-        Location randomLocation = getRandomSafeLocation(world, 0, 200);
-        if (randomLocation != null) {
-            player.teleport(randomLocation);
-            MessageUtil.sendMessage(player, "&aYou have been returned to the game world.");
-        } else {
-            MessageUtil.logError("Failed to find safe location for teleportation.");
-        }
-
-        // Définir le bon mode de jeu
         if (plugin.getGameManager().isPlayerAlive(playerId)) {
-            player.setGameMode(GameMode.SURVIVAL); // GM0
+            Location returnLocation = ngnlPlayer.getLastLocation();
+            if (returnLocation == null || returnLocation.getWorld() == null) {
+                World fallbackWorld = gameState == GameState.ARENA_PHASE
+                        ? plugin.getWorldManager().getArenaWorld()
+                        : plugin.getWorldManager().getMiningWorld();
+                returnLocation = fallbackWorld != null ? getRandomSafeLocation(fallbackWorld, 0, 200) : null;
+            }
+
+            if (returnLocation != null) {
+                player.setGameMode(GameMode.SURVIVAL);
+                player.setFallDistance(0);
+                player.setFireTicks(0);
+                player.teleport(returnLocation);
+                MessageUtil.sendMessage(player, "&aYou have been returned to your previous position.");
+            } else {
+                MessageUtil.logError("Failed to find a return location for " + player.getName() + ".");
+            }
+            player.setGameMode(GameMode.SURVIVAL);
         } else {
             player.setGameMode(GameMode.SPECTATOR);
         }

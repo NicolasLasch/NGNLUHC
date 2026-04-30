@@ -27,6 +27,10 @@ public class CommandManager {
     private AdminCommand adminCommand;
     private MiniGameCommand miniGameCommand;
     private ForceKillCommand forceKillCommand;
+    private HealCommand healCommand;
+    private RiteCommand riteCommand;
+    private ForestCommand forestCommand;
+    private TeleportCommand teleportCommand;
 
     private RoleCommand roleCommand;
     /**
@@ -49,10 +53,10 @@ public class CommandManager {
         this.allianceCommand = new AllianceCommand(plugin);
         this.pledgeCommand = new PledgeCommand(plugin);
         this.adminCommand = new AdminCommand(plugin);
-        // HealCommand healCommand = new HealCommand(plugin);
-        // RiteCommand riteCommand = new RiteCommand(plugin);
-        // ForestCommand forestCommand = new ForestCommand(plugin);
-        // TeleportCommand teleportCommand = new TeleportCommand(plugin);
+        this.healCommand = new HealCommand(plugin);
+        this.riteCommand = new RiteCommand(plugin);
+        this.forestCommand = new ForestCommand(plugin);
+        this.teleportCommand = new TeleportCommand(plugin);
         this.rpsCommand = new RockPaperScissorsCommand(plugin);
         this.miniGameCommand = new MiniGameCommand(plugin);
         this.forceKillCommand = new ForceKillCommand(plugin);
@@ -73,10 +77,13 @@ public class CommandManager {
         // Exemple d'exécution de la commande /chess
 
         // Register role-specific commands
-        // registerCommand("heal", healCommand);
-        // registerCommand("rite", riteCommand);
-        // registerCommand("forest", forestCommand);
-        // registerCommand("teleport", teleportCommand);
+        registerCommand("heal", healCommand);
+        registerCommand("rite", riteCommand);
+        registerCommand("forest", forestCommand);
+        registerCommand("teleport", teleportCommand);
+        registerCommand("substitute", new SubstituteCommand(plugin));
+        registerCommand("acceptsub", new AcceptSubCommand(plugin));
+        registerCommand("bonus", new BonusCommand(plugin));
 
         // Register utility commands
         registerCommand("rps", rpsCommand);

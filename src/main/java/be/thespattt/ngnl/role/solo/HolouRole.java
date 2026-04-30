@@ -31,6 +31,7 @@ public class HolouRole extends Role {
     private long lastSecondaryAbilityUsage = 0;
     private int abilitiesUsed = 0;
     private static final int MAX_ABILITY_USES = 3; // Maximum uses of primary ability per game
+    private boolean teleportSwapUsed = false;
 
     // Knowledge tracking
     private UUID knownPlayerId = null;
@@ -64,16 +65,7 @@ public class HolouRole extends Role {
         if (player == null) {
             return;
         }
-
-        // Provide initial role-specific knowledge if applicable
-        assignInitialKnowledge();
-
-        // Set up role-specific initial abilities or effects
-        // Example: Apply initial potion effects
-        // player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
-
-        // Schedule any periodic tasks
-        startPeriodicTask();
+        MessageUtil.sendMessage(player, "&eUse /teleport <p1> <p2> once to swap two players.");
     }
 
     /**
@@ -303,38 +295,13 @@ public class HolouRole extends Role {
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        // Create and give primary ability item
-        ItemStack primaryAbilityItem = new ItemBuilder(Material.DIAMOND)
-                .name("&b&lPrimary Ability Item")
-                .lore(
-                        "&7Activates your primary ability",
-                        "",
-                        "&eRight-click to activate",
-                        "&cCooldown: " + (PRIMARY_ABILITY_COOLDOWN / 60) + " minutes",
-                        "&aMaximum uses: " + MAX_ABILITY_USES
-                )
+        ItemStack tpStick = new ItemBuilder(Material.BLAZE_ROD)
+                .name("&5&lTP Stick")
+                .lore("&730-block teleport with 5 seconds of blindness.", "&cCooldown: 10 minutes")
                 .glow(true)
+                .setTag("role_item", "HOLOU")
                 .build();
-
-        // Create and give secondary ability item
-        ItemStack secondaryAbilityItem = new ItemBuilder(Material.EMERALD)
-                .name("&a&lSecondary Ability Item")
-                .lore(
-                        "&7Activates your secondary ability",
-                        "",
-                        "&eRight-click to activate",
-                        "&cCooldown: " + (SECONDARY_ABILITY_COOLDOWN / 60) + " minutes"
-                )
-                .glow(true)
-                .build();
-
-        // Add to player's inventory
-        player.getInventory().addItem(primaryAbilityItem);
-        player.getInventory().addItem(secondaryAbilityItem);
-
-        // Explain how to use
-        MessageUtil.sendMessage(player, "&aYou received your &bPrimary Ability Item &aand &aSecondary Ability Item&a!");
-        MessageUtil.sendMessage(player, "&eRight-click each item to activate its ability.");
+        player.getInventory().addItem(tpStick);
     }
 
     @Override
@@ -357,21 +324,45 @@ public class HolouRole extends Role {
     @Override
     public List<String> getDescription() {
         return Arrays.asList(
-                "You are a Solo Role template.",
-                "Your goal is to win alone or with an alliance formed using /alliance.",
-                "Customize this description for each specific role.",
-                "Add details about role-specific abilities here."
+                "You are Holou.",
+                "Your goal is to win alone or with your alliance.",
+                "Use /teleport <p1> <p2> once to swap two players."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "During the arena phase, you gain access to special abilities.",
-                "Your primary ability allows you to [describe primary ability].",
-                "Your secondary ability allows you to [describe secondary ability].",
-                "Customize this description for each specific role."
+                "You can use your TP Stick during finale.",
+                "It teleports you near a target and blinds you for 5 seconds."
         );
+    }
+
+    public boolean swapPlayers(Player first, Player second) {
+        Player player = getPlayer();
+        if (player == null) {
+            return false;
+        }
+        if (teleportSwapUsed) {
+            MessageUtil.sendMessage(player, "&cYou already used your swap for this game.");
+            return false;
+        }
+
+        if (!plugin.getGameManager().isPlayerAlive(first.getUniqueId()) || !plugin.getGameManager().isPlayerAlive(second.getUniqueId())) {
+            MessageUtil.sendMessage(player, "&cBoth targets must still be alive.");
+            return false;
+        }
+
+        var firstLocation = first.getLocation().clone();
+        var secondLocation = second.getLocation().clone();
+        first.teleport(secondLocation);
+        second.teleport(firstLocation);
+        teleportSwapUsed = true;
+
+        first.getInventory().addItem(new ItemStack(Material.ENCHANTED_BOOK));
+        second.getInventory().addItem(new ItemStack(Material.ENCHANTED_BOOK));
+        MessageUtil.broadcast("&5Holou swapped " + first.getName() + " and " + second.getName() + "!");
+        return true;
     }
 
     @Override

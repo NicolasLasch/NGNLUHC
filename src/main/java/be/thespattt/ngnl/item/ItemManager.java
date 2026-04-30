@@ -47,6 +47,7 @@ public class ItemManager {
         createSoraCrown();
         createLoveGun();
         createOracleCard();
+        createKnockbackStick();
         createIDHelmet();
         createFlugelBook();
         createTeleportStick();
@@ -257,6 +258,19 @@ public class ItemManager {
                 .build();
 
         specialItems.put("oracle_card", oracleCard);
+    }
+
+    private void createKnockbackStick() {
+        ItemStack stick = new ItemBuilder(Material.STICK)
+                .name("&6&lSumo Stick")
+                .lore(
+                        "&7Knockback I.",
+                        "&7One use per round for Ivan and Nonna."
+                )
+                .enchant(Enchantment.KNOCKBACK, 1)
+                .build();
+
+        specialItems.put("knockback_stick", stick);
     }
 
     /**

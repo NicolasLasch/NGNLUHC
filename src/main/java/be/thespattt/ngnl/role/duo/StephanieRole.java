@@ -9,7 +9,9 @@ import be.thespattt.ngnl.util.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Snowball;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -139,6 +141,12 @@ public class StephanieRole extends DuoRole {
             return false;
         }
 
+        UUID partnerUUID = getPartnerUUID();
+        if (partnerUUID != null && partnerUUID.equals(target.getUniqueId())) {
+            MessageUtil.sendMessage(player, "&cYou cannot use Love Gun on your duo teammate!");
+            return false;
+        }
+
         lastLoveGunUsage = currentTime;
 
         double originalMaxHealth = target.getMaxHealth();
@@ -148,7 +156,7 @@ public class StephanieRole extends DuoRole {
         }
 
         MessageUtil.sendMessage(player, "&dYou hit " + target.getName() + " with the Love Gun!");
-        MessageUtil.sendMessage(target, "&dStephanie hit you with the Love Gun! You have 6 hearts for 30 seconds!");
+        MessageUtil.sendMessage(target, "&dStephanie hit you with the Love Gun 2! Your max health is 12 HP for 30 seconds!");
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (target.isOnline()) {
@@ -164,17 +172,17 @@ public class StephanieRole extends DuoRole {
     protected void giveArenaPhaseItems(Player player) {
         ItemStack loveGun = createLoveGun();
         player.getInventory().addItem(loveGun);
-        MessageUtil.sendMessage(player, "&aYou received the &dLove Gun&a!");
-        MessageUtil.sendMessage(player, "&eShoot players to reduce them to 6 hearts for 30 seconds! (Cooldown: 10 minutes)");
+        MessageUtil.sendMessage(player, "&aYou received the &6LOVE GUN 2&a!");
+        MessageUtil.sendMessage(player, "&eHit players to set their max health to 12 HP for 30 seconds! (Cooldown: 10 minutes)");
     }
 
     private ItemStack createLoveGun() {
-        ItemStack loveGun = new ItemBuilder(Material.BOW)
-                .name("&d&lLove Gun")
+        ItemStack loveGun = new ItemBuilder(Material.GOLDEN_HOE)
+                .name("&6&lLOVE GUN 2")
                 .lore(
-                        "&7Reduces the hit player to 6 hearts for 30 seconds.",
+                        "&7Sets the hit player's max health to 12 HP for 30 seconds.",
                         "",
-                        "&eShoot a player to activate",
+                        "&eRight-click to shoot",
                         "&cCooldown: 10 minutes"
                 )
                 .glow(true)
@@ -197,7 +205,20 @@ public class StephanieRole extends DuoRole {
 
     @Override
     public boolean onItemUse(ItemStack item) {
-        return false; // Love Gun is handled by projectile hit, not item use
+        Player player = getPlayer();
+        if (player == null || !isArenaPhaseActive()) {
+            return false;
+        }
+
+        Projectile projectile = player.launchProjectile(Snowball.class);
+        projectile.setVelocity(player.getLocation().getDirection().normalize().multiply(2.5));
+        projectile.getPersistentDataContainer().set(
+                new NamespacedKey(plugin, "stephanie_love_gun"),
+                PersistentDataType.STRING,
+                player.getUniqueId().toString()
+        );
+        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 0.8f, 1.4f);
+        return true;
     }
 
     @Override
@@ -214,8 +235,8 @@ public class StephanieRole extends DuoRole {
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "You now have the Love Gun.",
-                "Shooting a player with it reduces them to 6 hearts",
+                "You now have the LOVE GUN 2.",
+                "Hitting a player with it sets their max health to 12 HP",
                 "for 30 seconds. Can be used every 10 minutes."
         );
     }

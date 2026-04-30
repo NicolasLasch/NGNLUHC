@@ -304,4 +304,8 @@ public class RoleManager {
         playerRoles.clear();
         assignedRoles.clear();
     }
+
+    public Collection<Role> getAllRoles() {
+        return new ArrayList<>(playerRoles.values());
+    }
 }

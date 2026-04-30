@@ -1,6 +1,9 @@
 package be.thespattt.ngnl.minigame;
 
 import be.thespattt.ngnl.NoGameNoLife;
+import be.thespattt.ngnl.player.NGNLPlayer;
+import be.thespattt.ngnl.role.RoleType;
+import be.thespattt.ngnl.role.duo.StephanieRole;
 import be.thespattt.ngnl.util.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -31,6 +34,11 @@ public class RandomMiniGameSelector implements Listener {
     private final Set<UUID> mustStayInGui = new HashSet<>(); // players who cannot leave GUI
 
     private static final int GUI_SIZE = 27;
+    private static final String RANDOM_SELECTOR_TITLE = ChatColor.DARK_PURPLE + "Random Mini-Game Selector";
+    private static final String STEPHANIE_MODE_TITLE = ChatColor.LIGHT_PURPLE + "Stephanie - Mini-Game";
+    private static final String STEPHANIE_CHOOSE_TITLE = ChatColor.LIGHT_PURPLE + "Stephanie - Choose Game";
+    private static final String SORA_MODE_TITLE = ChatColor.AQUA + "Sora - Substitution";
+    private static final String SHIRO_ACCEPT_TITLE = ChatColor.AQUA + "Shiro - Accept";
     private static final int REROLL_SLOT = 0;
     private static final int START_SLOT = 8;
     private static final int CENTER_SLOT = 13;
@@ -42,6 +50,19 @@ public class RandomMiniGameSelector implements Listener {
     }
 
     public void openMiniGameSelectionGUI(Player killer, Player victim) {
+        if (shouldOpenStephanieMode(killer)) {
+            openStephanieModeGUI(killer, victim);
+            return;
+        }
+        if (shouldOpenSoraMode(killer)) {
+            openSoraModeGUI(killer, victim);
+            return;
+        }
+
+        openRandomMiniGameSelectionGUI(killer, victim);
+    }
+
+    private void openRandomMiniGameSelectionGUI(Player killer, Player victim) {
         UUID killerUUID = killer.getUniqueId();
         playerSelections.put(killerUUID, victim.getUniqueId());
         canReroll.put(killerUUID, true);
@@ -58,7 +79,7 @@ public class RandomMiniGameSelector implements Listener {
             @Override
             public void run() {
                 if (killer.isOnline() && victim.isOnline()) {
-                    Inventory gui = Bukkit.createInventory(null, GUI_SIZE, ChatColor.DARK_PURPLE + "Random Mini-Game Selector");
+                    Inventory gui = Bukkit.createInventory(null, GUI_SIZE, RANDOM_SELECTOR_TITLE);
                     fillBackground(gui);
                     gui.setItem(REROLL_SLOT, createRerollButton(true));
                     gui.setItem(START_SLOT, createStartButton(false));
@@ -78,6 +99,75 @@ public class RandomMiniGameSelector implements Listener {
                 }
             }
         }.runTaskLater(plugin, 10);
+    }
+
+    private boolean shouldOpenStephanieMode(Player player) {
+        NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
+        return ngnlPlayer != null
+                && ngnlPlayer.getRole() instanceof StephanieRole stephanieRole
+                && !stephanieRole.hasUsedMiniGameChoice()
+                && plugin.getMiniGameSelectionManager().hasActiveSelection(player.getUniqueId());
+    }
+
+    private boolean shouldOpenSoraMode(Player player) {
+        NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
+        return ngnlPlayer != null
+                && ngnlPlayer.getRole() != null
+                && ngnlPlayer.getRole().getRoleType() == RoleType.SORA
+                && plugin.getMiniGameSelectionManager().isSoraSubstitutionSelection(player.getUniqueId());
+    }
+
+    private void openStephanieModeGUI(Player stephanie, Player opponent) {
+        UUID stephanieUUID = stephanie.getUniqueId();
+        playerSelections.put(stephanieUUID, opponent.getUniqueId());
+        inTeleport.add(stephanieUUID);
+
+        Set<UUID> viewers = new HashSet<>();
+        viewers.add(stephanie.getUniqueId());
+        guiViewers.put(stephanieUUID, viewers);
+        mustStayInGui.addAll(viewers);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!stephanie.isOnline() || !opponent.isOnline()) {
+                    return;
+                }
+
+                Inventory gui = Bukkit.createInventory(null, GUI_SIZE, STEPHANIE_MODE_TITLE);
+                fillBackground(gui);
+                gui.setItem(11, createGuiItem(
+                        Material.DISPENSER,
+                        ChatColor.GREEN + "Random",
+                        ChatColor.GRAY + "Launch the normal roulette."
+                ));
+                gui.setItem(15, createGuiItem(
+                        Material.NETHER_STAR,
+                        ChatColor.LIGHT_PURPLE + "Choose the game",
+                        ChatColor.GRAY + "Remaining uses: " + ChatColor.YELLOW + "1",
+                        ChatColor.GRAY + "Opens all enabled mini-games."
+                ));
+
+                stephanie.openInventory(gui);
+
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        inTeleport.remove(stephanieUUID);
+                    }
+                }.runTaskLater(plugin, 5);
+            }
+        }.runTaskLater(plugin, 10);
+    }
+
+    private void openStephanieGameChoiceGUI(Player stephanie) {
+        Inventory gui = Bukkit.createInventory(null, 54, STEPHANIE_CHOOSE_TITLE);
+        List<MiniGameType> types = getEnabledMiniGameTypes();
+        for (int i = 0; i < Math.min(types.size(), 45); i++) {
+            gui.setItem(i, createMiniGameItem(types.get(i), false));
+        }
+        gui.setItem(53, createGuiItem(Material.ARROW, ChatColor.YELLOW + "Back"));
+        stephanie.openInventory(gui);
     }
 
     private void fillBackground(Inventory gui) {
@@ -363,6 +453,120 @@ public class RandomMiniGameSelector implements Listener {
         Player player = (Player) event.getWhoClicked();
         UUID playerUUID = player.getUniqueId();
 
+        if (event.getView().getTitle().contains("Stephanie - Mini-Game")) {
+            event.setCancelled(true);
+
+            if (!playerSelections.containsKey(playerUUID)) {
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.5f, 1.0f);
+                return;
+            }
+
+            if (event.getRawSlot() == 11) {
+                UUID victimUUID = playerSelections.get(playerUUID);
+                Player victim = victimUUID != null ? Bukkit.getPlayer(victimUUID) : null;
+                markIntentionalClose(playerUUID);
+                clearPlayerData(playerUUID);
+                inTeleport.add(playerUUID);
+                player.closeInventory();
+                if (victim != null) {
+                    openRandomMiniGameSelectionGUI(player, victim);
+                }
+            } else if (event.getRawSlot() == 15) {
+                markTemporaryTransition(playerUUID);
+                openStephanieGameChoiceGUI(player);
+            }
+            return;
+        }
+
+        if (event.getView().getTitle().contains("Stephanie - Choose Game")) {
+            event.setCancelled(true);
+
+            if (!playerSelections.containsKey(playerUUID)) {
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.5f, 1.0f);
+                return;
+            }
+
+            if (event.getRawSlot() == 53) {
+                UUID victimUUID = playerSelections.get(playerUUID);
+                Player victim = victimUUID != null ? Bukkit.getPlayer(victimUUID) : null;
+                if (victim != null) {
+                    markTemporaryTransition(playerUUID);
+                    openStephanieModeGUI(player, victim);
+                }
+                return;
+            }
+
+            ItemStack clicked = event.getCurrentItem();
+            MiniGameType selected = getMiniGameTypeFromItem(clicked);
+            if (selected != null) {
+                markIntentionalClose(playerUUID);
+                player.closeInventory();
+                clearPlayerData(playerUUID);
+                if (!plugin.getMiniGameSelectionManager().processStephanieChoice(player, selected)) {
+                    MessageUtil.sendMessage(player, "&cThis mini-game choice is no longer available.");
+                    inTeleport.remove(playerUUID);
+                }
+            }
+            return;
+        }
+
+        if (event.getView().getTitle().contains("Sora - Substitution")) {
+            event.setCancelled(true);
+
+            if (!playerSelections.containsKey(playerUUID)) {
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.5f, 1.0f);
+                return;
+            }
+
+            UUID victimUUID = playerSelections.get(playerUUID);
+            Player victim = victimUUID != null ? Bukkit.getPlayer(victimUUID) : null;
+            if (victim == null) {
+                clearPlayerData(playerUUID);
+                return;
+            }
+
+            if (event.getRawSlot() == 11) {
+                Player shiro = plugin.getMiniGameSelectionManager().processSoraSubstitutionFromGui(player);
+                if (shiro != null) {
+                    markIntentionalClose(playerUUID);
+                    clearPlayerData(playerUUID);
+                    player.closeInventory();
+                    openShiroAcceptGUI(player, shiro, victim);
+                }
+                return;
+            }
+
+            if (event.getRawSlot() == 15) {
+                markIntentionalClose(playerUUID);
+                clearPlayerData(playerUUID);
+                player.closeInventory();
+                plugin.getMiniGameSelectionManager().processSoraDecline(player);
+            }
+            return;
+        }
+
+        if (event.getView().getTitle().contains("Shiro - Accept")) {
+            event.setCancelled(true);
+            if (event.getRawSlot() == 11) {
+                UUID soraUUID = plugin.getMiniGameSelectionManager().getSoraControllerForShiro(playerUUID);
+                if (soraUUID != null) {
+                    markIntentionalClose(soraUUID);
+                }
+                markIntentionalClose(playerUUID);
+                player.closeInventory();
+                plugin.getMiniGameSelectionManager().processShiroAccept(player);
+            } else if (event.getRawSlot() == 15) {
+                UUID soraUUID = plugin.getMiniGameSelectionManager().getSoraControllerForShiro(playerUUID);
+                if (soraUUID != null) {
+                    markTemporaryTransition(soraUUID);
+                }
+                markIntentionalClose(playerUUID);
+                player.closeInventory();
+                plugin.getMiniGameSelectionManager().processShiroDecline(player);
+            }
+            return;
+        }
+
         if (event.getView().getTitle().contains("Random Mini-Game Selector")) {
             event.setCancelled(true);
 
@@ -380,6 +584,19 @@ public class RandomMiniGameSelector implements Listener {
                 handleStartClick(player);
             }
         }
+    }
+
+    private MiniGameType getMiniGameTypeFromItem(ItemStack item) {
+        if (item == null || !item.hasItemMeta() || item.getItemMeta() == null || item.getItemMeta().getLore() == null) {
+            return null;
+        }
+        for (String line : item.getItemMeta().getLore()) {
+            String stripped = ChatColor.stripColor(line);
+            if (stripped != null && stripped.startsWith("Mini-game: ")) {
+                return MiniGameType.getByName(stripped.substring("Mini-game: ".length()));
+            }
+        }
+        return null;
     }
 
     private void handleRerollClick(Player player, Inventory inventory) {
@@ -429,14 +646,15 @@ public class RandomMiniGameSelector implements Listener {
         MiniGameType selectedGame = selectedGames.get(playerUUID);
         cancelExistingAnimation(playerUUID);
 
-        // Mark as intentional close to avoid the reopen logic
-        inTeleport.add(playerUUID);
+        markIntentionalClose(playerUUID);
         player.closeInventory();
+        victim.closeInventory();
+        clearPlayerData(playerUUID);
+        plugin.getMiniGameSessionManager().clearPending(playerUUID);
 
         boolean success = plugin.getMiniGameEngine().startGame(selectedGame, player, victim);
 
         if (success) {
-            clearPlayerData(playerUUID);
             MessageUtil.sendMessage(player, "&aStarting mini-game: &e" + selectedGame.getDisplayName());
             MessageUtil.sendMessage(victim, "&aStarting mini-game: &e" + selectedGame.getDisplayName());
         } else {
@@ -452,7 +670,11 @@ public class RandomMiniGameSelector implements Listener {
         Player player = (Player) event.getPlayer();
         UUID playerUUID = player.getUniqueId();
 
-        if (!event.getView().getTitle().contains("Random Mini-Game Selector")) {
+        if (!event.getView().getTitle().contains("Random Mini-Game Selector")
+                && !event.getView().getTitle().contains("Stephanie - Mini-Game")
+                && !event.getView().getTitle().contains("Stephanie - Choose Game")
+                && !event.getView().getTitle().contains("Sora - Substitution")
+                && !event.getView().getTitle().contains("Shiro - Accept")) {
             return;
         }
 
@@ -498,7 +720,16 @@ public class RandomMiniGameSelector implements Listener {
                 Player victim = Bukkit.getPlayer(victimUUID);
                 if (victim == null || !victim.isOnline()) return;
 
-                Inventory gui = Bukkit.createInventory(null, GUI_SIZE, ChatColor.DARK_PURPLE + "Random Mini-Game Selector");
+                if (shouldOpenStephanieMode(player)) {
+                    openStephanieModeGUI(player, victim);
+                    return;
+                }
+                if (shouldOpenSoraMode(player)) {
+                    openSoraModeGUI(player, victim);
+                    return;
+                }
+
+                Inventory gui = Bukkit.createInventory(null, GUI_SIZE, RANDOM_SELECTOR_TITLE);
                 fillBackground(gui);
                 gui.setItem(REROLL_SLOT, createRerollButton(canReroll.getOrDefault(playerUUID, false)));
                 gui.setItem(START_SLOT, createStartButton(true));
@@ -532,6 +763,82 @@ public class RandomMiniGameSelector implements Listener {
         }
 
         cancelExistingAnimation(playerUUID);
+    }
+
+    public void clearSelectionForController(UUID playerUUID) {
+        clearPlayerData(playerUUID);
+    }
+
+    private void markIntentionalClose(UUID controllerUUID) {
+        inTeleport.add(controllerUUID);
+        Set<UUID> viewers = guiViewers.get(controllerUUID);
+        if (viewers != null) {
+            inTeleport.addAll(viewers);
+        }
+    }
+
+    private void markTemporaryTransition(UUID controllerUUID) {
+        markIntentionalClose(controllerUUID);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            inTeleport.remove(controllerUUID);
+            Set<UUID> viewers = guiViewers.get(controllerUUID);
+            if (viewers != null) {
+                viewers.forEach(inTeleport::remove);
+            }
+        }, 3L);
+    }
+
+    private void openSoraModeGUI(Player sora, Player opponent) {
+        UUID soraUUID = sora.getUniqueId();
+        playerSelections.put(soraUUID, opponent.getUniqueId());
+        inTeleport.add(soraUUID);
+
+        Set<UUID> viewers = new HashSet<>();
+        viewers.add(sora.getUniqueId());
+        guiViewers.put(soraUUID, viewers);
+        mustStayInGui.addAll(viewers);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!sora.isOnline() || !opponent.isOnline()) {
+                    return;
+                }
+                Inventory gui = Bukkit.createInventory(null, GUI_SIZE, SORA_MODE_TITLE);
+                fillBackground(gui);
+                gui.setItem(11, createGuiItem(
+                        Material.ENDER_PEARL,
+                        ChatColor.AQUA + "Ask Shiro",
+                        ChatColor.GRAY + "Request Shiro to play this mini-game."
+                ));
+                gui.setItem(15, createGuiItem(
+                        Material.EMERALD,
+                        ChatColor.GREEN + "Play yourself",
+                        ChatColor.GRAY + "Continue to the normal roulette."
+                ));
+                sora.openInventory(gui);
+                Bukkit.getScheduler().runTaskLater(plugin, () -> inTeleport.remove(soraUUID), 5L);
+            }
+        }.runTaskLater(plugin, 10L);
+    }
+
+    private void openShiroAcceptGUI(Player sora, Player shiro, Player opponent) {
+        markTemporaryTransition(sora.getUniqueId());
+        Inventory gui = Bukkit.createInventory(null, GUI_SIZE, SHIRO_ACCEPT_TITLE);
+        fillBackground(gui);
+        gui.setItem(11, createGuiItem(
+                Material.LIME_DYE,
+                ChatColor.GREEN + "Accept",
+                ChatColor.GRAY + "Play the mini-game against " + opponent.getName() + "."
+        ));
+        gui.setItem(15, createGuiItem(
+                Material.RED_DYE,
+                ChatColor.RED + "Decline",
+                ChatColor.GRAY + "Sora will continue normally."
+        ));
+        shiro.openInventory(gui);
+        MessageUtil.sendMessage(shiro, "&6" + sora.getName() + " wants you to substitute.");
+        MessageUtil.sendMessage(shiro, "&eYou can also use &a/acceptsub &eor &a/duo acceptsub&e.");
     }
 
     public void cleanup() {

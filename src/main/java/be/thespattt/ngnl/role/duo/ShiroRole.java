@@ -6,6 +6,8 @@ import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -20,13 +22,14 @@ import java.util.UUID;
 public class ShiroRole extends DuoRole {
 
     private static final int CLONE_COOLDOWN = 20 * 60;
-    private static final int CLONE_DURATION = 10;
+    private static final int CLONE_DURATION = 60;
     private static final int PARTNER_PROXIMITY_RANGE = 30;
     private static final int MAX_BONUSES = 2;
 
     private long lastCloneUsage = 0;
     private int bonusesUsed = 0;
     private int proximityCheckTaskId = -1;
+    private boolean distancePenaltyActive = false;
 
     public ShiroRole(NoGameNoLife plugin, UUID playerId) {
         super(plugin, playerId, RoleType.SHIRO);
@@ -37,14 +40,7 @@ public class ShiroRole extends DuoRole {
         Player player = getPlayer();
         if (player == null) return;
 
-        UUID soraUUID = getPartnerUUID();
-        if (soraUUID != null) {
-            Player soraPlayer = Bukkit.getPlayer(soraUUID);
-            if (soraPlayer != null) {
-                MessageUtil.sendMessage(player, "&eSora is: &a" + soraPlayer.getName());
-                MessageUtil.sendMessage(player, "&eYou know their identity and position from the start.");
-            }
-        }
+        revealPartnerIdentity(player);
 
         MessageUtil.sendMessage(player, "&eYou can give Sora bonuses during mini-games (&a" + MAX_BONUSES + " times&e).");
         startProximityCheck();
@@ -59,11 +55,68 @@ public class ShiroRole extends DuoRole {
                 this::checkPartnerProximity, 20L, 20L);
     }
 
+    private void updateSoraDirectionActionBar() {
+        Player player = getPlayer();
+        Player sora = getPartnerPlayer();
+        
+        if (player == null) return;
+
+        if (sora == null || !plugin.getGameManager().isPlayerAlive(getPartnerUUID())) {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§cSora is not available"));
+            return;
+        }
+        
+        if (!player.getWorld().equals(sora.getWorld())) {
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText("§e" + sora.getName() + " is in another world"));
+            return;
+        }
+        
+        double dx = sora.getLocation().getX() - player.getLocation().getX();
+        double dz = sora.getLocation().getZ() - player.getLocation().getZ();
+        double distance = Math.sqrt(dx * dx + dz * dz);
+        
+        float playerYaw = player.getLocation().getYaw();
+        double targetYaw = Math.toDegrees(Math.atan2(-dx, dz));
+        double relativeAngle = targetYaw - playerYaw;
+        
+        // Normalize angle to -180 to 180
+        while (relativeAngle > 180) relativeAngle -= 360;
+        while (relativeAngle < -180) relativeAngle += 360;
+        
+        // Convert to arrow direction
+        String arrow = getDirectionArrow(relativeAngle);
+        String distanceText = String.format("%.1f", distance);
+
+        String color = distance <= PARTNER_PROXIMITY_RANGE ? "§b" : "§c";
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                TextComponent.fromLegacyText(color + arrow + " §f" + sora.getName() + " §7(" + distanceText + "m)"));
+    }
+
+    private String getDirectionArrow(double angle) {
+        if (angle >= -22.5 && angle < 22.5) return "↑";
+        else if (angle >= 22.5 && angle < 67.5) return "↗";
+        else if (angle >= 67.5 && angle < 112.5) return "→";
+        else if (angle >= 112.5 && angle < 157.5) return "↘";
+        else if (angle >= 157.5 || angle < -157.5) return "↓";
+        else if (angle >= -157.5 && angle < -112.5) return "↙";
+        else if (angle >= -112.5 && angle < -67.5) return "←";
+        else return "↖";
+    }
+
+    // Modify the checkPartnerProximity method to include the direction update
     private void checkPartnerProximity() {
         Player player = getPlayer();
         if (player == null) return;
 
+        updateSoraDirectionActionBar();
+
         Player sora = getPartnerPlayer();
+        if (plugin.getMiniGameEngine().isPlayerInMiniGame(playerId)) {
+            removeBaseProximityEffects(player);
+            distancePenaltyActive = false;
+            return;
+        }
+
         if (sora == null || !plugin.getGameManager().isPlayerAlive(getPartnerUUID())) {
             applyNegativeEffects(player);
             return;
@@ -84,7 +137,7 @@ public class ShiroRole extends DuoRole {
     }
 
     private void applyPositiveEffects(Player player) {
-        player.removePotionEffect(PotionEffectType.WEAKNESS);
+        distancePenaltyActive = false;
 
         if (!player.hasPotionEffect(PotionEffectType.SPEED)) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
@@ -96,12 +149,14 @@ public class ShiroRole extends DuoRole {
     }
 
     private void applyNegativeEffects(Player player) {
+        removeBaseProximityEffects(player);
+        distancePenaltyActive = true;
+    }
+
+    private void removeBaseProximityEffects(Player player) {
         player.removePotionEffect(PotionEffectType.SPEED);
         player.removePotionEffect(PotionEffectType.RESISTANCE);
-
-        if (!player.hasPotionEffect(PotionEffectType.WEAKNESS)) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, false, false));
-        }
+        player.removePotionEffect(PotionEffectType.WEAKNESS);
     }
 
     @Override
@@ -162,8 +217,7 @@ public class ShiroRole extends DuoRole {
 
         MessageUtil.sendMessage(player, "&c&lSora has been eliminated!");
         MessageUtil.sendMessage(player, "&cYou feel significantly weaker without your partner...");
-
-        player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, false, false));
+        distancePenaltyActive = true;
     }
 
     public boolean useCloneAbility() {
@@ -208,7 +262,7 @@ public class ShiroRole extends DuoRole {
                 .name("&f&lShiro's Crown")
                 .lore(
                         "&7Allows you to spawn 5 clones",
-                        "&7around you for 10 seconds.",
+                        "&7around you for 1 minute.",
                         "",
                         "&eRight-click to activate",
                         "&cCooldown: 20 minutes"
@@ -263,12 +317,36 @@ public class ShiroRole extends DuoRole {
         return MAX_BONUSES - bonusesUsed;
     }
 
+    public boolean isDistancePenaltyActive() {
+        return distancePenaltyActive;
+    }
+
+    private void revealPartnerIdentity(Player player) {
+        UUID soraUUID = getPartnerUUID();
+        if (soraUUID == null) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                Player current = getPlayer();
+                if (current != null) {
+                    revealPartnerIdentity(current);
+                }
+            }, 20L);
+            return;
+        }
+
+        Player soraPlayer = Bukkit.getPlayer(soraUUID);
+        if (soraPlayer != null) {
+            MessageUtil.sendMessage(player, "&eSora is: &a" + soraPlayer.getName());
+            MessageUtil.sendMessage(player, "&eYou know their identity and position from the start.");
+        }
+    }
+
     private String formatTime(long seconds) {
         long minutes = seconds / 60;
         long remainingSeconds = seconds % 60;
         return String.format("%d:%02d", minutes, remainingSeconds);
     }
 
+    // Modify the onDeath method to clean up the boss bar
     @Override
     public void onDeath(UUID killerId) {
         super.onDeath(killerId);
@@ -277,5 +355,15 @@ public class ShiroRole extends DuoRole {
             Bukkit.getScheduler().cancelTask(proximityCheckTaskId);
             proximityCheckTaskId = -1;
         }
+        distancePenaltyActive = false;
+    }
+
+    // Also clean up when role is removed/changed
+    public void cleanup() {
+        if (proximityCheckTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(proximityCheckTaskId);
+            proximityCheckTaskId = -1;
+        }
+        distancePenaltyActive = false;
     }
 }

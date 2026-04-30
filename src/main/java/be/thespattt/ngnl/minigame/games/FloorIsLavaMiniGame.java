@@ -470,10 +470,6 @@ public class FloorIsLavaMiniGame extends MiniGameBase implements Listener {
             MessageUtil.sendMessage(opponent, "&eYour opponent was eliminated by lava!");
         }
 
-        // Give spectator effects
-        player.setGameMode(GameMode.SPECTATOR);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0, false, false));
-
         // Check if other player wins
         UUID otherPlayerUUID = playerUUID.equals(player1UUID) ? player2UUID : player1UUID;
         if (playerAlive.get(otherPlayerUUID)) {
@@ -612,9 +608,8 @@ public class FloorIsLavaMiniGame extends MiniGameBase implements Listener {
             }
         }
 
-        super.endGame(winnerUUID);
-
         restorePlayerInventories();
+        super.endGame(winnerUUID);
 
         PlayerMoveEvent.getHandlerList().unregister(this);
     }

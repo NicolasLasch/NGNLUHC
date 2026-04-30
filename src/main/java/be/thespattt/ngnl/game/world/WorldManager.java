@@ -202,11 +202,11 @@ public class WorldManager {
         world.setGameRuleValue("doMobSpawning", "false");
         world.setTime(6000); // Midday
 
-        // Set world border
-        int borderSize = plugin.getConfigManager().getGameConfig().getArenaWorldBorderSize();
-        world.getWorldBorder().setSize(borderSize * 2);
-        world.getWorldBorder().setWarningDistance(20);
+        // Mini-games are spread across the world (some arenas use ordinal * 100),
+        // so this border must not reuse the arena border size.
         world.getWorldBorder().setCenter(0, 0);
+        world.getWorldBorder().setSize(10000);
+        world.getWorldBorder().setWarningDistance(50);
     }
 
     /**

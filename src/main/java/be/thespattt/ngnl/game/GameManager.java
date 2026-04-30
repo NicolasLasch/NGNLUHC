@@ -5,6 +5,7 @@ import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -90,20 +91,30 @@ public class GameManager {
     public void removePlayerHearts(UUID playerId, double hearts) {
         removePlayerHearts(playerId, hearts, null);
     }
+
     public void removePlayerHearts(UUID playerId, double hearts, UUID killerId) {
         NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
         if (ngnlPlayer == null) return;
-        double currentMaxHealth = ngnlPlayer.getMaxHealth();
-        double newMaxHealth = Math.max(2.0, currentMaxHealth - (hearts * 2));
-        ngnlPlayer.setMaxHealth(newMaxHealth);
+
         Player player = Bukkit.getPlayer(playerId);
         if (player == null) return;
 
+        double currentMaxHealth = ngnlPlayer.getMaxHealth();
+        double newMaxHealth = currentMaxHealth - (hearts * 2);
+
+        if (newMaxHealth <= 0.0) {
+            handlePlayerElimination(playerId, killerId);
+            return;
+        }
+
+        newMaxHealth = Math.max(2.0, newMaxHealth);
+
+        ngnlPlayer.setMaxHealth(newMaxHealth);
         player.setMaxHealth(newMaxHealth);
 
-        if (player.getHealth() > newMaxHealth) player.setHealth(newMaxHealth);
-
-        if (newMaxHealth <= 0.0) handlePlayerElimination(playerId, killerId);
+        if (player.getHealth() > newMaxHealth) {
+            player.setHealth(newMaxHealth);
+        }
     }
 
     public boolean isGameRunning() {
@@ -157,5 +168,9 @@ public class GameManager {
         } else {
             MessageUtil.logWarning("Cannot force arena phase from state: " + game.getGameState());
         }
+    }
+
+    public boolean revivePlayer(UUID playerId, Location location, double health) {
+        return game.revivePlayer(playerId, location, health);
     }
 }

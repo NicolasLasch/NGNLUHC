@@ -399,9 +399,9 @@ public class SumoMiniGame extends MiniGameBase implements Listener {
             }
         }
 
+        restorePlayerInventories();
         super.endGame(winnerUUID);
 
-        restorePlayerInventories();
         PlayerMoveEvent.getHandlerList().unregister(this);
         BlockBreakEvent.getHandlerList().unregister(this);
         EntityDamageByEntityEvent.getHandlerList().unregister(this);

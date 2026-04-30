@@ -11,6 +11,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -45,6 +46,8 @@ public class MemoryMiniGame extends MiniGameBase implements Listener {
     private final Map<UUID, ItemStack[]> playerInventories = new HashMap<>();
     private final Map<UUID, ItemStack[]> playerArmorContents = new HashMap<>();
     private final Map<UUID, GameMode> playerGameModes = new HashMap<>();
+    private final Map<UUID, Boolean> playerAllowFlight = new HashMap<>();
+    private final Map<UUID, Boolean> playerFlying = new HashMap<>();
 
     private final Map<UUID, Integer> playerScores = new HashMap<>();
     private BoundingBox player1BuildArea;
@@ -144,7 +147,8 @@ public class MemoryMiniGame extends MiniGameBase implements Listener {
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
         storePlayerInventories();
-        setPlayersGameMode(GameMode.CREATIVE);
+        prepareMemoryPlayer(getPlayer1());
+        prepareMemoryPlayer(getPlayer2());
 
         MessageUtil.sendMessage(getPlayer1(), "&eMemory Game: Starting arena setup...");
         MessageUtil.sendMessage(getPlayer2(), "&eMemory Game: Starting arena setup...");
@@ -165,16 +169,19 @@ public class MemoryMiniGame extends MiniGameBase implements Listener {
         playerInventories.put(player.getUniqueId(), player.getInventory().getContents());
         playerArmorContents.put(player.getUniqueId(), player.getInventory().getArmorContents());
         playerGameModes.put(player.getUniqueId(), player.getGameMode());
+        playerAllowFlight.put(player.getUniqueId(), player.getAllowFlight());
+        playerFlying.put(player.getUniqueId(), player.isFlying());
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
     }
 
-    private void setPlayersGameMode(GameMode gameMode) {
-        Player player1 = getPlayer1();
-        Player player2 = getPlayer2();
-
-        if (player1 != null) player1.setGameMode(gameMode);
-        if (player2 != null) player2.setGameMode(gameMode);
+    private void prepareMemoryPlayer(Player player) {
+        if (player == null) {
+            return;
+        }
+        player.setGameMode(GameMode.SURVIVAL);
+        player.setAllowFlight(true);
+        player.setFlying(true);
     }
 
     private void setupArenaAndStart() {
@@ -780,6 +787,16 @@ public class MemoryMiniGame extends MiniGameBase implements Listener {
     }
 
     @EventHandler
+    public void onBlockDamage(BlockDamageEvent event) {
+        Player player = event.getPlayer();
+        if (!isParticipant(player)) return;
+
+        if (currentPhase == GamePhase.BUILDING) {
+            event.setInstaBreak(true);
+        }
+    }
+
+    @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
 
@@ -806,6 +823,8 @@ public class MemoryMiniGame extends MiniGameBase implements Listener {
             }
 
             player1PlacedBlocks.remove(breakLoc);
+            event.setDropItems(false);
+            player.getInventory().addItem(new ItemStack(event.getBlock().getType()));
         } else if (player.getUniqueId().equals(player2UUID)) {
             if (!player2BuildArea.contains(breakLoc.getX(), breakLoc.getY(), breakLoc.getZ())) {
                 event.setCancelled(true);
@@ -813,6 +832,8 @@ public class MemoryMiniGame extends MiniGameBase implements Listener {
             }
 
             player2PlacedBlocks.remove(breakLoc);
+            event.setDropItems(false);
+            player.getInventory().addItem(new ItemStack(event.getBlock().getType()));
         }
     }
 
@@ -842,10 +863,14 @@ public class MemoryMiniGame extends MiniGameBase implements Listener {
 
         GameMode previousGameMode = playerGameModes.getOrDefault(playerUUID, GameMode.SURVIVAL);
         player.setGameMode(previousGameMode);
+        player.setAllowFlight(playerAllowFlight.getOrDefault(playerUUID, false));
+        player.setFlying(playerFlying.getOrDefault(playerUUID, false));
 
         playerInventories.remove(playerUUID);
         playerArmorContents.remove(playerUUID);
         playerGameModes.remove(playerUUID);
+        playerAllowFlight.remove(playerUUID);
+        playerFlying.remove(playerUUID);
     }
 
     @Override
@@ -867,12 +892,12 @@ public class MemoryMiniGame extends MiniGameBase implements Listener {
             }
         }
 
-        super.endGame(winnerUUID);
-
         restorePlayerInventories();
+        super.endGame(winnerUUID);
 
         BlockPlaceEvent.getHandlerList().unregister(this);
         BlockBreakEvent.getHandlerList().unregister(this);
+        BlockDamageEvent.getHandlerList().unregister(this);
         PlayerMoveEvent.getHandlerList().unregister(this);
     }
 

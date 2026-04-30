@@ -5,6 +5,7 @@ api-version: 1.21
 author: TheSpatt
 description: A UHC plugin inspired by the anime No Game No Life
 website: https://github.com/TheSpatt/NoGameNoLifeUHC
+softdepend: [ProtocolLib, packetevents, PacketEvents]
 
 commands:
   ngnl:
@@ -49,6 +50,21 @@ commands:
   teleport:
     description: Exchange the position of two players (Holou only)
     usage: /teleport <player1> <player2>
+    permission: ngnl.player
+
+  substitute:
+    description: Ask Shiro to replace Sora in the pending mini-game
+    usage: /substitute
+    permission: ngnl.player
+
+  acceptsub:
+    description: Accept Sora's substitution request
+    usage: /acceptsub
+    permission: ngnl.player
+
+  bonus:
+    description: Give Sora a mini-game bonus (Shiro only)
+    usage: /bonus
     permission: ngnl.player
 
   ngnladmin:

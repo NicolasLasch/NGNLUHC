@@ -5,9 +5,11 @@ import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.role.Role;
 import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.role.duo.StephanieRole;
+import be.thespattt.ngnl.role.solo.TetoRole;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -33,7 +35,14 @@ public class MiniGameSelectionManager {
 
         Role winnerRole = winnerNGNL.getRole();
 
-        // Check for Stephanie's choice ability
+        // Sora must decide substitution before the PvP winner selects the mini-game.
+        NGNLPlayer loserNGNL = plugin.getPlayerManager().getNGNLPlayer(loserId);
+        if (loserNGNL != null && loserNGNL.getRole() != null &&
+                loserNGNL.getRole().getRoleType() == RoleType.SORA) {
+            offerSoraSubstitution(loser, winner, winner);
+            return;
+        }
+
         if (winnerRole.getRoleType() == RoleType.STEPHANIE) {
             StephanieRole stephanie = (StephanieRole) winnerRole;
             if (!stephanie.hasUsedMiniGameChoice()) {
@@ -42,17 +51,19 @@ public class MiniGameSelectionManager {
             }
         }
 
-        // Check for Sora's substitution ability
-        if (winnerRole.getRoleType() == RoleType.SORA) {
-            offerSoraSubstitution(winner, loser);
+        if (winnerRole.getRoleType() == RoleType.TETO && winnerRole instanceof TetoRole tetoRole && tetoRole.canChooseMiniGame()) {
+            openTetoSelection(winner, loser);
             return;
         }
 
-        // Check if loser is Sora
-        NGNLPlayer loserNGNL = plugin.getPlayerManager().getNGNLPlayer(loserId);
-        if (loserNGNL != null && loserNGNL.getRole() != null &&
-                loserNGNL.getRole().getRoleType() == RoleType.SORA) {
-            offerSoraSubstitution(loser, winner);
+        // Check for Sora's substitution ability
+        if (winnerRole.getRoleType() == RoleType.SORA) {
+            offerSoraSubstitution(winner, loser, winner);
+            return;
+        }
+
+        if (loserNGNL != null && loserNGNL.getRole() instanceof TetoRole tetoRole && tetoRole.canChooseMiniGame()) {
+            openTetoSelection(loser, winner);
             return;
         }
 
@@ -65,7 +76,7 @@ public class MiniGameSelectionManager {
         activeSelections.put(stephanie.getUniqueId(), context);
 
         MessageUtil.sendMessage(stephanie, "&6You can choose the mini-game! (30 seconds)");
-        MessageUtil.sendMessage(stephanie, "&eUse &a/duo choosegame <type> &eor select normally");
+        MessageUtil.sendMessage(stephanie, "&eUse the inventory, or &a/duo choosegame <type>&e.");
         MessageUtil.sendMessage(opponent, "&6" + stephanie.getName() + " is choosing the mini-game...");
 
         // Open normal GUI but mark it as Stephanie-controlled
@@ -80,7 +91,7 @@ public class MiniGameSelectionManager {
         }, 600L); // 30 seconds
     }
 
-    private void offerSoraSubstitution(Player sora, Player opponent) {
+    private void offerSoraSubstitution(Player sora, Player opponent, Player selectionController) {
         UUID shiroId = sora.getUniqueId(); // This needs to get actual Shiro ID
         NGNLPlayer soraNGNL = plugin.getPlayerManager().getNGNLPlayer(sora.getUniqueId());
         if (soraNGNL.getRole() != null) {
@@ -88,23 +99,23 @@ public class MiniGameSelectionManager {
         }
 
         if (shiroId == null) {
-            openNormalSelection(sora, opponent);
+            openPostSoraSelection(selectionController, sora);
             return;
         }
 
         Player shiro = Bukkit.getPlayer(shiroId);
         if (shiro == null) {
             MessageUtil.sendMessage(sora, "&cShiro is not online for substitution.");
-            openNormalSelection(sora, opponent);
+            openPostSoraSelection(selectionController, sora);
             return;
         }
 
-        SelectionContext context = new SelectionContext(sora, opponent, SelectionType.SORA_SUBSTITUTION);
+        SelectionContext context = new SelectionContext(sora, opponent, SelectionType.SORA_SUBSTITUTION, selectionController);
         context.setShiro(shiro);
         activeSelections.put(sora.getUniqueId(), context);
 
         MessageUtil.sendMessage(sora, "&6You can ask Shiro to substitute! (30 seconds)");
-        MessageUtil.sendMessage(sora, "&eUse &a/duo substitute &eor proceed normally");
+        MessageUtil.sendMessage(sora, "&eUse the inventory, or &a/substitute &e/ &a/duo substitute&e.");
         MessageUtil.sendMessage(opponent, "&6" + sora.getName() + " might substitute with Shiro...");
 
         // Open normal GUI
@@ -121,6 +132,37 @@ public class MiniGameSelectionManager {
 
     private void openNormalSelection(Player player1, Player player2) {
         plugin.getMiniGameManager().openMiniGameSelectionGUI(player1, player2);
+    }
+
+    private void openTetoSelection(Player teto, Player opponent) {
+        SelectionContext context = new SelectionContext(teto, opponent, SelectionType.TETO_CHOICE);
+        activeSelections.put(teto.getUniqueId(), context);
+        MessageUtil.sendMessage(teto, "&6You control this mini-game selection as Teto.");
+        MessageUtil.sendMessage(opponent, "&6Teto is choosing the mini-game.");
+        plugin.getMiniGameManager().openMiniGameSelectionGUI(teto, opponent);
+    }
+
+    private void openPostSoraSelection(Player selectionController, Player soraParticipant) {
+        if (selectionController == null || soraParticipant == null) {
+            return;
+        }
+
+        NGNLPlayer controllerNGNL = plugin.getPlayerManager().getNGNLPlayer(selectionController.getUniqueId());
+        Role controllerRole = controllerNGNL != null ? controllerNGNL.getRole() : null;
+
+        if (controllerRole != null && controllerRole.getRoleType() == RoleType.STEPHANIE
+                && controllerRole instanceof StephanieRole stephanieRole
+                && !stephanieRole.hasUsedMiniGameChoice()) {
+            openStephanieSelection(selectionController, soraParticipant);
+            return;
+        }
+
+        if (controllerRole instanceof TetoRole tetoRole && tetoRole.canChooseMiniGame()) {
+            openTetoSelection(selectionController, soraParticipant);
+            return;
+        }
+
+        openNormalSelection(selectionController, soraParticipant);
     }
 
     public boolean processStephanieChoice(Player stephanie, MiniGameType gameType) {
@@ -141,6 +183,7 @@ public class MiniGameSelectionManager {
 
         // Clean up and start game
         activeSelections.remove(stephanie.getUniqueId());
+        plugin.getMiniGameSessionManager().clearPending(stephanie.getUniqueId());
         stephanie.closeInventory();
         if (context.opponent != null) {
             context.opponent.closeInventory();
@@ -150,6 +193,25 @@ public class MiniGameSelectionManager {
         MessageUtil.sendMessage(context.opponent, "&6Starting mini-game: &e" + gameType.getDisplayName());
 
         plugin.getMiniGameEngine().startGame(gameType, stephanie, context.opponent);
+        return true;
+    }
+
+    public boolean processTetoChoice(Player teto, MiniGameType gameType) {
+        SelectionContext context = activeSelections.get(teto.getUniqueId());
+        if (context == null || context.type != SelectionType.TETO_CHOICE) {
+            return false;
+        }
+
+        activeSelections.remove(teto.getUniqueId());
+        plugin.getMiniGameSessionManager().clearPending(teto.getUniqueId());
+        teto.closeInventory();
+        if (context.opponent != null) {
+            context.opponent.closeInventory();
+        }
+
+        MessageUtil.sendMessage(teto, "&aStarting chosen mini-game: &e" + gameType.getDisplayName());
+        MessageUtil.sendMessage(context.opponent, "&6Starting mini-game: &e" + gameType.getDisplayName());
+        plugin.getMiniGameEngine().startGame(gameType, teto, context.opponent);
         return true;
     }
 
@@ -171,11 +233,53 @@ public class MiniGameSelectionManager {
                 MessageUtil.sendMessage(sora, "&cShiro didn't respond. You will play yourself.");
                 MessageUtil.sendMessage(context.shiro, "&cSubstitution request timed out.");
                 activeSelections.remove(sora.getUniqueId());
-                // DON'T reopen GUI - let it continue normally
+                if (plugin.getMiniGameManager().getMiniGameSelector() != null) {
+                    plugin.getMiniGameManager().getMiniGameSelector().clearSelectionForController(sora.getUniqueId());
+                }
+                openPostSoraSelection(context.selectionController, context.controller);
             }
         }, 300L); // 15 seconds
 
         return true;
+    }
+
+    public Player processSoraSubstitutionFromGui(Player sora) {
+        SelectionContext context = activeSelections.get(sora.getUniqueId());
+        if (context == null || context.type != SelectionType.SORA_SUBSTITUTION || context.shiro == null) {
+            return null;
+        }
+
+        context.waitingForShiroResponse = true;
+        MessageUtil.sendMessage(sora, "&aSubstitution request sent to Shiro.");
+        MessageUtil.sendMessage(context.shiro, "&6" + sora.getName() + " wants you to substitute.");
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (activeSelections.containsKey(sora.getUniqueId()) && context.waitingForShiroResponse) {
+                MessageUtil.sendMessage(sora, "&cShiro didn't respond. You will play yourself.");
+                MessageUtil.sendMessage(context.shiro, "&cSubstitution request timed out.");
+                activeSelections.remove(sora.getUniqueId());
+                if (plugin.getMiniGameManager().getMiniGameSelector() != null) {
+                    plugin.getMiniGameManager().getMiniGameSelector().clearSelectionForController(sora.getUniqueId());
+                }
+                openPostSoraSelection(context.selectionController, context.controller);
+            }
+        }, 300L);
+
+        return context.shiro;
+    }
+
+    public boolean processSoraDecline(Player sora) {
+        SelectionContext context = activeSelections.get(sora.getUniqueId());
+        if (context != null && context.type == SelectionType.SORA_SUBSTITUTION) {
+            UUID soraId = sora.getUniqueId();
+            activeSelections.remove(soraId);
+            if (plugin.getMiniGameManager().getMiniGameSelector() != null) {
+                plugin.getMiniGameManager().getMiniGameSelector().clearSelectionForController(soraId);
+            }
+            openPostSoraSelection(context.selectionController, context.controller);
+            return true;
+        }
+        return false;
     }
 
     public boolean processShiroAccept(Player shiro) {
@@ -196,10 +300,58 @@ public class MiniGameSelectionManager {
         MessageUtil.sendMessage(context.controller, "&aShiro accepted the substitution!");
         MessageUtil.sendMessage(shiro, "&aYou will play instead of " + context.controller.getName() + "!");
         MessageUtil.sendMessage(context.opponent, "&6" + shiro.getName() + " will play instead!");
+        swapSoraAndShiroPositions(context.controller, shiro);
+
+        if (plugin.getMiniGameManager().getMiniGameSelector() != null) {
+            plugin.getMiniGameManager().getMiniGameSelector().clearSelectionForController(soraId);
+        }
 
         plugin.getMiniGameSessionManager().clearPending(context.controller.getUniqueId());
-        plugin.getMiniGameSessionManager().registerPendingSession(shiro.getUniqueId(), context.opponent.getUniqueId());
-        plugin.getMiniGameManager().openMiniGameSelectionGUI(shiro, context.opponent);
+        if (context.selectionController.getUniqueId().equals(context.controller.getUniqueId())) {
+            openPostSoraSelection(shiro, context.opponent);
+        } else {
+            openPostSoraSelection(context.selectionController, shiro);
+        }
+        return true;
+    }
+
+    private void swapSoraAndShiroPositions(Player sora, Player shiro) {
+        Location soraSelectionLocation = sora.getLocation().clone();
+        Location shiroOriginalLocation = shiro.getLocation().clone();
+
+        NGNLPlayer soraNGNL = plugin.getPlayerManager().getNGNLPlayer(sora.getUniqueId());
+        NGNLPlayer shiroNGNL = plugin.getPlayerManager().getNGNLPlayer(shiro.getUniqueId());
+        Location soraReturnLocation = soraNGNL != null && soraNGNL.getLastLocation() != null
+                ? soraNGNL.getLastLocation().clone()
+                : soraSelectionLocation.clone();
+
+        sora.teleport(shiroOriginalLocation);
+        shiro.teleport(soraSelectionLocation);
+
+        if (soraNGNL != null) {
+            soraNGNL.setLastLocation(shiroOriginalLocation);
+        }
+        if (shiroNGNL != null) {
+            shiroNGNL.setLastLocation(soraReturnLocation);
+        }
+    }
+
+    public boolean processShiroDecline(Player shiro) {
+        SelectionContext context = findContextForShiro(shiro.getUniqueId());
+        if (context == null || !context.waitingForShiroResponse) {
+            return false;
+        }
+
+        UUID soraId = context.controller.getUniqueId();
+        context.waitingForShiroResponse = false;
+        activeSelections.remove(soraId);
+        if (plugin.getMiniGameManager().getMiniGameSelector() != null) {
+            plugin.getMiniGameManager().getMiniGameSelector().clearSelectionForController(soraId);
+        }
+
+        MessageUtil.sendMessage(context.controller, "&cShiro declined. Continue the roulette yourself.");
+        MessageUtil.sendMessage(shiro, "&eYou declined Sora's substitution.");
+        openPostSoraSelection(context.selectionController, context.controller);
         return true;
     }
 
@@ -220,6 +372,16 @@ public class MiniGameSelectionManager {
         return activeSelections.containsKey(playerId);
     }
 
+    public boolean isSoraSubstitutionSelection(UUID playerId) {
+        SelectionContext context = activeSelections.get(playerId);
+        return context != null && context.type == SelectionType.SORA_SUBSTITUTION && !context.waitingForShiroResponse;
+    }
+
+    public UUID getSoraControllerForShiro(UUID shiroId) {
+        SelectionContext context = findContextForShiro(shiroId);
+        return context != null ? context.controller.getUniqueId() : null;
+    }
+
     public void cleanup() {
         activeSelections.clear();
     }
@@ -228,20 +390,27 @@ public class MiniGameSelectionManager {
     public enum SelectionType {
         NORMAL,
         STEPHANIE_CHOICE,
-        SORA_SUBSTITUTION
+        SORA_SUBSTITUTION,
+        TETO_CHOICE
     }
 
     private static class SelectionContext {
         final Player controller;
         final Player opponent;
         final SelectionType type;
+        final Player selectionController;
         Player shiro;
         boolean waitingForShiroResponse = false;
 
         SelectionContext(Player controller, Player opponent, SelectionType type) {
+            this(controller, opponent, type, controller);
+        }
+
+        SelectionContext(Player controller, Player opponent, SelectionType type, Player selectionController) {
             this.controller = controller;
             this.opponent = opponent;
             this.type = type;
+            this.selectionController = selectionController;
         }
 
         void setShiro(Player shiro) {

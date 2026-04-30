@@ -4,6 +4,7 @@ import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.event.custom.MiniGameEndEvent;
 import be.thespattt.ngnl.event.custom.MiniGameStartEvent;
 import be.thespattt.ngnl.minigame.games.RockPaperScissorsGame;
+import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.*;
@@ -164,10 +165,6 @@ public class MiniGameManager {
 
         // Start the mini-game
         instance.start();
-
-        // Broadcast mini-game start
-        MessageUtil.broadcast("&6A mini-game has started: &e" + miniGameType.getDisplayName());
-        MessageUtil.broadcast("&6" + player1.getName() + " vs " + player2.getName());
 
         return true;
     }
@@ -491,6 +488,9 @@ public class MiniGameManager {
     }
 
     public void startMiniGameDuel(Player killer, Player victim) {
+        storeReturnLocationBeforeSelection(killer);
+        storeReturnLocationBeforeSelection(victim);
+
         teleportToMiniGameRoom(killer, victim);
 
         plugin.getMiniGameSessionManager().registerPendingSession(killer.getUniqueId(), victim.getUniqueId());
@@ -499,10 +499,25 @@ public class MiniGameManager {
         plugin.getMiniGameSelectionManager().handleMiniGameSelection(killer, victim);
     }
 
+    private void storeReturnLocationBeforeSelection(Player player) {
+        if (player == null) {
+            return;
+        }
+        NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
+        World miniGameWorld = plugin.getWorldManager().getMinigameWorld();
+        if (ngnlPlayer != null && (miniGameWorld == null || !player.getWorld().getUID().equals(miniGameWorld.getUID()))) {
+            ngnlPlayer.setLastLocation(player.getLocation());
+        }
+    }
+
     public void openMiniGameSelectionGUI(Player killer, Player victim) {
         plugin.getMiniGameSessionManager().registerPendingSession(killer.getUniqueId(), victim.getUniqueId());
         MessageUtil.sendMessage(killer, "&eChoose a mini-game to challenge &c" + victim.getName());
         miniGameSelector.openMiniGameSelectionGUI(killer, victim);
+    }
+
+    public RandomMiniGameSelector getMiniGameSelector() {
+        return miniGameSelector;
     }
 
 
@@ -513,15 +528,15 @@ public class MiniGameManager {
             MessageUtil.sendMessage(killer, "&c[Error] Mini-game world not found.");
             return;
         }
+        world.getWorldBorder().setCenter(0, 0);
+        world.getWorldBorder().setSize(10000);
+        world.getWorldBorder().setWarningDistance(50);
 
         Location center = new Location(plugin.getWorldManager().getMinigameWorld(), waitingRoomX, waitingRoomY, waitingRoomZ);
         preloadChunksAndThen(plugin.getWorldManager().getMinigameWorld(), center, 32, () -> {
             setupWaitingRoom();
             teleportPlayersToWaitingRoom(killer, victim);
         });
-        setupWaitingRoom();
-
-        teleportPlayersToWaitingRoom(killer, victim);
     }
 
     private void setupWaitingRoom() {

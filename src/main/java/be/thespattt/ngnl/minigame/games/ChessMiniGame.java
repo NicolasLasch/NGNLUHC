@@ -627,7 +627,7 @@ public class ChessMiniGame extends MiniGameBase implements Listener {
         }
 
         if ((piece.isWhite() && col == 7) || (!piece.isWhite() && col == 0)) {
-            board[row][col] = new ChessPiece(promotionPossibility.getFirst(), piece.isWhite());
+            board[row][col] = new ChessPiece(promotionPossibility.get(0), piece.isWhite());
 
             Player player = piece.isWhite() ? getPlayer1() : getPlayer2();
             if (player != null) {

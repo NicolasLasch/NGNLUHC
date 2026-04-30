@@ -7,9 +7,13 @@ import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +39,8 @@ public class ThinkRole extends Role {
     // Knowledge tracking
     private UUID knownPlayerId = null;
     private RoleType knownPlayerRole = null;
+    private boolean riteOneUsed = false;
+    private boolean riteTwoUsed = false;
 
     // Task IDs for scheduled tasks
     private int periodicTaskId = -1;
@@ -64,16 +70,7 @@ public class ThinkRole extends Role {
         if (player == null) {
             return;
         }
-
-        // Provide initial role-specific knowledge if applicable
-        assignInitialKnowledge();
-
-        // Set up role-specific initial abilities or effects
-        // Example: Apply initial potion effects
-        // player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
-
-        // Schedule any periodic tasks
-        startPeriodicTask();
+        MessageUtil.sendMessage(player, "&eUse /rite 1 for the stealth rite and /rite 2 for levitation.");
     }
 
     /**
@@ -222,6 +219,17 @@ public class ThinkRole extends Role {
         // Add role-specific death handling here
     }
 
+    public void onAnyPlayerEliminated(UUID victimId, UUID killerId) {
+        if (killerId == null || !killerId.equals(playerId)) {
+            return;
+        }
+        Player player = getPlayer();
+        if (player != null) {
+            player.setHealth(Math.min(player.getMaxHealth(), player.getHealth() + 2.0));
+            MessageUtil.sendMessage(player, "&aYour kill granted you 1 extra heart.");
+        }
+    }
+
     /**
      * Use the role's primary ability
      *
@@ -303,38 +311,7 @@ public class ThinkRole extends Role {
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        // Create and give primary ability item
-        ItemStack primaryAbilityItem = new ItemBuilder(Material.DIAMOND)
-                .name("&b&lPrimary Ability Item")
-                .lore(
-                        "&7Activates your primary ability",
-                        "",
-                        "&eRight-click to activate",
-                        "&cCooldown: " + (PRIMARY_ABILITY_COOLDOWN / 60) + " minutes",
-                        "&aMaximum uses: " + MAX_ABILITY_USES
-                )
-                .glow(true)
-                .build();
-
-        // Create and give secondary ability item
-        ItemStack secondaryAbilityItem = new ItemBuilder(Material.EMERALD)
-                .name("&a&lSecondary Ability Item")
-                .lore(
-                        "&7Activates your secondary ability",
-                        "",
-                        "&eRight-click to activate",
-                        "&cCooldown: " + (SECONDARY_ABILITY_COOLDOWN / 60) + " minutes"
-                )
-                .glow(true)
-                .build();
-
-        // Add to player's inventory
-        player.getInventory().addItem(primaryAbilityItem);
-        player.getInventory().addItem(secondaryAbilityItem);
-
-        // Explain how to use
-        MessageUtil.sendMessage(player, "&aYou received your &bPrimary Ability Item &aand &aSecondary Ability Item&a!");
-        MessageUtil.sendMessage(player, "&eRight-click each item to activate its ability.");
+        MessageUtil.sendMessage(player, "&eYour rites are command-based: /rite 1 and /rite 2.");
     }
 
     @Override
@@ -357,26 +334,77 @@ public class ThinkRole extends Role {
     @Override
     public List<String> getDescription() {
         return Arrays.asList(
-                "You are a Solo Role template.",
-                "Your goal is to win alone or with an alliance formed using /alliance.",
-                "Customize this description for each specific role.",
-                "Add details about role-specific abilities here."
+                "You are Think Nirvalen.",
+                "Your goal is to win alone.",
+                "Each kill grants you 1 additional heart."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "During the arena phase, you gain access to special abilities.",
-                "Your primary ability allows you to [describe primary ability].",
-                "Your secondary ability allows you to [describe secondary ability].",
-                "Customize this description for each specific role."
+                "/rite 1: invisibility + flight for 2 minutes or until damage.",
+                "/rite 2: levitation 20 to the nearest enemy for 5 seconds.",
+                "Each rite can only be used once."
         );
     }
 
     @Override
     public String getObjective() {
-        return "Win the game alone or with an alliance formed using /alliance.";
+        return "Win the game alone.";
+    }
+
+    public boolean useStealthRite() {
+        Player player = getPlayer();
+        if (player == null || riteOneUsed) {
+            return false;
+        }
+
+        riteOneUsed = true;
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 2 * 60 * 20, 0, false, false));
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        MessageUtil.sendMessage(player, "&aRite of rupture activated for 2 minutes.");
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (player.isOnline()) {
+                player.setFlying(false);
+                if (player.getGameMode() != GameMode.CREATIVE) {
+                    player.setAllowFlight(false);
+                }
+            }
+        }, 2 * 60 * 20L);
+        return true;
+    }
+
+    public boolean useLevitationRite() {
+        Player player = getPlayer();
+        if (player == null || riteTwoUsed) {
+            return false;
+        }
+
+        Player target = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (Entity entity : player.getNearbyEntities(20, 20, 20)) {
+            if (entity instanceof Player nearby && !nearby.getUniqueId().equals(player.getUniqueId())) {
+                double distance = nearby.getLocation().distanceSquared(player.getLocation());
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    target = nearby;
+                }
+            }
+        }
+
+        if (target == null) {
+            MessageUtil.sendMessage(player, "&cNo target found within 20 blocks.");
+            return false;
+        }
+
+        riteTwoUsed = true;
+        target.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 5 * 20, 19, false, false));
+        MessageUtil.sendMessage(player, "&aYou afflicted " + target.getName() + " with levitation.");
+        MessageUtil.sendMessage(target, "&cThink Nirvalen used a rite on you.");
+        return true;
     }
 
     /**

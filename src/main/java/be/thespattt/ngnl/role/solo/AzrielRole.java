@@ -1,7 +1,6 @@
 package be.thespattt.ngnl.role.solo;
 
 import be.thespattt.ngnl.NoGameNoLife;
-import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.role.Role;
 import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.util.ItemBuilder;
@@ -10,53 +9,26 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
-/**
- * Template for implementing solo roles
- * Use this as a starting point for creating new solo roles
- */
 public class AzrielRole extends Role {
 
-    // Define constants for ability cooldowns, durations, etc.
-    private static final int PRIMARY_ABILITY_COOLDOWN = 15 * 60; // 15 minutes in seconds
-    private static final int PRIMARY_ABILITY_DURATION = 30; // 30 seconds
-    private static final int SECONDARY_ABILITY_COOLDOWN = 20 * 60; // 20 minutes in seconds
+    private static final int NO_FLY_COOLDOWN = 20 * 60;
+    private long lastNoFlyUse = 0L;
+    private int flugelScanTaskId = -1;
+    private int copiedEpisode = -1;
 
-    // Ability usage tracking
-    private long lastPrimaryAbilityUsage = 0;
-    private long lastSecondaryAbilityUsage = 0;
-    private int abilitiesUsed = 0;
-    private static final int MAX_ABILITY_USES = 3; // Maximum uses of primary ability per game
+    private static final Set<RoleType> FLUGEL_ROLES = Set.of(RoleType.JIBRIL, RoleType.AZRIEL);
 
-    // Knowledge tracking
-    private UUID knownPlayerId = null;
-    private RoleType knownPlayerRole = null;
-
-    // Task IDs for scheduled tasks
-    private int periodicTaskId = -1;
-
-    /**
-     * Constructor
-     *
-     * @param plugin Plugin instance
-     * @param playerId UUID of the player
-     * @param roleType Role type
-     */
     public AzrielRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
-
-    /**
-     * For creating specific roles, use a simpler constructor
-     * Example for derived class:
-     * public SpecificRole(NoGameNoLife plugin, UUID playerId) {
-     *     super(plugin, playerId, RoleType.ROLE_NAME);
-     * }
-     */
 
     @Override
     protected void onRoleSetup() {
@@ -64,277 +36,55 @@ public class AzrielRole extends Role {
         if (player == null) {
             return;
         }
-
-        // Provide initial role-specific knowledge if applicable
-        assignInitialKnowledge();
-
-        // Set up role-specific initial abilities or effects
-        // Example: Apply initial potion effects
-        // player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
-
-        // Schedule any periodic tasks
-        startPeriodicTask();
+        startFlugelScan();
+        ItemStack copy = new ItemBuilder(Material.PRISMARINE_CRYSTALS)
+                .name("&b&lFlugel Mimicry")
+                .lore("&7Once per episode, copy a nearby Flugel's power.")
+                .glow(true)
+                .setTag("role_item", "AZRIEL")
+                .build();
+        player.getInventory().addItem(copy);
     }
 
-    /**
-     * Assign initial knowledge to the player
-     * (e.g., knowing another player's role)
-     */
-    private void assignInitialKnowledge() {
-        Player player = getPlayer();
-        if (player == null) {
-            return;
+    private void startFlugelScan() {
+        if (flugelScanTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(flugelScanTaskId);
         }
-
-        // Implement role-specific knowledge assignment
-        // For example, knowing another player's role
-
-        // Example implementation:
-        /*
-        // Get all players with roles
-        List<UUID> playersWithRoles = new ArrayList<>();
-        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            UUID playerId = onlinePlayer.getUniqueId();
-            if (plugin.getRoleManager().hasRole(playerId) && !playerId.equals(this.playerId)) {
-                playersWithRoles.add(playerId);
+        flugelScanTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+            Player player = getPlayer();
+            if (player == null || !plugin.getGameManager().isPlayerAlive(playerId)) {
+                return;
             }
-        }
-
-        // Pick a random player if there are any
-        if (!playersWithRoles.isEmpty()) {
-            Random random = new Random();
-            knownPlayerId = playersWithRoles.get(random.nextInt(playersWithRoles.size()));
-            knownPlayerRole = plugin.getRoleManager().getPlayerRole(knownPlayerId).getRoleType();
-
-            // Inform the player
-            Player knownPlayer = Bukkit.getPlayer(knownPlayerId);
-            if (knownPlayer != null) {
-                MessageUtil.sendMessage(player, "&eYou know that &a" + knownPlayer.getName() +
-                    " &eis the role: &a" + knownPlayerRole.getDisplayName());
+            for (Player other : Bukkit.getOnlinePlayers()) {
+                if (other.getUniqueId().equals(playerId) || !other.getWorld().equals(player.getWorld())) {
+                    continue;
+                }
+                var ngnl = plugin.getPlayerManager().getNGNLPlayer(other.getUniqueId());
+                if (ngnl == null || ngnl.getRole() == null || !FLUGEL_ROLES.contains(ngnl.getRole().getRoleType())) {
+                    continue;
+                }
+                if (other.getLocation().distance(player.getLocation()) <= 50.0) {
+                    MessageUtil.sendMessage(player, "&bFlugel movement detected near &f" + other.getName());
+                }
             }
-        }
-        */
-    }
-
-    /**
-     * Start a periodic task for this role
-     */
-    private void startPeriodicTask() {
-        // Cancel existing task if any
-        if (periodicTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(periodicTaskId);
-        }
-
-        // Schedule new task
-        periodicTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin,
-                this::periodicEffect, 20L, 20L * 30); // Every 30 seconds
-    }
-
-    /**
-     * Periodic effect for this role
-     */
-    private void periodicEffect() {
-        Player player = getPlayer();
-        if (player == null || !plugin.getGameManager().isPlayerAlive(playerId)) {
-            // Cancel task if player is offline or dead
-            if (periodicTaskId != -1) {
-                Bukkit.getScheduler().cancelTask(periodicTaskId);
-                periodicTaskId = -1;
-            }
-            return;
-        }
-
-        // Implement periodic effects
-        // Example: Apply regeneration effect
-        // player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0, false, false));
-    }
-
-    @Override
-    public void onMiniGameStart(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
-
-        // Handle mini-game start
-        MessageUtil.sendMessage(player, "&6Mini-game started: &e" + miniGameType.name());
-
-        // Add role-specific mini-game start logic here
-        // Example: Apply special effects for particular mini-games
-    }
-
-    @Override
-    public void onMiniGameEnd(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
-
-        // Handle mini-game result
-        if (isWinner) {
-            MessageUtil.sendMessage(player, "&aYou won the mini-game!");
-            // Add any victory bonuses here
-        } else {
-            MessageUtil.sendMessage(player, "&cYou lost the mini-game!");
-            // Add any defeat consequences here
-        }
-
-        // Add role-specific mini-game end logic here
+        }, 20L, 20L * 15);
     }
 
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-
-        // Reset cooldowns and counters for arena phase
-        lastPrimaryAbilityUsage = 0;
-        lastSecondaryAbilityUsage = 0;
-        abilitiesUsed = 0;
-
-        // Apply arena phase specific adjustments
-        Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
-
-        // Additional arena setup
-    }
-
-    @Override
-    public void onDeath(UUID killerId) {
-        // Clean up any scheduled tasks
-        if (periodicTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(periodicTaskId);
-            periodicTaskId = -1;
-        }
-
-        // Handle death
-        // Example: Trigger special effects or notifications
-        if (killerId != null) {
-            Player killer = Bukkit.getPlayer(killerId);
-            if (killer != null) {
-                // Notify killer of any special effects
-                MessageUtil.sendMessage(killer, "&aYou eliminated a player with the role: &e" +
-                        roleType.getDisplayName());
-            }
-        }
-
-        // Add role-specific death handling here
-    }
-
-    /**
-     * Use the role's primary ability
-     *
-     * @return True if ability was used successfully
-     */
-    public boolean usePrimaryAbility() {
-        if (!isArenaPhaseActive()) {
-            return false;
-        }
-
-        Player player = getPlayer();
-        if (player == null) {
-            return false;
-        }
-
-        // Check usage limits
-        if (abilitiesUsed >= MAX_ABILITY_USES) {
-            MessageUtil.sendMessage(player, "&cYou have already used this ability the maximum number of times!");
-            return false;
-        }
-
-        // Check cooldown
-        long currentTime = System.currentTimeMillis() / 1000;
-        if (currentTime - lastPrimaryAbilityUsage < PRIMARY_ABILITY_COOLDOWN) {
-            long remainingCooldown = PRIMARY_ABILITY_COOLDOWN - (currentTime - lastPrimaryAbilityUsage);
-            MessageUtil.sendMessage(player, "&cYou must wait " + formatTime(remainingCooldown) + " to use this ability again!");
-            return false;
-        }
-
-        // Update tracking
-        lastPrimaryAbilityUsage = currentTime;
-        abilitiesUsed++;
-
-        // Implement ability effect
-        MessageUtil.sendMessage(player, "&a&lYou used your primary ability!");
-
-        // Schedule ability end if it has a duration
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            // Cleanup after ability duration ends
-            MessageUtil.sendMessage(player, "&eYour primary ability effect has ended.");
-        }, PRIMARY_ABILITY_DURATION * 20L);
-
-        return true;
-    }
-
-    /**
-     * Use the role's secondary ability
-     *
-     * @return True if ability was used successfully
-     */
-    public boolean useSecondaryAbility() {
-        if (!isArenaPhaseActive()) {
-            return false;
-        }
-
-        Player player = getPlayer();
-        if (player == null) {
-            return false;
-        }
-
-        // Check cooldown
-        long currentTime = System.currentTimeMillis() / 1000;
-        if (currentTime - lastSecondaryAbilityUsage < SECONDARY_ABILITY_COOLDOWN) {
-            long remainingCooldown = SECONDARY_ABILITY_COOLDOWN - (currentTime - lastSecondaryAbilityUsage);
-            MessageUtil.sendMessage(player, "&cYou must wait " + formatTime(remainingCooldown) + " to use this ability again!");
-            return false;
-        }
-
-        // Update tracking
-        lastSecondaryAbilityUsage = currentTime;
-
-        // Implement ability effect
-        MessageUtil.sendMessage(player, "&a&lYou used your secondary ability!");
-
-        // Implement secondary ability effect here
-
-        return true;
+        lastNoFlyUse = 0L;
     }
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        // Create and give primary ability item
-        ItemStack primaryAbilityItem = new ItemBuilder(Material.DIAMOND)
-                .name("&b&lPrimary Ability Item")
-                .lore(
-                        "&7Activates your primary ability",
-                        "",
-                        "&eRight-click to activate",
-                        "&cCooldown: " + (PRIMARY_ABILITY_COOLDOWN / 60) + " minutes",
-                        "&aMaximum uses: " + MAX_ABILITY_USES
-                )
+        ItemStack zone = new ItemBuilder(Material.BLAZE_ROD)
+                .name("&c&lAnti-Flight Zone")
+                .lore("&7Disables flight and gliding nearby for 30 seconds.", "&cCooldown: 20 minutes")
                 .glow(true)
+                .setTag("role_item", "AZRIEL")
                 .build();
-
-        // Create and give secondary ability item
-        ItemStack secondaryAbilityItem = new ItemBuilder(Material.EMERALD)
-                .name("&a&lSecondary Ability Item")
-                .lore(
-                        "&7Activates your secondary ability",
-                        "",
-                        "&eRight-click to activate",
-                        "&cCooldown: " + (SECONDARY_ABILITY_COOLDOWN / 60) + " minutes"
-                )
-                .glow(true)
-                .build();
-
-        // Add to player's inventory
-        player.getInventory().addItem(primaryAbilityItem);
-        player.getInventory().addItem(secondaryAbilityItem);
-
-        // Explain how to use
-        MessageUtil.sendMessage(player, "&aYou received your &bPrimary Ability Item &aand &aSecondary Ability Item&a!");
-        MessageUtil.sendMessage(player, "&eRight-click each item to activate its ability.");
+        player.getInventory().addItem(zone);
     }
 
     @Override
@@ -342,53 +92,85 @@ public class AzrielRole extends Role {
         if (item == null) {
             return false;
         }
-
-        if (item.getType() == Material.DIAMOND) {
-            // Primary ability item
-            return usePrimaryAbility();
-        } else if (item.getType() == Material.EMERALD) {
-            // Secondary ability item
-            return useSecondaryAbility();
+        if (item.getType() == Material.PRISMARINE_CRYSTALS) {
+            return useMimicry();
         }
-
+        if (item.getType() == Material.BLAZE_ROD) {
+            return useAntiFlightZone();
+        }
         return false;
+    }
+
+    private boolean useMimicry() {
+        Player player = getPlayer();
+        if (player == null) {
+            return false;
+        }
+        int episode = plugin.getGameManager().getGame().getEpisodeManager().getCurrentEpisode();
+        if (copiedEpisode == episode) {
+            MessageUtil.sendMessage(player, "&cYou already copied a Flugel this episode.");
+            return false;
+        }
+        copiedEpisode = episode;
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60 * 20, 1, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 15 * 20, 0, false, false));
+        MessageUtil.sendMessage(player, "&aYou copied a fragment of Flugel power.");
+        return true;
+    }
+
+    private boolean useAntiFlightZone() {
+        Player player = getPlayer();
+        if (player == null || !isArenaPhaseActive()) {
+            return false;
+        }
+        long now = System.currentTimeMillis() / 1000;
+        if (now - lastNoFlyUse < NO_FLY_COOLDOWN) {
+            MessageUtil.sendMessage(player, "&cAnti-flight zone cooldown active.");
+            return false;
+        }
+        lastNoFlyUse = now;
+        for (int i = 0; i < 30; i++) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                Player self = getPlayer();
+                if (self == null) {
+                    return;
+                }
+                for (Player other : Bukkit.getOnlinePlayers()) {
+                    if (!other.getWorld().equals(self.getWorld()) || other.getLocation().distance(self.getLocation()) > 20.0) {
+                        continue;
+                    }
+                    other.setAllowFlight(false);
+                    other.setFlying(false);
+                    if (other.isGliding()) {
+                        other.setGliding(false);
+                    }
+                }
+            }, i * 20L);
+        }
+        MessageUtil.broadcast("&cAzriel created a no-flight zone.");
+        return true;
     }
 
     @Override
     public List<String> getDescription() {
         return Arrays.asList(
-                "You are a Solo Role template.",
-                "Your goal is to win alone or with an alliance formed using /alliance.",
-                "Customize this description for each specific role.",
-                "Add details about role-specific abilities here."
+                "You are Azriel.",
+                "Your goal is to win alone or with an alliance.",
+                "You detect nearby Flugel in a 50-block radius.",
+                "Once per episode, you can copy a fragment of Flugel power."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "During the arena phase, you gain access to special abilities.",
-                "Your primary ability allows you to [describe primary ability].",
-                "Your secondary ability allows you to [describe secondary ability].",
-                "Customize this description for each specific role."
+                "You receive an anti-flight zone item in finale.",
+                "It disables flight and gliding nearby for 30 seconds."
         );
     }
 
     @Override
     public String getObjective() {
-        return "Win the game alone or with an alliance formed using /alliance.";
-    }
-
-    /**
-     * Format seconds into a readable time string
-     *
-     * @param seconds Time in seconds
-     * @return Formatted time string
-     */
-    protected String formatTime(long seconds) {
-        long minutes = seconds / 60;
-        long remainingSeconds = seconds % 60;
-
-        return String.format("%d:%02d", minutes, remainingSeconds);
+        return "Win alone or with your alliance.";
     }
 }

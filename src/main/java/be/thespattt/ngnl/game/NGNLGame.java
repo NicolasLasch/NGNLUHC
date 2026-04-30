@@ -13,10 +13,16 @@ import be.thespattt.ngnl.game.world.WorldType;
 import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.role.Role;
+import be.thespattt.ngnl.role.duo.InoRole;
+import be.thespattt.ngnl.role.solo.ArtoshRole;
+import be.thespattt.ngnl.role.solo.EinzigRole;
+import be.thespattt.ngnl.role.solo.GhostRole;
+import be.thespattt.ngnl.role.solo.ThinkRole;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -374,12 +380,38 @@ public class NGNLGame {
             NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
             if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
                 ngnlPlayer.getRole().onDeath(killer);
+                String roleName = ngnlPlayer.getRole().getDisplayName();
+                MessageUtil.broadcast("§c☠ §7(" + roleName + "§7) has been eliminated!");
+
+                if (ngnlPlayer.getRole().isDuo()) {
+                    UUID partnerId = ngnlPlayer.getRole().getPartnerUUID();
+                    if (partnerId != null) {
+                        NGNLPlayer partner = plugin.getPlayerManager().getNGNLPlayer(partnerId);
+                        if (partner != null && partner.getRole() != null) {
+                            partner.getRole().onPartnerDeath(playerId, killer);
+                        }
+                    }
+                }
+            }
+
+            for (Role role : plugin.getRoleManager().getAllRoles()) {
+                if (role instanceof InoRole inoRole) {
+                    inoRole.onAnyPlayerEliminated(playerId, killer);
+                }
+                if (role instanceof ThinkRole thinkRole) {
+                    thinkRole.onAnyPlayerEliminated(playerId, killer);
+                }
+                if (role instanceof ArtoshRole artoshRole) {
+                    artoshRole.onAnyPlayerEliminated(playerId, killer);
+                }
+                if (role instanceof EinzigRole einzigRole) {
+                    einzigRole.onAnyPlayerEliminated(playerId, killer);
+                }
+                if (role instanceof GhostRole ghostRole) {
+                    ghostRole.onAnyPlayerEliminated(playerId, killer);
+                }
             }
         }
-
-        //    if (killer != null && gameState == GameState.MINING_PHASE) {
-        //        plugin.getMiniGameManager().startMiniGame(killer, playerId);
-        //    }
 
         MessageUtil.logInfo("Player eliminated. Alive players: " + alivePlayers.size() + "/" + remainingPlayersForArena);
         MessageUtil.logInfo("Current game state: " + gameState);
@@ -491,6 +523,34 @@ public class NGNLGame {
      */
     public List<UUID> getEliminatedPlayers() {
         return new ArrayList<>(eliminatedPlayers);
+    }
+
+    public boolean revivePlayer(UUID playerId, Location location, double health) {
+        if (alivePlayers.contains(playerId)) {
+            return false;
+        }
+
+        Player player = Bukkit.getPlayer(playerId);
+        if (player == null) {
+            return false;
+        }
+
+        eliminatedPlayers.remove(playerId);
+        alivePlayers.add(playerId);
+        player.setGameMode(GameMode.SURVIVAL);
+
+        NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
+        if (ngnlPlayer != null) {
+            player.setMaxHealth(ngnlPlayer.getMaxHealth());
+            player.setHealth(Math.min(Math.max(1.0, health), player.getMaxHealth()));
+        }
+
+        if (location != null) {
+            player.teleport(location);
+        }
+
+        MessageUtil.broadcast("&a" + player.getName() + " has been revived!");
+        return true;
     }
 
     /**

@@ -13,6 +13,9 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 
 /**
  * Abstract base class for all roles in the game
@@ -23,6 +26,7 @@ public abstract class Role {
     protected final UUID playerId;
     protected RoleType roleType;
     protected boolean arenaPhaseActive = false;
+    private boolean arenaPhaseItemsGiven = false;
 
     /**
      * Constructor
@@ -102,8 +106,10 @@ public abstract class Role {
         }
         MessageUtil.sendMessage(player,"&7——————————————————————————————————————————————————");
 
-        // Give arena phase items
-        giveArenaPhaseItems(player);
+        if (!arenaPhaseItemsGiven) {
+            giveArenaPhaseItems(player);
+            arenaPhaseItemsGiven = true;
+        }
     }
 
     /**
@@ -179,6 +185,44 @@ public abstract class Role {
      */
     public RoleType getRoleType() {
         return roleType;
+    }
+
+    public void ThreeNamesInformations(Player player) {
+        Player playerGame = getPlayer();
+        MessageUtil.sendMessage(player, "&m                    ");
+        MessageUtil.sendMessage(player, "");
+        MessageUtil.sendMessage(player, "Here are the names of the people you may want to encounter:");
+
+        List<Player> nearbyPlayers = player.getNearbyEntities(300, 300, 300).stream()
+                .filter(entity -> entity instanceof Player)
+                .map(entity -> (Player) entity)
+                .toList();
+
+        List<String> playerNames = new ArrayList<>();
+
+        if (!nearbyPlayers.isEmpty()) {
+            Player nearest = nearbyPlayers.get(0);
+            playerNames.add(nearest.getName());
+        }
+        if (isDuo()) {
+            if (Bukkit.getPlayer(getPartnerUUID()) != null){
+                playerNames.add(Bukkit.getPlayer(getPartnerUUID()).getName());
+            }
+        }
+
+        List<Player> allPlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
+        allPlayers.removeIf(p -> playerNames.contains(p.getName()) ||
+                playerNames.contains(p.getName()));
+
+        if (!allPlayers.isEmpty()) {
+            Player randomPlayer = allPlayers.get(new Random().nextInt(allPlayers.size()));
+            playerNames.add(randomPlayer.getName());
+        }
+
+        Collections.shuffle(playerNames);
+        playerNames.forEach(name -> MessageUtil.sendMessage(player, name));
+        MessageUtil.sendMessage(player, "");
+        MessageUtil.sendMessage(player, "&m                    ");
     }
 
     /**

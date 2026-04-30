@@ -52,6 +52,10 @@ public class ArenaCombatManager implements Listener {
      * Donner l'équipement d'arène à un joueur
      */
     public void giveArenaEquipment(Player player) {
+        if (hasQuakeWeapon(player)) {
+            return;
+        }
+
         ItemStack quakeGun = quakeWeapon.createQuakeWeapon();
         player.getInventory().addItem(quakeGun);
 

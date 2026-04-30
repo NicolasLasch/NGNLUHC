@@ -6,15 +6,18 @@ import be.thespattt.ngnl.event.custom.MiniGameStartEvent;
 import be.thespattt.ngnl.event.custom.PhaseChangeEvent;
 import be.thespattt.ngnl.game.GameState;
 import be.thespattt.ngnl.player.NGNLPlayer;
+import be.thespattt.ngnl.role.duo.StephanieRole;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.WorldLoadEvent;
@@ -157,45 +160,12 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onMiniGameStart(MiniGameStartEvent event) {
-        // Forward mini-game start event to roles
-        Player player1 = Bukkit.getPlayer(event.getPlayer1Id());
-        Player player2 = Bukkit.getPlayer(event.getPlayer2Id());
-
-        if (player1 != null) {
-            NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player1.getUniqueId());
-            if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
-                ngnlPlayer.getRole().onMiniGameStart(event.getPlayer2Id(), event.getMiniGameType(), true);
-            }
-        }
-
-        if (player2 != null) {
-            NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player2.getUniqueId());
-            if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
-                ngnlPlayer.getRole().onMiniGameStart(event.getPlayer1Id(), event.getMiniGameType(), false);
-            }
-        }
-
-        // Broadcast mini-game start
-        MessageUtil.broadcast("&6A mini-game has started: &e" + event.getMiniGameType().getDisplayName());
-        if (player1 != null && player2 != null) {
-            MessageUtil.broadcast("&6" + player1.getName() + " vs " + player2.getName());
-        }
+        // Mini-game lifecycle is handled by MiniGameListener.
     }
 
     @EventHandler
     public void onMiniGameEnd(MiniGameEndEvent event) {
-        // Pass
-        return;
-    }
-
-    /**
-     * Give a random reward book to a player
-     *
-     * @param player Player to receive the book
-     */
-    private void giveRandomRewardBook(Player player) {
-        // TODO: Implement random reward book
-        MessageUtil.sendMessage(player, "&aYou received a random reward book!");
+        // Mini-game lifecycle is handled by MiniGameListener.
     }
 
     @EventHandler
@@ -279,6 +249,28 @@ public class GameListener implements Listener {
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onStephanieLoveGunHit(ProjectileHitEvent event) {
+        Projectile projectile = event.getEntity();
+
+        PersistentDataContainer container = projectile.getPersistentDataContainer();
+        String shooterId = container.get(plugin.getNamespacedKey("stephanie_love_gun"), PersistentDataType.STRING);
+        if (shooterId == null || !(event.getHitEntity() instanceof Player target)) {
+            return;
+        }
+
+        Player shooter = Bukkit.getPlayer(UUID.fromString(shooterId));
+        if (shooter == null) {
+            return;
+        }
+
+        NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(shooter.getUniqueId());
+        if (ngnlPlayer != null && ngnlPlayer.getRole() instanceof StephanieRole stephanieRole) {
+            stephanieRole.useLoveGun(target);
+        }
+        projectile.remove();
     }
 
     /**

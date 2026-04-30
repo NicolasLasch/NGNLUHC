@@ -1,6 +1,7 @@
 package be.thespattt.ngnl.arena;
 
 import be.thespattt.ngnl.NoGameNoLife;
+import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.util.MessageUtil;
 import org.bukkit.*;
 import org.bukkit.entity.Entity;
@@ -210,6 +211,11 @@ public class QuakeWeapon implements Listener {
     }
 
     private void applyQuakeDamage(Player shooter, Player target, Location impactLocation) {
+        if (areTeammates(shooter, target)) {
+            MessageUtil.sendMessage(shooter, "&cVous ne pouvez pas utiliser le Love Gun sur votre coéquipier !");
+            return;
+        }
+
         double finalDamage = calculateDirectDamage(shooter, target);
 
         target.damage(finalDamage);
@@ -234,7 +240,14 @@ public class QuakeWeapon implements Listener {
     private void applyKnockback(Player shooter, Player target) {
         if (shooter == null) return;
 
-        Vector direction = target.getLocation().subtract(shooter.getLocation()).toVector().normalize();
+        Vector direction = target.getLocation().toVector().subtract(shooter.getLocation().toVector());
+        if (direction.lengthSquared() < 0.0001) {
+            direction = shooter.getLocation().getDirection();
+        }
+        if (direction.lengthSquared() < 0.0001) {
+            return;
+        }
+        direction.normalize();
         direction.setY(0.3);
         target.setVelocity(direction.multiply(config.getKnockback()));
     }
@@ -255,8 +268,23 @@ public class QuakeWeapon implements Listener {
     }
 
     private void applyAreaDamage(Player shooter, Location impactLocation) {
-        AreaDamageHandler handler = new AreaDamageHandler(config, shooter, impactLocation);
+        AreaDamageHandler handler = new AreaDamageHandler(plugin, config, shooter, impactLocation);
         handler.execute();
+    }
+
+    private boolean areTeammates(Player shooter, Player target) {
+        if (shooter == null || target == null) {
+            return false;
+        }
+
+        NGNLPlayer shooterData = plugin.getPlayerManager().getNGNLPlayer(shooter.getUniqueId());
+        if (shooterData != null && shooterData.getRole() != null
+                && target.getUniqueId().equals(shooterData.getRole().getPartnerUUID())) {
+            return true;
+        }
+
+        return shooterData != null && shooterData.hasAlliancePartner()
+                && target.getUniqueId().equals(shooterData.getAlliancePartner());
     }
 
     public void cleanup() {
@@ -291,12 +319,14 @@ public class QuakeWeapon implements Listener {
     }
 
     private static class AreaDamageHandler {
+        private final NoGameNoLife plugin;
         private final WeaponConfig config;
         private final Player shooter;
         private final Location impactLocation;
         private final double splashRadius = 3.0;
 
-        public AreaDamageHandler(WeaponConfig config, Player shooter, Location impactLocation) {
+        public AreaDamageHandler(NoGameNoLife plugin, WeaponConfig config, Player shooter, Location impactLocation) {
+            this.plugin = plugin;
             this.config = config;
             this.shooter = shooter;
             this.impactLocation = impactLocation;
@@ -321,7 +351,21 @@ public class QuakeWeapon implements Listener {
         }
 
         private boolean shouldSkipTarget(Player target) {
-            return shooter != null && target.getUniqueId().equals(shooter.getUniqueId());
+            if (shooter == null) {
+                return false;
+            }
+            if (target.getUniqueId().equals(shooter.getUniqueId())) {
+                return true;
+            }
+
+            NGNLPlayer shooterData = plugin.getPlayerManager().getNGNLPlayer(shooter.getUniqueId());
+            if (shooterData != null && shooterData.getRole() != null
+                    && target.getUniqueId().equals(shooterData.getRole().getPartnerUUID())) {
+                return true;
+            }
+
+            return shooterData != null && shooterData.hasAlliancePartner()
+                    && target.getUniqueId().equals(shooterData.getAlliancePartner());
         }
 
         private void processTarget(Player target, double baseSplashDamage) {
@@ -341,7 +385,11 @@ public class QuakeWeapon implements Listener {
         }
 
         private void applySplashKnockback(Player target) {
-            Vector direction = target.getLocation().subtract(impactLocation).toVector().normalize();
+            Vector direction = target.getLocation().toVector().subtract(impactLocation.toVector());
+            if (direction.lengthSquared() < 0.0001) {
+                return;
+            }
+            direction.normalize();
             direction.setY(0.2);
             target.setVelocity(direction.multiply(config.getKnockback() * 0.5));
         }

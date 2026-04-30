@@ -55,6 +55,9 @@ public class MiniGameListener implements Listener {
         NGNLPlayer ngnlPlayer1 = plugin.getPlayerManager().getNGNLPlayer(player1.getUniqueId());
         NGNLPlayer ngnlPlayer2 = plugin.getPlayerManager().getNGNLPlayer(player2.getUniqueId());
 
+        clearBaseWorldEffectsForMiniGame(player1, ngnlPlayer1);
+        clearBaseWorldEffectsForMiniGame(player2, ngnlPlayer2);
+
         // Notify roles about mini-game start
         if (ngnlPlayer1 != null && ngnlPlayer1.getRole() != null) {
             ngnlPlayer1.getRole().onMiniGameStart(player2.getUniqueId(), event.getMiniGameType(), event.isPlayer1WonPvP());
@@ -94,24 +97,35 @@ public class MiniGameListener implements Listener {
         // Notify roles about mini-game end
         if (ngnlPlayer1 != null && ngnlPlayer1.getRole() != null) {
             ngnlPlayer1.getRole().onMiniGameEnd(player2.getUniqueId(), event.getMiniGameType(), event.isPlayer1Winner());
-
-            // Update mini-game stats
-            if (event.isPlayer1Winner()) {
-                ngnlPlayer1.incrementMiniGamesWon();
-            } else {
-                ngnlPlayer1.incrementMiniGamesLost();
-            }
         }
 
         if (ngnlPlayer2 != null && ngnlPlayer2.getRole() != null) {
             ngnlPlayer2.getRole().onMiniGameEnd(player1.getUniqueId(), event.getMiniGameType(), !event.isPlayer1Winner());
+        }
 
-            // Update mini-game stats
-            if (!event.isPlayer1Winner()) {
-                ngnlPlayer2.incrementMiniGamesWon();
-            } else {
-                ngnlPlayer2.incrementMiniGamesLost();
-            }
+        Player winner = event.isPlayer1Winner() ? player1 : player2;
+        if (winner != null) {
+            applyWinnerRoleBonuses(winner);
+        }
+
+        clearTemporaryMiniGameEffects(player1);
+        clearTemporaryMiniGameEffects(player2);
+    }
+
+    private void clearBaseWorldEffectsForMiniGame(Player player, NGNLPlayer ngnlPlayer) {
+        if (ngnlPlayer == null || ngnlPlayer.getRole() == null) {
+            return;
+        }
+
+        switch (ngnlPlayer.getRole().getRoleType()) {
+            case SORA:
+            case SHIRO:
+                player.removePotionEffect(PotionEffectType.SPEED);
+                player.removePotionEffect(PotionEffectType.RESISTANCE);
+                player.removePotionEffect(PotionEffectType.WEAKNESS);
+                break;
+            default:
+                break;
         }
     }
 
@@ -157,8 +171,15 @@ public class MiniGameListener implements Listener {
                         // Kurami has 2 lives in Bloc Party
                         MessageUtil.sendMessage(player1, "&aYou have &e2 lives &ain this mini-game!");
                     } else if (ngnlPlayer1.getRole().getRoleType() == be.thespattt.ngnl.role.RoleType.IZUNA) {
-                        // Izuna can inflict blindness
-                        MessageUtil.sendMessage(player1, "&aYou can inflict &eblindness &aon your opponent!");
+                        player2.addPotionEffect(new org.bukkit.potion.PotionEffect(
+                                PotionEffectType.BLINDNESS,
+                                Integer.MAX_VALUE,
+                                0,
+                                false,
+                                false
+                        ));
+                        MessageUtil.sendMessage(player1, "&aYou've applied &eBlindness &ato your opponent!");
+                        MessageUtil.sendMessage(player2, "&cIzuna applied &eBlindness &cto you!");
                     }
                 }
 
@@ -167,8 +188,15 @@ public class MiniGameListener implements Listener {
                         // Kurami has 2 lives in Bloc Party
                         MessageUtil.sendMessage(player2, "&aYou have &e2 lives &ain this mini-game!");
                     } else if (ngnlPlayer2.getRole().getRoleType() == be.thespattt.ngnl.role.RoleType.IZUNA) {
-                        // Izuna can inflict blindness
-                        MessageUtil.sendMessage(player2, "&aYou can inflict &eblindness &aon your opponent!");
+                        player1.addPotionEffect(new org.bukkit.potion.PotionEffect(
+                                PotionEffectType.BLINDNESS,
+                                Integer.MAX_VALUE,
+                                0,
+                                false,
+                                false
+                        ));
+                        MessageUtil.sendMessage(player2, "&aYou've applied &eBlindness &ato your opponent!");
+                        MessageUtil.sendMessage(player1, "&cIzuna applied &eBlindness &cto you!");
                     }
                 }
                 break;
@@ -331,7 +359,7 @@ public class MiniGameListener implements Listener {
      * @param winner Player who won the mini-game
      * @param miniGameType Type of mini-game
      */
-    private void giveRewardToWinner(Player winner, MiniGameType miniGameType) {
+    private void applyWinnerRoleBonuses(Player winner) {
         // Get player data
         NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(winner.getUniqueId());
 
@@ -345,20 +373,16 @@ public class MiniGameListener implements Listener {
 
             MessageUtil.sendMessage(winner, "&aYou gained &c1 heart &afor winning the mini-game!");
         }
-
-        // Give random reward book
-        giveRandomRewardBook(winner);
     }
 
-    /**
-     * Give a random reward book to a player
-     *
-     * @param player Player to receive the book
-     */
-    private void giveRandomRewardBook(Player player) {
-        // This would be implemented with actual reward books
-        // For now, just notify the player
-        MessageUtil.sendMessage(player, "&aYou received a random reward book!");
+    private void clearTemporaryMiniGameEffects(Player player) {
+        if (player == null) {
+            return;
+        }
+        player.removePotionEffect(PotionEffectType.SPEED);
+        player.removePotionEffect(PotionEffectType.JUMP_BOOST);
+        player.removePotionEffect(PotionEffectType.SLOWNESS);
+        player.removePotionEffect(PotionEffectType.BLINDNESS);
     }
 
     @EventHandler

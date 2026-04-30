@@ -1,16 +1,14 @@
 package be.thespattt.ngnl.role.duo;
 
 import be.thespattt.ngnl.NoGameNoLife;
-import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -18,318 +16,170 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Template for implementing duo roles
- * Use this as a starting point for creating new duo roles
- */
 public class ChlammyRole extends DuoRole {
 
-    // Define constants for ability cooldowns, durations, etc.
-    private static final int ABILITY_COOLDOWN = 15 * 60; // 15 minutes in seconds
-    private static final int ABILITY_DURATION = 30; // 30 seconds
+    private static final int SLOW_COOLDOWN = 15 * 60;
+    private long lastSlowUse = 0L;
+    private int lastReadEpisode = -1;
 
-    // Define partner proximity settings if applicable
-    private static final int PARTNER_PROXIMITY_RANGE = 15; // 25 blocks
-
-    // Ability usage tracking
-    private long lastAbilityUsage = 0;
-    private int abilitiesUsed = 0;
-    private static final int MAX_ABILITY_USES = 3; // Maximum uses of ability per game
-
-    // Task IDs for scheduled tasks
-    private int proximityCheckTaskId = -1;
-
-    /**
-     * Constructor
-     *
-     * @param plugin Plugin instance
-     * @param playerId UUID of the player
-     * @param roleType Role type
-     */
     public ChlammyRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
 
-    /**
-     * For creating specific roles, use a simpler constructor
-     * Example for derived class:
-     * public SpecificRole(NoGameNoLife plugin, UUID playerId) {
-     *     super(plugin, playerId, RoleType.ROLE_NAME);
-     * }
-     */
-
     @Override
     protected void onRoleSetup() {
         Player player = getPlayer();
-        if (player == null) {
-            return;
+        Player partner = getPartnerPlayer();
+        if (player != null && partner != null) {
+            MessageUtil.sendMessage(player, "&eFiel is: &a" + partner.getName());
+            giveMindEye(player);
         }
-
-        // Find partner player
-        UUID partnerUUID = getPartnerUUID();
-        if (partnerUUID != null) {
-            Player partnerPlayer = Bukkit.getPlayer(partnerUUID);
-            if (partnerPlayer != null) {
-                // Send partner information
-                MessageUtil.sendMessage(player, "&eYour partner is: &a" + partnerPlayer.getName());
-            }
-        }
-
-        // Set up role-specific initial abilities or effects
-        // Example: Apply initial potion effects
-        // player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0, false, false));
-
-        // Start proximity check if needed
-        startProximityCheck();
-
-        // Schedule any other periodic tasks
-        // schedulePeriodicTask();
-    }
-
-    /**
-     * Start the proximity check task
-     */
-    private void startProximityCheck() {
-        // Cancel existing task if any
-        if (proximityCheckTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(proximityCheckTaskId);
-        }
-
-        // Schedule new task
-        proximityCheckTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin,
-                this::checkPartnerProximity, 20L, 20L); // Check every second
-    }
-
-    /**
-     * Check proximity to partner and apply effects
-     */
-    private void checkPartnerProximity() {
-        // N'applique plus d'effet, juste pour logique éventuelle
-        Player player = getPlayer();
-        if (player == null) return;
-
-        Player partner = Bukkit.getPlayer(getPartnerUUID());
-        if (partner == null || !plugin.getGameManager().isPlayerAlive(getPartnerUUID())) {
-            // rien de spécial ici car effets gérés par onDamage
-        }
-    }
-
-    @EventHandler
-    public void onDamage(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player damager)) return;
-
-        Player self = getPlayer();
-        if (self == null || !damager.getUniqueId().equals(self.getUniqueId())) return;
-
-        Player partner = Bukkit.getPlayer(getPartnerUUID());
-        if (partner != null && partner.isOnline() && plugin.getGameManager().isPlayerAlive(partner.getUniqueId())) {
-            double distance = damager.getLocation().distance(partner.getLocation());
-            if (distance <= PARTNER_PROXIMITY_RANGE) {
-                event.setDamage(event.getDamage() * 1.15); // proche → bonus dégâts
-                MessageUtil.sendMessage(self, "+15% de dégats");
-            } else {
-                event.setDamage(event.getDamage() * 0.85); // loin → malus dégâts
-                MessageUtil.sendMessage(self, "-15% de dégats");
-            }
-        } else {
-            // partenaire mort/offline → malus dégâts
-            event.setDamage(event.getDamage() * 0.85);
-            MessageUtil.sendMessage(self, "-15% de dégats");
-        }
-    }
-
-    @Override
-    public void onMiniGameStart(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
-
-        // Handle mini-game start
-        // For example, offer ability to use specific powers or request partner help
-        MessageUtil.sendMessage(player, "&6Mini-game started: &e" + miniGameType.name());
-
-        // Add role-specific mini-game start logic here
-    }
-
-    @Override
-    public void onMiniGameEnd(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
-
-        // Handle mini-game result
-        if (isWinner) {
-            MessageUtil.sendMessage(player, "&aYou won the mini-game!");
-            // Add any victory bonuses here
-        } else {
-            MessageUtil.sendMessage(player, "&cYou lost the mini-game!");
-            // Add any defeat consequences here
-        }
-
-        // Add role-specific mini-game end logic here
     }
 
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-
-        // Reset cooldowns and counters for arena phase
-        lastAbilityUsage = 0;
-        abilitiesUsed = 0;
-
-        // Apply arena phase specific adjustments
+        lastSlowUse = 0L;
         Player player = getPlayer();
-        if (player == null) {
-            return;
+        if (player != null) {
+            giveMindEye(player);
         }
-
-        // Additional arena setup
-    }
-
-    @Override
-    public void onPartnerDeath(UUID partnerId, UUID killerId) {
-        Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
-
-        // Handle partner death
-        MessageUtil.sendMessage(player, "&c&lYour partner has been eliminated!");
-
-        // Implement consequences of partner death
-        // Example: Permanent weakness effect
-        player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, Integer.MAX_VALUE, 0, false, false));
-
-        // Add additional partner death effects here
-    }
-
-    /**
-     * Use the role's primary ability
-     *
-     * @return True if ability was used successfully
-     */
-    public boolean usePrimaryAbility() {
-        if (!isArenaPhaseActive()) {
-            return false;
-        }
-
-        Player player = getPlayer();
-        if (player == null) {
-            return false;
-        }
-
-        // Check usage limits
-        if (abilitiesUsed >= MAX_ABILITY_USES) {
-            MessageUtil.sendMessage(player, "&cYou have already used this ability the maximum number of times!");
-            return false;
-        }
-
-        // Check cooldown
-        long currentTime = System.currentTimeMillis() / 1000;
-        if (currentTime - lastAbilityUsage < ABILITY_COOLDOWN) {
-            long remainingCooldown = ABILITY_COOLDOWN - (currentTime - lastAbilityUsage);
-            MessageUtil.sendMessage(player, "&cYou must wait " + formatTime(remainingCooldown) + " to use this ability again!");
-            return false;
-        }
-
-        // Update tracking
-        lastAbilityUsage = currentTime;
-        abilitiesUsed++;
-
-        // Implement ability effect
-        MessageUtil.sendMessage(player, "&a&lYou used your primary ability!");
-
-        // Schedule ability end if it has a duration
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            // Cleanup after ability duration ends
-            MessageUtil.sendMessage(player, "&eYour ability effect has ended.");
-        }, ABILITY_DURATION * 20L);
-
-        return true;
     }
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        // Create and give role-specific items
-        ItemStack primaryAbilityItem = new ItemBuilder(Material.GOLD_INGOT)
-                .name("&6&lSpecial Ability Item")
-                .lore(
-                        "&7Activates your special ability",
-                        "",
-                        "&eRight-click to activate",
-                        "&cCooldown: " + (ABILITY_COOLDOWN / 60) + " minutes",
-                        "&aMaximum uses: " + MAX_ABILITY_USES
-                )
+        ItemStack orb = new ItemBuilder(Material.ENDER_PEARL)
+                .name("&b&lPrediction Orb")
+                .lore("&7Slows a nearby enemy for 20 seconds.", "&cCooldown: 15 minutes")
                 .glow(true)
+                .setTag("role_item", "CHLAMMY")
                 .build();
+        player.getInventory().addItem(orb);
+    }
 
-        // Add to player's inventory
-        player.getInventory().addItem(primaryAbilityItem);
-
-        // Explain how to use
-        MessageUtil.sendMessage(player, "&aYou received your &6Special Ability Item&a!");
-        MessageUtil.sendMessage(player, "&eRight-click to activate your ability. (Cooldown: " + (ABILITY_COOLDOWN / 60) + " minutes)");
+    private void giveMindEye(Player player) {
+        ItemStack eye = new ItemBuilder(Material.BOOK)
+                .name("&b&lMind Reading")
+                .lore("&7Once per episode, reveal the inventory", "&7of the nearest player.")
+                .glow(true)
+                .setTag("role_item", "CHLAMMY")
+                .build();
+        player.getInventory().addItem(eye);
     }
 
     @Override
     public boolean onItemUse(ItemStack item) {
-        if (item != null && item.getType() == Material.GOLD_INGOT) {
-            // Verify this is our special item (would need better verification in real implementation)
-            return usePrimaryAbility();
+        if (item == null) {
+            return false;
+        }
+        if (item.getType() == Material.BOOK) {
+            return useMindRead();
+        }
+        if (item.getType() == Material.ENDER_PEARL) {
+            return usePrediction();
         }
         return false;
+    }
+
+    private boolean useMindRead() {
+        Player player = getPlayer();
+        if (player == null) {
+            return false;
+        }
+
+        int episode = plugin.getGameManager().getGame().getEpisodeManager().getCurrentEpisode();
+        if (lastReadEpisode == episode) {
+            MessageUtil.sendMessage(player, "&cYou already used mind reading this episode.");
+            return false;
+        }
+
+        Player target = getNearestValidPlayer(player, 12.0);
+        if (target == null) {
+            MessageUtil.sendMessage(player, "&cNo valid target nearby.");
+            return false;
+        }
+
+        lastReadEpisode = episode;
+        MessageUtil.sendMessage(player, "&bInventory of " + target.getName() + ":");
+        for (ItemStack stack : target.getInventory().getContents()) {
+            if (stack == null || stack.getType() == Material.AIR) {
+                continue;
+            }
+            ItemMeta meta = stack.getItemMeta();
+            String name = meta != null && meta.hasDisplayName() ? meta.getDisplayName() : stack.getType().name();
+            MessageUtil.sendMessage(player, "&7- &f" + name + " &7x" + stack.getAmount());
+        }
+        return true;
+    }
+
+    private boolean usePrediction() {
+        Player player = getPlayer();
+        if (player == null || !isArenaPhaseActive()) {
+            return false;
+        }
+
+        long now = System.currentTimeMillis() / 1000;
+        if (now - lastSlowUse < SLOW_COOLDOWN) {
+            MessageUtil.sendMessage(player, "&cCooldown: " + formatTime(SLOW_COOLDOWN - (now - lastSlowUse)));
+            return false;
+        }
+
+        Player target = getNearestValidPlayer(player, 18.0);
+        if (target == null) {
+            MessageUtil.sendMessage(player, "&cNo target nearby.");
+            return false;
+        }
+
+        lastSlowUse = now;
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 20, 1, false, false));
+        MessageUtil.sendMessage(player, "&aYou predicted " + target.getName() + "'s movement.");
+        MessageUtil.sendMessage(target, "&cChlammy anticipated your movements.");
+        return true;
+    }
+
+    private Player getNearestValidPlayer(Player player, double range) {
+        Player result = null;
+        double best = Double.MAX_VALUE;
+        for (Player other : Bukkit.getOnlinePlayers()) {
+            if (other.getUniqueId().equals(playerId) || other.getUniqueId().equals(getPartnerUUID())) {
+                continue;
+            }
+            if (!plugin.getGameManager().isPlayerAlive(other.getUniqueId()) || !other.getWorld().equals(player.getWorld())) {
+                continue;
+            }
+            double distance = other.getLocation().distance(player.getLocation());
+            if (distance <= range && distance < best) {
+                best = distance;
+                result = other;
+            }
+        }
+        return result;
     }
 
     @Override
     public List<String> getDescription() {
         return Arrays.asList(
-                "You are a Duo Role template.",
-                "Your goal is to win with your partner.",
-                "Customize this description for each specific role.",
-                "Add details about role-specific abilities here."
+                "You are Chlammy.",
+                "Your goal is to win with Fiel.",
+                "You know Fiel's identity from the start.",
+                "Once per episode, you can inspect the inventory of a nearby player."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "During the arena phase, you gain access to special abilities.",
-                "You have a special item that activates your primary ability.",
-                "Customize this description for each specific role.",
-                "Add details about arena-specific abilities here."
+                "You receive the Prediction Orb in finale.",
+                "It inflicts Slowness on a nearby enemy for 20 seconds every 15 minutes."
         );
     }
 
     @Override
     public String getObjective() {
-        return "Win the game with your partner.";
+        return "Win the game with Fiel.";
     }
 
-    /**
-     * Format seconds into a readable time string
-     *
-     * @param seconds Time in seconds
-     * @return Formatted time string
-     */
-    protected String formatTime(long seconds) {
-        long minutes = seconds / 60;
-        long remainingSeconds = seconds % 60;
-
-        return String.format("%d:%02d", minutes, remainingSeconds);
-    }
-
-    @Override
-    public void onDeath(UUID killerId) {
-        super.onDeath(killerId);
-
-        // Clean up any scheduled tasks
-        if (proximityCheckTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(proximityCheckTaskId);
-            proximityCheckTaskId = -1;
-        }
-
-        // Add any other cleanup needed
+    private String formatTime(long seconds) {
+        return String.format("%d:%02d", seconds / 60, seconds % 60);
     }
 }
