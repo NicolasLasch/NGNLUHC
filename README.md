@@ -4,6 +4,8 @@ Welcome to **No Game No Life UHC**, a custom Minecraft Ultra Hardcore plugin ins
 
 This plugin features a robust phase system, 14 unique mini-games, complex duo and solo roles, and a custom final Arena phase.
 
+Google Doc (In French) : https://docs.google.com/document/d/1blBPdmT5l3AH29eRe4WNXCGbC-yFB59FCwmSEmxozhI/edit?usp=sharing
+
 ## 🎮 Game Flow & Phases
 
 The game is divided into distinct episodes and phases, managed by the `EpisodeManager` and `GameManager`.
