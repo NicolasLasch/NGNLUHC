@@ -35,13 +35,16 @@ public class WorldManager {
 
     /** Flat-world generator settings producing an empty (void) world. */
     private static final String VOID_SETTINGS =
-            "{\"layers\":[{\"block\":\"minecraft:air\",\"height\":1}],\"biome\":\"minecraft:the_void\",\"structures\":{\"structures\":[]}}";
+            "{\"biome\":\"minecraft:the_void\",\"features\":false,\"lakes\":false,\"structure_overrides\":[],"
+                    + "\"layers\":[{\"block\":\"minecraft:air\",\"height\":1}]}";
     /** Height of the lobby platform. */
     private static final int LOBBY_Y = 100;
     /** Half-size of the lobby platform. */
     private static final int LOBBY_RADIUS = 15;
     /** Number of scattered spawn points generated for the mining world (at least). */
     private static final int MIN_MINING_SPAWNS = 16;
+    /** Attempts made to find dry ground for a spawn point. */
+    private static final int MAX_SPAWN_ATTEMPTS = 8;
 
     private final NoGameNoLife plugin;
     private final Random random = new Random();
@@ -56,6 +59,8 @@ public class WorldManager {
     private final ArenaWorldHandler arenaWorldHandler;
 
     private final Map<WorldType, List<Location>> spawnLocations = new EnumMap<>(WorldType.class);
+    /** Incremented each time spawn points are regenerated, to ignore results of older searches. */
+    private int spawnGeneration = 0;
 
     /**
      * Constructor
@@ -226,11 +231,14 @@ public class WorldManager {
         world.getWorldBorder().setSize(borderRadius * 2.0);
         world.getWorldBorder().setWarningDistance(50);
 
-        generateMiningSpawns(world, Math.max(MIN_MINING_SPAWNS, Bukkit.getOnlinePlayers().size()));
+        if (spawnLocations.get(WorldType.MINING).isEmpty()) {
+            generateMiningSpawns(world, Math.max(MIN_MINING_SPAWNS, Bukkit.getOnlinePlayers().size()));
+        }
     }
 
     /**
      * Generate evenly spread, safe (dry, solid ground) spawn points on a ring inside the border.
+     * Chunks are loaded asynchronously so the server thread never freezes while the new world is explored.
      *
      * @param world Mining world
      * @param count Number of spawn points
@@ -238,19 +246,78 @@ public class WorldManager {
     private void generateMiningSpawns(World world, int count) {
         List<Location> spawns = spawnLocations.get(WorldType.MINING);
         spawns.clear();
+        int generation = ++spawnGeneration;
 
         double halfBorder = world.getWorldBorder().getSize() / 2;
         double minDistance = halfBorder * 0.1;
         double maxDistance = halfBorder * 0.7;
         for (int i = 0; i < count; i++) {
             double angle = 2 * Math.PI * i / count;
-            spawns.add(findSafeSpawn(world, angle, minDistance, maxDistance));
+            findSafeSpawnAsync(world, angle, minDistance, maxDistance, 0, candidate -> {
+                if (generation == spawnGeneration) {
+                    spawns.add(candidate);
+                    if (spawns.size() == count) {
+                        Collections.shuffle(spawns, random);
+                    }
+                }
+            });
         }
-        Collections.shuffle(spawns, random);
     }
 
     /**
-     * Find a spawn point around an angle, retrying with other distances if the ground is liquid.
+     * Look for a safe spot around an angle, loading the needed chunk asynchronously and retrying
+     * with another distance when the ground is liquid.
+     *
+     * @param world       World to search in
+     * @param angle       Angle of the ray (radians)
+     * @param minDistance Minimum distance from the center
+     * @param maxDistance Maximum distance from the center
+     * @param attempt     Number of attempts already made
+     * @param done        Callback receiving the found location (the last candidate if none is safe)
+     */
+    private void findSafeSpawnAsync(World world, double angle, double minDistance, double maxDistance, int attempt,
+                                    java.util.function.Consumer<Location> done) {
+        double distance = minDistance + random.nextDouble() * (maxDistance - minDistance);
+        int x = (int) (Math.cos(angle) * distance);
+        int z = (int) (Math.sin(angle) * distance);
+        world.getChunkAtAsync(x >> 4, z >> 4).thenAccept(chunk -> {
+            Location candidate = spawnCandidate(world, x, z, angle);
+            boolean safe = isSafeGround(world.getBlockAt(candidate.getBlockX(), candidate.getBlockY() - 1, candidate.getBlockZ()).getType());
+            if (safe || attempt >= MAX_SPAWN_ATTEMPTS - 1) {
+                done.accept(candidate);
+            } else {
+                findSafeSpawnAsync(world, angle, minDistance, maxDistance, attempt + 1, done);
+            }
+        });
+    }
+
+    /**
+     * Build the spawn location standing on the highest block of a column.
+     *
+     * @param world World
+     * @param x     Block X
+     * @param z     Block Z
+     * @param angle Angle used to orient the player toward the center
+     * @return The spawn location
+     */
+    private Location spawnCandidate(World world, int x, int z, double angle) {
+        int y = world.getHighestBlockYAt(x, z);
+        return new Location(world, x + 0.5, y + 1, z + 0.5, (float) (angle * 180 / Math.PI + 90), 0);
+    }
+
+    /**
+     * Whether a block is acceptable ground to spawn on (solid, not liquid, not leaves).
+     *
+     * @param ground Block type under the feet
+     * @return True if safe
+     */
+    private boolean isSafeGround(Material ground) {
+        return ground.isSolid() && ground != Material.LAVA && ground != Material.WATER && !ground.name().contains("LEAVES");
+    }
+
+    /**
+     * Synchronous version of the spawn search, only used as a fallback when more players than
+     * prepared spawn points join a game.
      *
      * @param world       World to search in
      * @param angle       Angle of the ray (radians)
@@ -260,14 +327,10 @@ public class WorldManager {
      */
     private Location findSafeSpawn(World world, double angle, double minDistance, double maxDistance) {
         Location candidate = null;
-        for (int attempt = 0; attempt < 15; attempt++) {
+        for (int attempt = 0; attempt < MAX_SPAWN_ATTEMPTS; attempt++) {
             double distance = minDistance + random.nextDouble() * (maxDistance - minDistance);
-            int x = (int) (Math.cos(angle) * distance);
-            int z = (int) (Math.sin(angle) * distance);
-            int y = world.getHighestBlockYAt(x, z);
-            Material ground = world.getBlockAt(x, y, z).getType();
-            candidate = new Location(world, x + 0.5, y + 1, z + 0.5, (float) (angle * 180 / Math.PI + 90), 0);
-            if (ground.isSolid() && ground != Material.LAVA && ground != Material.WATER && !ground.name().contains("LEAVES")) {
+            candidate = spawnCandidate(world, (int) (Math.cos(angle) * distance), (int) (Math.sin(angle) * distance), angle);
+            if (isSafeGround(world.getBlockAt(candidate.getBlockX(), candidate.getBlockY() - 1, candidate.getBlockZ()).getType())) {
                 return candidate;
             }
         }
@@ -282,15 +345,31 @@ public class WorldManager {
      */
     public List<Location> getMiningSpawns(int count) {
         List<Location> pool = spawnLocations.get(WorldType.MINING);
-        if (pool.size() < count && miningWorld != null) {
-            generateMiningSpawns(miningWorld, count);
-            pool = spawnLocations.get(WorldType.MINING);
-        }
+        topUpSpawnsSynchronously(pool, count);
         List<Location> result = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             result.add(pool.get(i % pool.size()));
         }
         return result;
+    }
+
+    /**
+     * Make sure there are at least as many spawn points as players (spawns still being searched
+     * asynchronously, or more players than prepared points).
+     *
+     * @param pool  Spawn point list of the mining world
+     * @param count Number of players
+     */
+    private void topUpSpawnsSynchronously(List<Location> pool, int count) {
+        if (miningWorld == null) {
+            return;
+        }
+        double halfBorder = miningWorld.getWorldBorder().getSize() / 2;
+        int missing = Math.max(count, 1) - pool.size();
+        for (int i = 0; i < missing; i++) {
+            double angle = random.nextDouble() * Math.PI * 2;
+            pool.add(findSafeSpawn(miningWorld, angle, halfBorder * 0.1, halfBorder * 0.7));
+        }
     }
 
     // ------------------------------------------------------------------ mini-game world

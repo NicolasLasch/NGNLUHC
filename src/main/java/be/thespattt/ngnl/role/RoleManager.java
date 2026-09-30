@@ -160,19 +160,46 @@ public class RoleManager {
     }
 
     /**
-     * Assign a specific role to a player and reveal it immediately (admin command)
+     * Assign a specific role to a player and reveal it immediately (admin command).
+     * A player who already has a role gets it replaced; during the arena phase the finale powers are given at once.
      *
      * @param playerId UUID of the player
      * @param roleType Role type to assign
      * @return True if assignment was successful
      */
     public boolean assignRoleToPlayer(UUID playerId, RoleType roleType) {
+        UUID currentHolder = assignedRoles.get(roleType);
+        if (currentHolder != null && !currentHolder.equals(playerId)) {
+            return false;
+        }
+        removeRole(playerId);
+
         Role role = registerRole(playerId, roleType);
         if (role == null) {
             return false;
         }
         role.onAssign();
+        if (plugin.getGameManager().getGameState() == be.thespattt.ngnl.game.GameState.ARENA_PHASE) {
+            role.onArenaPhaseStart();
+        }
         return true;
+    }
+
+    /**
+     * Remove the role of a player (the role is cleaned up and can be assigned again).
+     *
+     * @param playerId UUID of the player
+     */
+    private void removeRole(UUID playerId) {
+        Role old = playerRoles.remove(playerId);
+        if (old != null) {
+            old.cleanup();
+            assignedRoles.remove(old.getRoleType());
+            NGNLPlayer data = plugin.getPlayerManager().getNGNLPlayer(playerId);
+            if (data != null) {
+                data.setRole(null);
+            }
+        }
     }
 
     /**
