@@ -79,4 +79,19 @@ public final class DirectionArrow {
         if (angle >= -112.5 && angle < -67.5) return "←";
         return "↖";
     }
+
+    /**
+     * Show an anonymous presence arrow (direction and distance, no name) in the viewer's action bar.
+     *
+     * @param viewer Player who sees the arrow
+     * @param target Detected player
+     */
+    public static void showAnonymous(Player viewer, Player target) {
+        double dx = target.getLocation().getX() - viewer.getLocation().getX();
+        double dz = target.getLocation().getZ() - viewer.getLocation().getZ();
+        double distance = Math.sqrt(dx * dx + dz * dz);
+        double relative = normalizeAngle(Math.toDegrees(Math.atan2(-dx, dz)) - viewer.getLocation().getYaw());
+        String text = "§6" + arrowFor(relative) + " §eUne présence rôde à §f" + String.format("%.0f", distance) + "m";
+        viewer.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(text));
+    }
 }

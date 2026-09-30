@@ -106,6 +106,20 @@ Close it with ESC and reopen it with `/role`.
 * **Suniaster**: on a cloud near the spawn. The first Old Deus to take it gets 15 hearts; Old Deus know the exact coordinates.
 * **Blood Destruction Bomb, Elf Runes, Imanity Crown, Ex-Machina Core, Old Deus Fragment**: sold in the Imanity shop (`/shop`, random prices in emeralds/gold drawn every game).
 
+## 🏷️ Faction advantages
+
+| Faction | Advantage |
+| --- | --- |
+| Imanity | `/shop` (special items for emeralds/gold, random prices) |
+| Flügel | A hidden library (enchanting table + bookshelves) usable once per game by Flügel only; its coordinates are given to them at the reveal |
+| Werebeasts | An anonymous arrow in the action bar shows the closest player within 40 blocks |
+| Ex-Machina | +1 drop from ores |
+| Elves | +1 level on the enchantments they get |
+| Old Deus | 30% less damage from mobs and the environment |
+| Other | Defined by the role |
+
+Members of the same faction within 15 blocks also get a small buff (Speed, Jump Boost, Night Vision, Haste, Luck or Resistance depending on the faction). Killing a member of your own faction before the arena marks you as a **traitor**: you glow during the finale. (`factions.*` options in the config.)
+
 ## ⚙️ Building
 
 `./gradlew build` (copies the jar to `server/plugins`). Targets Purpur/Paper 1.21.4. No external plugin is required.

@@ -81,6 +81,7 @@ public class SpecialItemManager {
             return;
         }
         suniasterClaimed = false;
+        plugin.getFactionManager().prepareGame(world);
         Location center = world.getWorldBorder().getCenter();
         double radius = world.getWorldBorder().getSize() / 2.0;
 

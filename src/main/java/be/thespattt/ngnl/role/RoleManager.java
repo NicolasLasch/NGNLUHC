@@ -212,7 +212,10 @@ public class RoleManager {
         }
         for (Role role : new ArrayList<>(playerRoles.values())) {
             sendDuoNameListIfNeeded(role);
+            plugin.getSpecialItemManager().informGodsAboutSuniaster(role);
+            plugin.getFactionManager().informFlugelAboutLibrary(role);
         }
+        plugin.getFactionManager().start();
     }
 
     /**
@@ -348,6 +351,7 @@ public class RoleManager {
      * Clear all role assignments
      */
     public void clearRoles() {
+        plugin.getFactionManager().stop();
         for (Role role : playerRoles.values()) {
             role.cleanup();
         }

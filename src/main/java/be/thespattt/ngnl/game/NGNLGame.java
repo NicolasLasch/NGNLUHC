@@ -276,6 +276,8 @@ public class NGNLGame {
         arenaHandler.teleportPlayersToArena(fighters);
         teleportSpectatorsToArena(arenaHandler);
 
+        plugin.getFactionManager().applyBetrayalMarks();
+
         // Finale abilities and equipment once everybody has arrived
         plugin.getRoleManager().activateArenaPhaseAbilities();
         Bukkit.getScheduler().runTaskLater(plugin, () -> giveArenaEquipment(fighters), 40L);
@@ -443,6 +445,7 @@ public class NGNLGame {
         for (Role role : plugin.getRoleManager().getAllRoles()) {
             role.onAnyPlayerEliminated(playerId, killer);
         }
+        plugin.getFactionManager().onElimination(playerId, killer);
 
         MessageUtil.logInfo("Player eliminated. Alive players: " + alivePlayers.size() + "/" + remainingPlayersForArena);
         if (!checkGameEnd()) {

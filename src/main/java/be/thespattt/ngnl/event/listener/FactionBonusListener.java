@@ -4,12 +4,16 @@ import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.player.faction.FactionType;
 
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.enchantment.EnchantItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
@@ -54,6 +58,9 @@ public class FactionBonusListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEnchant(EnchantItemEvent event) {
+        if (plugin.getFactionManager().getLibrary().isTable(event.getEnchantBlock())) {
+            plugin.getFactionManager().getLibrary().markUsed(event.getEnchanter().getUniqueId());
+        }
         if (factionOf(event.getEnchanter()) != FactionType.ELVES) {
             return;
         }
@@ -75,6 +82,28 @@ public class FactionBonusListener implements Listener {
         boolean fromPlayer = event instanceof EntityDamageByEntityEvent byEntity && byEntity.getDamager() instanceof Player;
         if (!fromPlayer && plugin.getGameManager().isGameRunning()) {
             event.setDamage(event.getDamage() * OLD_DEUS_DAMAGE_FACTOR);
+        }
+    }
+
+    /**
+     * The Flügel library table can only be used by Flügel, once per game each.
+     *
+     * @param event Interact event
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onLibraryTable(PlayerInteractEvent event) {
+        Block block = event.getClickedBlock();
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || block == null || block.getType() != Material.ENCHANTING_TABLE
+                || !plugin.getFactionManager().getLibrary().isTable(block)) {
+            return;
+        }
+        Player player = event.getPlayer();
+        if (factionOf(player) != FactionType.FLUGEL) {
+            event.setCancelled(true);
+            player.sendMessage("§cSeuls les Flügel peuvent utiliser cette bibliothèque.");
+        } else if (plugin.getFactionManager().getLibrary().hasUsed(player.getUniqueId())) {
+            event.setCancelled(true);
+            player.sendMessage("§cTu as déjà utilisé la bibliothèque pendant cette partie.");
         }
     }
 }
