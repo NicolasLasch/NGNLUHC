@@ -43,8 +43,8 @@ public class RoleCardManager implements Listener {
     private static final int PAGE_FRONT = 0;
     private static final int PAGE_BACK = 1;
     private static final int INVENTORY_SIZE = 54;
-    private static final int FLIP_SLOT = 53;
-    private static final int CLOSE_SLOT = 45;
+    private static final int FLIP_SLOT = 8;
+    private static final int CLOSE_SLOT = 0;
     /** Ticks waited for the resource pack before falling back to the text card. */
     private static final long PACK_WAIT_TICKS = 100L;
 
