@@ -160,7 +160,9 @@ public class ThinkRole extends Role implements CombatRestrictions {
             return false;
         }
         riteTwoUsed = true;
-        target.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, RITE_TWO_SECONDS * 20, 19, false, false));
+        PotionEffect levitation = new PotionEffect(PotionEffectType.LEVITATION, RITE_TWO_SECONDS * 20, 19, false, false);
+        target.addPotionEffect(levitation);
+        plugin.getSpecialItemManager().getEffects().recordAbilityUsedAgainst(target, "Rite de lévitation", levitation);
         MessageUtil.sendMessage(player, "&aTu as frappé " + target.getName() + " de lévitation.");
         MessageUtil.sendMessage(target, "&cThink Nirvalen a utilisé un rite sur toi !");
         return true;

@@ -1,0 +1,10 @@
+{
+  "pack": {
+    "pack_format": 46,
+    "description": "§5No Game No Life UHC §7- cartes de rôles",
+    "supported_formats": {
+      "min_inclusive": 34,
+      "max_inclusive": 99
+    }
+  }
+}

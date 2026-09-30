@@ -1,10 +1,5 @@
-Fix rock paper scissor\
-Fix pledges\
-Mini-games\
-Roles -> Last\
-Allow selection of playable roles
+# Remaining ideas
 
-TNT run faster OK!\
--> Remove mobs from mini-game world \
-Add\
-4 last mini games
+* Flügel faction advantage (one-time enchantment library zone) and Werebeast detection radius
+* Faction proximity bonuses and the betrayal mark shown in the finale
+* Real artwork for the role cards (drop PNGs in `tools/portraits/`)

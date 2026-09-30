@@ -441,20 +441,6 @@ public class PlayerListener implements Listener {
         NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
 
         if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
-            // Check faction-specific damage modifiers
-            switch (ngnlPlayer.getRole().getRoleType().getFaction()) {
-                case OLD_DEUS:
-                    // Old Deus have resistance to environmental damage
-                    if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK &&
-                            event.getCause() != EntityDamageEvent.DamageCause.PROJECTILE) {
-                        // Reduce environmental damage by 30%
-                        event.setDamage(event.getDamage() * 0.7);
-                    }
-                    break;
-
-                // Add other faction-specific rules as needed
-            }
-
         }
     }
 

@@ -4,6 +4,7 @@ import be.thespattt.ngnl.card.RoleCardManager;
 import be.thespattt.ngnl.command.CommandManager;
 import be.thespattt.ngnl.config.ConfigManager;
 import be.thespattt.ngnl.event.listener.CombatTracker;
+import be.thespattt.ngnl.event.listener.FactionBonusListener;
 import be.thespattt.ngnl.event.listener.GameListener;
 import be.thespattt.ngnl.event.listener.PlayerListener;
 import be.thespattt.ngnl.event.listener.MiniGameListener;
@@ -104,6 +105,7 @@ public class NoGameNoLife extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new MiniGameListener(this), this);
         Bukkit.getPluginManager().registerEvents(new SpecialItemListener(this), this);
         Bukkit.getPluginManager().registerEvents(new RoleRulesListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new FactionBonusListener(this), this);
 
         // Register commands
         commandManager.registerCommands();

@@ -158,7 +158,9 @@ public class ChlammyRole extends DuoRole {
         if (!tryUseCooldown("prediction", PREDICTION_COOLDOWN)) {
             return false;
         }
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, SLOWNESS_SECONDS * 20, 1, false, false));
+        PotionEffect slowness = new PotionEffect(PotionEffectType.SLOWNESS, SLOWNESS_SECONDS * 20, 1, false, false);
+        target.addPotionEffect(slowness);
+        plugin.getSpecialItemManager().getEffects().recordAbilityUsedAgainst(target, "Orbe de prédiction", slowness);
         MessageUtil.sendMessage(player, "&aTu as anticipé les mouvements de " + target.getName() + ".");
         MessageUtil.sendMessage(target, "&cChlammy a anticipé tes mouvements.");
         return true;

@@ -243,7 +243,9 @@ public class PlumRole extends Role {
         }
         for (Player other : nearbyAlivePlayers(player.getLocation(), SIGHT_RADIUS)) {
             if (!isFriendly(other.getUniqueId())) {
-                other.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 8 * 20, 0, false, false));
+                PotionEffect blindness = new PotionEffect(PotionEffectType.BLINDNESS, 8 * 20, 0, false, false);
+                other.addPotionEffect(blindness);
+                plugin.getSpecialItemManager().getEffects().recordAbilityUsedAgainst(other, "Sort de cécité", blindness);
             }
         }
         MessageUtil.sendMessage(player, "&aTon sort de cécité frappe les ennemis proches.");
