@@ -8,7 +8,6 @@ import be.thespattt.ngnl.player.faction.FactionType;
 public enum RoleType {
 
     // Imanity faction roles (Duo)
-    // Imanity faction roles (Duo)
     SORA("Sora", true, "SHIRO", FactionType.IMANITY),
     SHIRO("Shiro", true, "SORA", FactionType.IMANITY),
 
@@ -19,7 +18,6 @@ public enum RoleType {
 
     // Imanity faction roles (Solo)
     CORONE("Corone Dola", false, null, FactionType.IMANITY),
-    TETO("Teto", false, null, FactionType.IMANITY),
     EINZIG("Einzig", false, null, FactionType.IMANITY),
 
     // Flügel faction roles (Solo)
@@ -47,6 +45,7 @@ public enum RoleType {
     ARTOSH("Artosh", false, null, FactionType.OLD_DEUS),
     OKEIN("Ōkein", false, null, FactionType.OLD_DEUS),
     KAINAS("Kainas", false, null, FactionType.OLD_DEUS),
+    TETO("Teto", false, null, FactionType.OLD_DEUS),
     HOLOU("Holou", false, null, FactionType.OLD_DEUS),
 
     // Other faction roles

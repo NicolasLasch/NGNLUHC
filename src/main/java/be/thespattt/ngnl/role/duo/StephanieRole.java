@@ -40,14 +40,6 @@ public class StephanieRole extends DuoRole {
         Player player = getPlayer();
         if (player == null) return;
 
-        UUID makotoUUID = getPartnerUUID();
-        if (makotoUUID != null) {
-            Player makotoPlayer = Bukkit.getPlayer(makotoUUID);
-            if (makotoPlayer != null) {
-                MessageUtil.sendMessage(player, "&eMakoto is: &a" + makotoPlayer.getName());
-            }
-        }
-
         MessageUtil.sendMessage(player, "&eYou can choose mini-games once per game (when you win PvP).");
         MessageUtil.sendMessage(player, "&eYou get Speed I in Parkour and Floor is Lava mini-games.");
     }
@@ -149,7 +141,6 @@ public class StephanieRole extends DuoRole {
 
         lastLoveGunUsage = currentTime;
 
-        double originalMaxHealth = target.getMaxHealth();
         target.setMaxHealth(LOVE_GUN_HEALTH);
         if (target.getHealth() > LOVE_GUN_HEALTH) {
             target.setHealth(LOVE_GUN_HEALTH);
@@ -158,14 +149,24 @@ public class StephanieRole extends DuoRole {
         MessageUtil.sendMessage(player, "&dYou hit " + target.getName() + " with the Love Gun!");
         MessageUtil.sendMessage(target, "&dStephanie hit you with the Love Gun 2! Your max health is 12 HP for 30 seconds!");
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (target.isOnline()) {
-                target.setMaxHealth(originalMaxHealth);
-                MessageUtil.sendMessage(target, "&eThe Love Gun effect has worn off.");
-            }
-        }, LOVE_GUN_DURATION * 20L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> restoreMaxHealth(target), LOVE_GUN_DURATION * 20L);
 
         return true;
+    }
+
+    /**
+     * Give back the real maximum health of a player hit by the Love Gun.
+     *
+     * @param target Player hit by the Love Gun
+     */
+    private void restoreMaxHealth(Player target) {
+        if (!target.isOnline()) {
+            return;
+        }
+        var ngnlTarget = plugin.getPlayerManager().getNGNLPlayer(target.getUniqueId());
+        double realMaxHealth = ngnlTarget != null ? ngnlTarget.getMaxHealth() : 20.0;
+        target.setMaxHealth(realMaxHealth);
+        MessageUtil.sendMessage(target, "&eThe Love Gun effect has worn off.");
     }
 
     @Override

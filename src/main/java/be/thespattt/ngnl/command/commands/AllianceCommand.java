@@ -84,6 +84,12 @@ public class AllianceCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        // Some solo roles (Think Nirvalen) win alone and can never ally
+        if (!role.canFormAlliance()) {
+            MessageUtil.sendMessage(player, "&cTon rôle te force à gagner seul : aucune alliance possible !");
+            return true;
+        }
+
         // Check if player already has an alliance
         if (ngnlPlayer.hasAlliancePartner()) {
             // Check if they want to break the alliance
@@ -149,6 +155,12 @@ public class AllianceCommand implements CommandExecutor, TabCompleter {
         }
 
         Role targetRole = targetNGNLPlayer.getRole();
+
+        // Roles that win alone can not be allied with
+        if (!targetRole.canFormAlliance()) {
+            MessageUtil.sendMessage(player, "&c" + target.getName() + " ne peut pas former d'alliance !");
+            return true;
+        }
 
         // Check if target is in a duo role
         if (targetRole instanceof DuoRole) {

@@ -3,174 +3,152 @@ package be.thespattt.ngnl.role.duo;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.role.RoleType;
-import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
-import org.bukkit.Bukkit;
+
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class KuramiRole extends DuoRole {
+/**
+ * Kurami: second life in Des a Coudre and Bloc Party; Oracle Card in the finale
+ * (swap two players that are not fighting, 20% risk of being swapped instead of one of them).
+ */
+public class KuramiRole extends KuramiFeelBase {
 
+    /** Cooldown of the Oracle Card in seconds. */
     private static final int ORACLE_COOLDOWN = 20 * 60;
-    private boolean jointMiniGameUsed = false;
-    private boolean jointMiniGameArmed = false;
-    private boolean extraLifeUsed = false;
-    private long lastOracleUse = 0L;
+    /** Percent chance that Kurami replaces the first chosen player. */
+    private static final int SELF_TELEPORT_CHANCE = 20;
 
+    /**
+     * Constructor
+     *
+     * @param plugin   Plugin instance
+     * @param playerId UUID of the player
+     * @param roleType Role type (KURAMI)
+     */
     public KuramiRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
 
     @Override
+    protected Set<MiniGameType> secondLifeGames() {
+        return EnumSet.of(MiniGameType.DES_A_COUDRE, MiniGameType.BLOC_PARTY);
+    }
+
+    @Override
+    protected String partnerName() {
+        return "Feel";
+    }
+
+    @Override
     protected void onRoleSetup() {
-        Player player = getPlayer();
-        Player partner = getPartnerPlayer();
-        if (player != null && partner != null) {
-            MessageUtil.sendMessage(player, "&eFeel is: &a" + partner.getName());
-        }
-    }
-
-    @Override
-    public void onMiniGameStart(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        Player player = getPlayer();
-        if (player != null && !jointMiniGameUsed) {
-            MessageUtil.sendMessage(player, "&eUse &a/duo together &eto link this mini-game to Feel once per game.");
-        }
-    }
-
-    @Override
-    public void onMiniGameEnd(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        if (isWinner) {
-            jointMiniGameArmed = false;
-        }
-    }
-
-    @Override
-    public void onPartnerDeath(UUID partnerId, UUID killerId) {
-        Player player = getPlayer();
-        if (player != null) {
-            MessageUtil.sendMessage(player, "&cFeel has been eliminated.");
-        }
-    }
-
-    public void armJointMiniGame() {
-        Player player = getPlayer();
-        if (player == null) {
-            return;
-        }
-        if (jointMiniGameUsed) {
-            MessageUtil.sendMessage(player, "&cYou already used this ability.");
-            return;
-        }
-        jointMiniGameUsed = true;
-        jointMiniGameArmed = true;
-        MessageUtil.sendMessage(player, "&aIf you lose your next mini-game, you and Feel will both fall to 5 hearts.");
-        Player partner = getPartnerPlayer();
-        if (partner != null) {
-            MessageUtil.sendMessage(partner, "&eKurami linked the next mini-game to both of you.");
-        }
-    }
-
-    public boolean consumeExtraLife(MiniGameType miniGameType) {
-        if (extraLifeUsed) {
-            return false;
-        }
-        if (miniGameType != MiniGameType.DES_A_COUDRE && miniGameType != MiniGameType.BLOC_PARTY) {
-            return false;
-        }
-        extraLifeUsed = true;
-        Player player = getPlayer();
-        if (player != null) {
-            MessageUtil.sendMessage(player, "&aYour bonus negated the consequences of this defeat.");
-        }
-        return true;
-    }
-
-    public void handleJointLossIfNeeded() {
-        if (!jointMiniGameArmed) {
-            return;
-        }
-        jointMiniGameArmed = false;
-        Player self = getPlayer();
-        Player partner = getPartnerPlayer();
-        if (self != null) {
-            self.setHealth(Math.min(self.getMaxHealth(), 10.0));
-            MessageUtil.sendMessage(self, "&cYou fall to 5 hearts because of the shared mini-game risk.");
-        }
-        if (partner != null) {
-            partner.setHealth(Math.min(partner.getMaxHealth(), 10.0));
-            MessageUtil.sendMessage(partner, "&cYou fall to 5 hearts because of Kurami's shared mini-game risk.");
-        }
+        // Kurami does not learn Feel directly: the three-name list is sent with the role.
     }
 
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-        lastOracleUse = 0L;
+        resetCooldown("oracle_card");
     }
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        ItemStack card = new ItemBuilder(Material.PAPER)
-                .name("&5&lOracle Card")
-                .lore("&7Teleports two non-combat players together.", "&c20% chance to replace one target.")
-                .glow(true)
-                .setTag("role_item", "KURAMI")
-                .build();
-        player.getInventory().addItem(card);
+        giveItem(player, buildRoleItem(Material.PAPER, "&5&lOracle Card",
+                "&7Téléporte deux joueurs (hors combat) l'un à l'autre.",
+                "&c20% de risque de te téléporter à la place de l'un d'eux.", "",
+                "&eClic droit pour activer", "&cRecharge : 20 minutes"));
     }
 
     @Override
     public boolean onItemUse(ItemStack item) {
-        if (item != null && item.getType() == Material.PAPER) {
-            return useOracleCard();
+        if (item == null || item.getType() != Material.PAPER || !isArenaPhaseActive()) {
+            return false;
         }
-        return false;
+        openFirstTargetPicker();
+        return true;
     }
 
-    private boolean useOracleCard() {
+    /**
+     * Ask Kurami for the first player to teleport.
+     */
+    private void openFirstTargetPicker() {
         Player player = getPlayer();
-        if (player == null || !isArenaPhaseActive()) {
-            return false;
+        if (player == null) {
+            return;
         }
-
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastOracleUse < ORACLE_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cOracle Card cooldown: " + formatTime(ORACLE_COOLDOWN - (now - lastOracleUse)));
-            return false;
-        }
-
-        List<Player> candidates = new ArrayList<>(Bukkit.getOnlinePlayers().stream()
-                .filter(p -> plugin.getGameManager().isPlayerAlive(p.getUniqueId()))
-                .filter(p -> !plugin.getCombatTracker().isInCombat(p.getUniqueId()))
-                .filter(p -> !p.getUniqueId().equals(playerId))
-                .toList());
-
+        List<UUID> candidates = eligibleTargets(player, null);
         if (candidates.size() < 2) {
-            MessageUtil.sendMessage(player, "&cNot enough valid players to teleport.");
-            return false;
+            MessageUtil.sendMessage(player, "&cPas assez de joueurs valides à téléporter.");
+            return;
+        }
+        plugin.getPlayerPicker().open(player, "Oracle Card - 1er joueur", candidates, this::openSecondTargetPicker);
+    }
+
+    /**
+     * Ask Kurami for the second player to teleport.
+     *
+     * @param firstId First chosen player
+     */
+    private void openSecondTargetPicker(UUID firstId) {
+        Player player = getPlayer();
+        if (player == null) {
+            return;
+        }
+        plugin.getPlayerPicker().open(player, "Oracle Card - 2e joueur", eligibleTargets(player, firstId),
+                secondId -> swapTargets(firstId, secondId));
+    }
+
+    /**
+     * List the alive players that are not in combat (and not already chosen).
+     *
+     * @param viewer   Kurami
+     * @param excluded Player to leave out (can be null)
+     * @return Eligible target UUIDs
+     */
+    private List<UUID> eligibleTargets(Player viewer, UUID excluded) {
+        List<UUID> result = new ArrayList<>();
+        for (UUID id : plugin.getPlayerPicker().aliveCandidates(viewer)) {
+            if (!id.equals(excluded) && !plugin.getCombatTracker().isInCombat(id)) {
+                result.add(id);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Swap the positions of the two chosen players (20% chance Kurami replaces the first).
+     *
+     * @param firstId  First chosen player
+     * @param secondId Second chosen player
+     */
+    private void swapTargets(UUID firstId, UUID secondId) {
+        Player player = getPlayer();
+        Player first = org.bukkit.Bukkit.getPlayer(firstId);
+        Player second = org.bukkit.Bukkit.getPlayer(secondId);
+        if (player == null || first == null || second == null || !tryUseCooldown("oracle_card", ORACLE_COOLDOWN)) {
+            return;
         }
 
-        Player first = candidates.get(0);
-        Player second = candidates.get(1);
-        if (ThreadLocalRandom.current().nextInt(100) < 20) {
-            first = player;
-        }
+        boolean mishap = ThreadLocalRandom.current().nextInt(100) < SELF_TELEPORT_CHANCE;
+        Player swapped = mishap ? player : first;
+        Location swappedSpot = swapped.getLocation().clone();
+        swapped.teleport(second.getLocation());
+        second.teleport(swappedSpot);
 
-        var firstLocation = first.getLocation().clone();
-        var secondLocation = second.getLocation().clone();
-        first.teleport(secondLocation);
-        second.teleport(firstLocation);
-        lastOracleUse = now;
-        MessageUtil.broadcast("&5Kurami used an Oracle Card.");
-        return true;
+        MessageUtil.broadcast("&5Kurami a utilisé une Oracle Card.");
+        if (mishap) {
+            MessageUtil.sendMessage(player, "&cL'Oracle Card s'est retournée contre toi !");
+        }
     }
 
     @Override
@@ -178,26 +156,22 @@ public class KuramiRole extends DuoRole {
         return Arrays.asList(
                 "You are Kurami Zell.",
                 "Your goal is to win with Feel.",
-                "Use /duo together once to link your next mini-game to Feel.",
-                "You negate one defeat in Bloc Party or Des a Coudre."
+                "Once per game you can link a mini-game with Feel (/duo together):",
+                "if you lose it, both of you fall to 5 hearts.",
+                "You have two lives in Des a Coudre and Bloc Party."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "You receive an Oracle Card in finale.",
-                "It teleports two non-combat players together every 20 minutes.",
-                "There is a 20% risk that you replace one target."
+                "You get an Oracle Card: it swaps two players that are not in combat",
+                "(every 20 minutes). 20% risk that you are swapped instead of one of them."
         );
     }
 
     @Override
     public String getObjective() {
         return "Win the game with Feel.";
-    }
-
-    private String formatTime(long seconds) {
-        return String.format("%d:%02d", seconds / 60, seconds % 60);
     }
 }

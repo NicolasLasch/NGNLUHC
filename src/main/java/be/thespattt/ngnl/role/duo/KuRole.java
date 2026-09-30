@@ -2,23 +2,38 @@ package be.thespattt.ngnl.role.duo;
 
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.role.RoleType;
-import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
-import org.bukkit.Bukkit;
+
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class KuRole extends DuoRole {
+/**
+ * Ku: shares his health pool with Shi, passively detects players carrying special role items
+ * and repairs all of Shi's equipment in the finale.
+ */
+public class KuRole extends ShiKuBase {
 
+    /** Cooldown of the repair pulse in seconds. */
     private static final int REPAIR_COOLDOWN = 20 * 60;
-    private long lastRepairUse = 0L;
-    private int scannerTaskId = -1;
+    /** Radius (blocks) of the special item scanner. */
+    private static final double SCAN_RADIUS = 30.0;
+    /** Ticks between two scans. */
+    private static final long SCAN_PERIOD = 20L * 15;
 
+    /**
+     * Constructor
+     *
+     * @param plugin   Plugin instance
+     * @param playerId UUID of the player
+     * @param roleType Role type (KU)
+     */
     public KuRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
@@ -26,117 +41,104 @@ public class KuRole extends DuoRole {
     @Override
     protected void onRoleSetup() {
         Player player = getPlayer();
-        Player partner = getPartnerPlayer();
-        if (player != null && partner != null) {
-            MessageUtil.sendMessage(player, "&eShi is: &a" + partner.getName());
-            MessageUtil.sendMessage(player, "&bYour health is linked with Shi's.");
+        if (player == null) {
+            return;
         }
-        startScannerTask();
+        Player shi = getPartnerPlayer();
+        if (shi != null) {
+            MessageUtil.sendMessage(player, "&eShi est : &a" + shi.getName());
+        }
+        MessageUtil.sendMessage(player, "&bTa santé est partagée avec Shi : vous devez tous les deux être éliminés pour perdre.");
+        runRepeating(this::scanForSpecialItems, 20L, SCAN_PERIOD);
+    }
+
+    /**
+     * Warn Ku about players carrying special role items within the scanner radius.
+     */
+    private void scanForSpecialItems() {
+        Player player = getPlayer();
+        if (player == null || !isAlive()) {
+            return;
+        }
+        for (Player other : nearbyAlivePlayers(player.getLocation(), SCAN_RADIUS)) {
+            if (carriesSpecialItem(other)) {
+                MessageUtil.sendMessage(player, "&bScanner : équipement spécial détecté près de &f" + other.getName());
+            }
+        }
+    }
+
+    /**
+     * Check whether a player carries a role item or a special item.
+     *
+     * @param other Player to inspect
+     * @return True if he carries one
+     */
+    private boolean carriesSpecialItem(Player other) {
+        for (ItemStack item : other.getInventory().getContents()) {
+            if (item == null || !item.hasItemMeta()) {
+                continue;
+            }
+            var container = item.getItemMeta().getPersistentDataContainer();
+            if (container.has(plugin.getNamespacedKey("role_item"), PersistentDataType.STRING)
+                    || container.has(plugin.getNamespacedKey("special_item"), PersistentDataType.STRING)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-        lastRepairUse = 0L;
-    }
-
-    @Override
-    public void onPartnerDeath(UUID partnerId, UUID killerId) {
-        Player player = getPlayer();
-        if (player == null || !plugin.getGameManager().isPlayerAlive(playerId) || !partnerId.equals(getPartnerUUID())) {
-            return;
-        }
-        if (plugin.getGameManager().revivePlayer(partnerId, player.getLocation(), Math.min(player.getHealth(), 8.0))) {
-            MessageUtil.broadcast("&bShi and Ku's shared core restored one of them.");
-        }
-    }
-
-    private void startScannerTask() {
-        if (scannerTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(scannerTaskId);
-        }
-        scannerTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
-            Player player = getPlayer();
-            if (player == null || !plugin.getGameManager().isPlayerAlive(playerId)) {
-                return;
-            }
-
-            for (Player other : Bukkit.getOnlinePlayers()) {
-                if (other.getUniqueId().equals(playerId) || !other.getWorld().equals(player.getWorld())) {
-                    continue;
-                }
-                if (!plugin.getGameManager().isPlayerAlive(other.getUniqueId()) || other.getLocation().distance(player.getLocation()) > 30.0) {
-                    continue;
-                }
-                boolean hasSpecial = Arrays.stream(other.getInventory().getContents())
-                        .filter(item -> item != null && item.hasItemMeta() && item.getItemMeta() != null)
-                        .anyMatch(item -> item.getItemMeta().getPersistentDataContainer().has(
-                                plugin.getNamespacedKey("role_item"),
-                                org.bukkit.persistence.PersistentDataType.STRING
-                        ) || item.getItemMeta().getPersistentDataContainer().has(
-                                plugin.getNamespacedKey("special_item"),
-                                org.bukkit.persistence.PersistentDataType.STRING
-                        ));
-                if (hasSpecial) {
-                    MessageUtil.sendMessage(player, "&bScanner: special equipment detected near &f" + other.getName());
-                }
-            }
-        }, 20L, 20L * 15);
+        resetCooldown("repair_pulse");
     }
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        ItemStack repair = new ItemBuilder(Material.IRON_INGOT)
-                .name("&b&lRepair Pulse")
-                .lore("&7Instantly repairs Shi's equipment.", "&cCooldown: 20 minutes")
-                .glow(true)
-                .setTag("role_item", "KU")
-                .build();
-        player.getInventory().addItem(repair);
+        giveItem(player, buildRoleItem(Material.IRON_INGOT, "&b&lImpulsion de réparation",
+                "&7Répare instantanément tout l'équipement de Shi.", "",
+                "&eClic droit pour activer", "&cRecharge : 20 minutes"));
     }
 
     @Override
     public boolean onItemUse(ItemStack item) {
-        if (item != null && item.getType() == Material.IRON_INGOT) {
-            return useRepairPulse();
-        }
-        return false;
+        return item != null && item.getType() == Material.IRON_INGOT && useRepairPulse();
     }
 
+    /**
+     * Repair every damageable item of Shi.
+     *
+     * @return True if the pulse was used
+     */
     private boolean useRepairPulse() {
         Player player = getPlayer();
-        Player partner = getPartnerPlayer();
-        if (player == null || partner == null || !isArenaPhaseActive()) {
+        Player shi = getPartnerPlayer();
+        if (player == null || shi == null || !isArenaPhaseActive() || !isPartnerAlive()) {
             return false;
         }
-
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastRepairUse < REPAIR_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cCooldown: " + formatTime(REPAIR_COOLDOWN - (now - lastRepairUse)));
+        if (!tryUseCooldown("repair_pulse", REPAIR_COOLDOWN)) {
             return false;
         }
-
-        lastRepairUse = now;
-        for (ItemStack armor : partner.getInventory().getArmorContents()) {
-            if (armor != null) {
-                armor.setDurability((short) 0);
-            }
+        for (ItemStack armor : shi.getInventory().getArmorContents()) {
+            repair(armor);
         }
-        for (ItemStack content : partner.getInventory().getContents()) {
-            if (content != null && content.getType().getMaxDurability() > 0) {
-                content.setDurability((short) 0);
-            }
+        for (ItemStack content : shi.getInventory().getContents()) {
+            repair(content);
         }
-        MessageUtil.sendMessage(player, "&aShi's equipment has been fully repaired.");
-        MessageUtil.sendMessage(partner, "&aKu repaired all of your equipment.");
+        MessageUtil.sendMessage(player, "&aL'équipement de Shi a été entièrement réparé.");
+        MessageUtil.sendMessage(shi, "&aKu a réparé tout ton équipement.");
         return true;
     }
 
-    @Override
-    public void onDeath(UUID killerId) {
-        if (scannerTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(scannerTaskId);
-            scannerTaskId = -1;
+    /**
+     * Set the damage of an item to zero when it is damageable.
+     *
+     * @param item Item to repair (can be null)
+     */
+    private void repair(ItemStack item) {
+        if (item != null && item.getItemMeta() instanceof Damageable meta && meta.hasDamage()) {
+            meta.setDamage(0);
+            item.setItemMeta(meta);
         }
     }
 
@@ -145,25 +147,20 @@ public class KuRole extends DuoRole {
         return Arrays.asList(
                 "You are Ku.",
                 "Your goal is to win with Shi.",
-                "Your health is permanently linked with Shi's.",
-                "You periodically detect nearby special items."
+                "Your health is shared with Shi: you must both be eliminated to lose.",
+                "You periodically detect players carrying special items nearby."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "You receive a Repair Pulse in finale.",
-                "It instantly repairs Shi's equipment every 20 minutes."
+                "Repair Pulse: instantly repairs all of Shi's equipment (every 20 minutes)."
         );
     }
 
     @Override
     public String getObjective() {
         return "Win the game with Shi.";
-    }
-
-    private String formatTime(long seconds) {
-        return String.format("%d:%02d", seconds / 60, seconds % 60);
     }
 }

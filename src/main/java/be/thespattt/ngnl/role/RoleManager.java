@@ -22,6 +22,11 @@ public class RoleManager {
     private final Map<UUID, Role> playerRoles = new HashMap<>();
     private final Map<RoleType, UUID> assignedRoles = new HashMap<>();
 
+    /** Duo roles that learn their partner's identity directly instead of receiving three names. */
+    private static final Set<RoleType> KNOWS_PARTNER = EnumSet.of(
+            RoleType.SORA, RoleType.SHIRO, RoleType.FIEL, RoleType.CHLAMMY,
+            RoleType.SHI, RoleType.KU, RoleType.IVAN);
+
     /**
      * Constructor
      *
@@ -43,9 +48,8 @@ public class RoleManager {
      * Assign roles to players
      */
     public void assignRoles() {
-        // Clear existing data
-        playerRoles.clear();
-        assignedRoles.clear();
+        // Clear existing data (and stop the tasks of previous roles)
+        clearRoles();
 
         List<Player> players = new ArrayList<>();
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -71,64 +75,77 @@ public class RoleManager {
     }
 
     /**
-     * Assign roles randomly to players
+     * Assign roles randomly to players.
+     * Every role is registered first, then all of them are revealed, so roles that
+     * "know" another role at the start always find it assigned.
      *
      * @param players List of players
      */
     private void assignRolesRandomly(List<Player> players) {
-        int playerCount = players.size();
-        List<RoleType> availableRoles = new ArrayList<>();
-
-        List<RoleType> enabledRoles = new ArrayList<>();
-        for (RoleType roleType : RoleType.values()) {
-            if (plugin.getConfigManager().getGameConfig().isRoleEnabled(roleType)) {
-                enabledRoles.add(roleType);
-            }
-        }
-
-        List<RoleType> soloRoles = new ArrayList<>();
-        List<RoleType> duoRoles = new ArrayList<>();
-
-        for (RoleType roleType : enabledRoles) {
-            if (roleType.isDuo()) {
-                if (enabledRoles.contains(roleType.getPartnerRoleType()) &&
-                        !duoRoles.contains(roleType) &&
-                        !duoRoles.contains(roleType.getPartnerRoleType())) {
-                    duoRoles.add(roleType);
-                }
-            } else {
-                soloRoles.add(roleType);
-            }
-        }
-
-        Collections.shuffle(duoRoles);
-        Collections.shuffle(soloRoles);
-        availableRoles.addAll(soloRoles);
-
-        for (RoleType duoRole : duoRoles) {
-            if (availableRoles.size() + 2 <= playerCount) {
-                availableRoles.add(duoRole);
-                availableRoles.add(duoRole.getPartnerRoleType());
-            }
-        }
-
-        Collections.shuffle(availableRoles);
-
-        if (availableRoles.size() < playerCount) {
-            MessageUtil.logWarning("Not enough available roles for all players! " +
-                    "Available: " + availableRoles.size() + ", Players: " + playerCount);
+        List<RoleType> selected = selectRolesForPlayerCount(players.size());
+        if (selected == null) {
             return;
         }
 
-        for (int i = 0; i < Math.min(playerCount, availableRoles.size()); i++) {
-            Player player = players.get(i);
-            RoleType roleType = availableRoles.get(i);
-
-            assignRoleToPlayer(player.getUniqueId(), roleType);
+        Collections.shuffle(selected);
+        for (int i = 0; i < players.size(); i++) {
+            registerRole(players.get(i).getUniqueId(), selected.get(i));
         }
 
-        MessageUtil.logInfo("Randomly assigned " + Math.min(playerCount, availableRoles.size()) +
-                " roles to " + playerCount + " players");
+        revealAllRoles();
+        MessageUtil.logInfo("Randomly assigned " + players.size() + " roles");
+    }
+
+    /**
+     * Pick exactly one role per player, mixing duos (two roles) and solos (one role)
+     *
+     * @param playerCount Number of players to give a role to
+     * @return The selected roles, or null if there are not enough enabled roles
+     */
+    private List<RoleType> selectRolesForPlayerCount(int playerCount) {
+        List<List<RoleType>> units = buildRoleUnits();
+        Collections.shuffle(units);
+
+        List<RoleType> selected = new ArrayList<>();
+        for (List<RoleType> unit : units) {
+            if (selected.size() + unit.size() <= playerCount) {
+                selected.addAll(unit);
+            }
+        }
+
+        if (selected.size() < playerCount) {
+            MessageUtil.logWarning("Not enough enabled roles for all players! Available: "
+                    + selected.size() + ", Players: " + playerCount);
+            return null;
+        }
+        return selected;
+    }
+
+    /**
+     * Group the enabled roles in assignable units: a solo role alone, a duo as a pair
+     *
+     * @return List of units (each unit is one solo role or both roles of a duo)
+     */
+    private List<List<RoleType>> buildRoleUnits() {
+        GameConfig config = plugin.getConfigManager().getGameConfig();
+        List<List<RoleType>> units = new ArrayList<>();
+        Set<RoleType> used = new HashSet<>();
+
+        for (RoleType roleType : RoleType.values()) {
+            if (!config.isRoleEnabled(roleType) || used.contains(roleType)) {
+                continue;
+            }
+            if (!roleType.isDuo()) {
+                units.add(new ArrayList<>(List.of(roleType)));
+                continue;
+            }
+            RoleType partner = roleType.getPartnerRoleType();
+            if (config.isRoleEnabled(partner)) {
+                units.add(new ArrayList<>(List.of(roleType, partner)));
+                used.add(partner);
+            }
+        }
+        return units;
     }
 
     /**
@@ -143,43 +160,71 @@ public class RoleManager {
     }
 
     /**
-     * Assign a specific role to a player
+     * Assign a specific role to a player and reveal it immediately (admin command)
      *
      * @param playerId UUID of the player
      * @param roleType Role type to assign
      * @return True if assignment was successful
      */
     public boolean assignRoleToPlayer(UUID playerId, RoleType roleType) {
-        // Check if player already has a role
-        if (playerRoles.containsKey(playerId)) {
-            return false;
-        }
-
-        // Check if role is already assigned
-        if (assignedRoles.containsKey(roleType)) {
-            return false;
-        }
-
-        // Create role instance
-        Role role = createRoleInstance(playerId, roleType);
+        Role role = registerRole(playerId, roleType);
         if (role == null) {
             return false;
         }
+        role.onAssign();
+        return true;
+    }
 
-        // Register player and role
+    /**
+     * Create a role and register it for a player without revealing it
+     *
+     * @param playerId UUID of the player
+     * @param roleType Role type to assign
+     * @return The created role, or null if the player or the role is already taken
+     */
+    private Role registerRole(UUID playerId, RoleType roleType) {
+        if (playerRoles.containsKey(playerId) || assignedRoles.containsKey(roleType)) {
+            return null;
+        }
+
+        Role role = createRoleInstance(playerId, roleType);
+        if (role == null) {
+            return null;
+        }
+
         playerRoles.put(playerId, role);
         assignedRoles.put(roleType, playerId);
 
-        // Update NGNLPlayer
         NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
         if (ngnlPlayer != null) {
             ngnlPlayer.setRole(role);
         }
+        return role;
+    }
 
-        // Initialize role
-        role.onAssign();
+    /**
+     * Reveal every registered role to its player (card popup + role setup),
+     * then give duo members their list of three names.
+     */
+    private void revealAllRoles() {
+        for (Role role : new ArrayList<>(playerRoles.values())) {
+            role.onAssign();
+        }
+        for (Role role : new ArrayList<>(playerRoles.values())) {
+            sendDuoNameListIfNeeded(role);
+        }
+    }
 
-        return true;
+    /**
+     * Give the three-name list to duo roles that do not know their partner from the start
+     *
+     * @param role Role that may receive the list
+     */
+    private void sendDuoNameListIfNeeded(Role role) {
+        Player player = role.getPlayer();
+        if (player != null && role.isDuo() && !KNOWS_PARTNER.contains(role.getRoleType())) {
+            role.sendThreeNamesInformation(player);
+        }
     }
 
     /**
@@ -262,8 +307,10 @@ public class RoleManager {
      * Activate arena phase abilities for all roles
      */
     public void activateArenaPhaseAbilities() {
-        for (Role role : playerRoles.values()) {
-            role.onArenaPhaseStart();
+        for (Role role : new ArrayList<>(playerRoles.values())) {
+            if (plugin.getGameManager().isPlayerAlive(role.getPlayerId())) {
+                role.onArenaPhaseStart();
+            }
         }
     }
 
@@ -301,6 +348,9 @@ public class RoleManager {
      * Clear all role assignments
      */
     public void clearRoles() {
+        for (Role role : playerRoles.values()) {
+            role.cleanup();
+        }
         playerRoles.clear();
         assignedRoles.clear();
     }

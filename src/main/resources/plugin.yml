@@ -5,7 +5,6 @@ api-version: 1.21
 author: TheSpatt
 description: A UHC plugin inspired by the anime No Game No Life
 website: https://github.com/TheSpatt/NoGameNoLifeUHC
-softdepend: [ProtocolLib, packetevents, PacketEvents]
 
 commands:
   ngnl:
@@ -90,10 +89,14 @@ commands:
     usage: /forcekill <player> [hearts]
     permission: ngnl.admin.forcekill
   role:
-    description: View your role information
+    description: Reopen your role card
     usage: /role
     permission: ngnl.player
     aliases: [ r ]
+  shop:
+    description: Open the Imanity shop (Imanity faction only)
+    usage: /shop
+    permission: ngnl.player
   chess:
     description: Reopen the chess board if it was closed
     usage: /chess

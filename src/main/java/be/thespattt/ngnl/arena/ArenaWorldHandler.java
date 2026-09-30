@@ -18,6 +18,11 @@ public class ArenaWorldHandler {
     private Location centerLocation;
     private final List<Location> spawnLocations = new ArrayList<>();
     private final Random random = new Random();
+    private boolean fallbackWorld = false;
+    /** Number of player spawn points on the ring. */
+    private static final int SPAWN_COUNT = 8;
+    /** Radius (blocks) of the spawn ring around the arena center. */
+    private static final int SPAWN_RING_RADIUS = 150;
 
     public ArenaWorldHandler(NoGameNoLife plugin) {
         this.plugin = plugin;
@@ -59,7 +64,8 @@ public class ArenaWorldHandler {
 
     private World createFlatWorld(String worldName, File worldFolder) {
         MessageUtil.logWarning("Aucune map personnalisée trouvée à " + worldFolder.getAbsolutePath());
-        MessageUtil.logWarning("Création d'un monde plat par défaut. Placez votre map dans ce dossier !");
+        MessageUtil.logWarning("Création d'une ville générée par défaut. Placez votre map dans ce dossier pour la remplacer !");
+        fallbackWorld = true;
 
         WorldCreator creator = new WorldCreator(worldName);
         creator.type(org.bukkit.WorldType.FLAT);
@@ -98,14 +104,44 @@ public class ArenaWorldHandler {
 
     private void setupCenterAndSpawns() {
         int centerX = 0;
-        int centerY = 80;
         int centerZ = 0;
 
+        List<int[]> plannedSpawns = planSpawnPoints();
+        if (fallbackWorld) {
+            new ArenaCityBuilder().buildIfMissing(arenaWorld, SPAWN_RING_RADIUS - 10, arenaWorld.getHighestBlockYAt(0, 0), plannedSpawns);
+        }
+
+        int centerY = arenaWorld.getHighestBlockYAt(centerX, centerZ) + 1;
         centerLocation = new Location(arenaWorld, centerX + 0.5, centerY, centerZ + 0.5);
         arenaWorld.getWorldBorder().setCenter(centerX, centerZ);
 
         generateSpawnLocations();
         logSetupInfo(centerX, centerY, centerZ);
+    }
+
+    /**
+     * Compute the X/Z of the spawn ring before anything is built on it.
+     *
+     * @return X/Z pairs of the spawn points
+     */
+    private List<int[]> planSpawnPoints() {
+        List<int[]> points = new ArrayList<>();
+        for (int i = 0; i < SPAWN_COUNT; i++) {
+            double angle = 2 * Math.PI * i / SPAWN_COUNT;
+            points.add(new int[]{(int) (SPAWN_RING_RADIUS * Math.cos(angle)), (int) (SPAWN_RING_RADIUS * Math.sin(angle))});
+        }
+        return points;
+    }
+
+    /**
+     * Put the arena in its starting state for a new game (initial border, no mobs).
+     */
+    public void prepareForGame() {
+        if (arenaWorld == null) {
+            return;
+        }
+        setupWorldBorder();
+        clearHostileMobs();
     }
 
     private void logSetupInfo(int centerX, int centerY, int centerZ) {
@@ -115,11 +151,9 @@ public class ArenaWorldHandler {
 
     private void generateSpawnLocations() {
         spawnLocations.clear();
-        int spawnRadius = 150;
-        int spawnCount = 8;
 
-        for (int i = 0; i < spawnCount; i++) {
-            Location spawnLoc = calculateSpawnLocation(i, spawnCount, spawnRadius);
+        for (int i = 0; i < SPAWN_COUNT; i++) {
+            Location spawnLoc = calculateSpawnLocation(i, SPAWN_COUNT, SPAWN_RING_RADIUS);
             if (spawnLoc != null) {
                 spawnLocations.add(spawnLoc);
             }

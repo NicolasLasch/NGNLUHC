@@ -6,10 +6,10 @@
 # Game settings
 game:
   # Length of episodes in minutes
-  episode_length: 1
+  episode_length: 20
 
   # Number of players remaining to trigger arena phase
-  arena_player_threshold: 2
+  arena_player_threshold: 8
 
   # Minimum number of players required to start the game
   minimum_players: 4
@@ -25,8 +25,9 @@ game:
   # If false, PvP will follow UHC rules
   force_enable_pvp: false
 
-  # Time in minutes when Aka Si Anse appears
-  # Random location will be announced between 50-80 minutes
+  # Reference time (minutes) for the Aka Si Anse announcement: Nina Clive's approximate
+  # coordinates are announced at a random time between (value - 10) and (value + 20) minutes,
+  # i.e. between 50 and 80 minutes with the default 60.
   aka_si_anse_appear_time: 60
 
 # World settings
@@ -38,7 +39,8 @@ world:
   arena_world_border_size: 300
 
   # Whether worlds should be destroyed after game
-  destroy_worlds_after_game: false
+  # Delete the mining world after every game so each game has a fresh map
+  destroy_worlds_after_game: true
 
   # World generation settings
   generation:
@@ -66,6 +68,27 @@ minigames:
     MENTAL_CHESS: true
     MEMORY_GAME: true
     MATERIALIZATION_SHIRITORI: true
+
+# Role cards (popup shown when the role is revealed and with /role)
+resourcepack:
+  # Send the resource pack that draws the role card pictures
+  enabled: true
+  # Send the pack when a player joins (so it is loaded before the roles are revealed)
+  send-on-join: true
+  # Kick players who refuse the pack (they would only get the text card otherwise)
+  required: false
+  # URL of the pack if you host it yourself (leave empty to use the built-in host below).
+  # The pack is the file src/main/resources/resourcepack/NGNL-ResourcePack.zip of this repository.
+  url: ""
+  # SHA-1 of the pack when you use "url" (optional but recommended)
+  sha1: ""
+  # Built-in web server that serves the pack bundled in the plugin jar.
+  # The TCP port must be open and reachable by your players.
+  self-host:
+    enabled: false
+    port: 8123
+    # Public IP / domain of your server as players see it
+    public-host: ""
 
 # Scoreboard settings
 scoreboard:

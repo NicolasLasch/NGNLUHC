@@ -44,6 +44,7 @@ public class GameConfig {
     private int miningWorldBorderSize;
     private int arenaWorldBorderSize;
     private boolean destroyWorldsAfterGame;
+    private String miningSeed;
 
     // Additional world settings for GUI
     private boolean borderShrinking;
@@ -193,7 +194,8 @@ public class GameConfig {
     private void loadWorldSettings() {
         miningWorldBorderSize = config.getInt("world.mining_world_border_size", 1000);
         arenaWorldBorderSize = config.getInt("world.arena_world_border_size", 300);
-        destroyWorldsAfterGame = config.getBoolean("world.destroy_worlds_after_game", false);
+        destroyWorldsAfterGame = config.getBoolean("world.destroy_worlds_after_game", true);
+        miningSeed = config.getString("world.generation.mining_seed", "");
     }
 
     /**
@@ -203,6 +205,7 @@ public class GameConfig {
         config.set("world.mining_world_border_size", miningWorldBorderSize);
         config.set("world.arena_world_border_size", arenaWorldBorderSize);
         config.set("world.destroy_worlds_after_game", destroyWorldsAfterGame);
+        config.set("world.generation.mining_seed", miningSeed);
     }
 
     /**
@@ -368,6 +371,25 @@ public class GameConfig {
         }
 
 
+    }
+
+    /**
+     * Seed of the mining world (empty for a random one)
+     *
+     * @return Configured seed text
+     */
+    public String getMiningSeed() {
+        return miningSeed;
+    }
+
+    /**
+     * Check whether a special item is enabled in the config (items.<name>_enabled)
+     *
+     * @param itemName Name of the item (aka_si_anse, suniaster, ...)
+     * @return True if enabled
+     */
+    public boolean isItemEnabled(String itemName) {
+        return specialItemsEnabled && config.getBoolean("items." + itemName + "_enabled", true);
     }
 
     // Original getters and setters

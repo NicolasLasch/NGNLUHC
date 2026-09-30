@@ -5,26 +5,59 @@ import be.thespattt.ngnl.role.Role;
 import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
-import org.bukkit.Bukkit;
+
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Okein: learns the role of the first player to take damage, starts with an anvil, 200 levels,
+ * Fire Resistance and a Flame book (he is the only role allowed to use fire), takes 1 heart per
+ * second in water and owns the Hammer of Destruction (anvil rain) in the finale.
+ */
 public class OkeinRole extends Role {
 
-    private static final int HAMMER_COOLDOWN = 15 * 60;
-    private boolean firstDamageKnown = false;
-    private long lastHammerUse = 0L;
-    private int waterTaskId = -1;
+    /** Persistent-data key marking an anvil created by the hammer. */
+    public static final String ANVIL_TAG = "okein_anvil";
 
+    /** Cooldown of the hammer in seconds. */
+    private static final int HAMMER_COOLDOWN = 15 * 60;
+    /** Cooldown (seconds) that remains when the anvils killed somebody. */
+    private static final int HAMMER_KILL_COOLDOWN = 5 * 60;
+    /** Radius of the anvil rain (5x5 area). */
+    private static final int HAMMER_RADIUS = 2;
+    /** Damage (HP) of one anvil (4 hearts). */
+    private static final int ANVIL_DAMAGE = 8;
+    /** Time (ms) during which a victim hit by an anvil counts as killed by the hammer. */
+    private static final long KILL_ATTRIBUTION_MS = 10_000L;
+    /** Levels granted at the start. */
+    private static final int STARTING_LEVELS = 200;
+
+    private boolean firstDamageKnown = false;
+    private final Map<UUID, Long> anvilVictims = new HashMap<>();
+
+    /**
+     * Constructor
+     *
+     * @param plugin   Plugin instance
+     * @param playerId UUID of the player
+     * @param roleType Role type (OKEIN)
+     */
     public OkeinRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
@@ -35,17 +68,33 @@ public class OkeinRole extends Role {
         if (player == null) {
             return;
         }
-        player.getInventory().addItem(new ItemStack(Material.ANVIL));
-        player.getInventory().addItem(new ItemBuilder(Material.ENCHANTED_BOOK)
-                .name("&6&lFlame Book")
-                .lore("&7A flame book granted by Okein.")
-                .glow(true)
-                .build());
-        player.setLevel(player.getLevel() + 200);
+        giveItem(player, new ItemStack(Material.ANVIL));
+        giveItem(player, buildFlameBook());
+        player.setLevel(player.getLevel() + STARTING_LEVELS);
         player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, false, false));
-        startWaterTask();
+        runRepeating(this::applyWaterDamage, 20L, 20L);
+        MessageUtil.sendMessage(player, "&eAttention : l'eau (et la pluie) te brûle de 1 cœur par seconde. Tu es le seul à pouvoir utiliser le feu.");
     }
 
+    /**
+     * Build the book holding the Flame enchantment.
+     *
+     * @return Enchanted book with Flame
+     */
+    private ItemStack buildFlameBook() {
+        ItemStack book = new ItemBuilder(Material.ENCHANTED_BOOK).name("&6&lLivre Flamme").build();
+        if (book.getItemMeta() instanceof EnchantmentStorageMeta meta) {
+            meta.addStoredEnchant(Enchantment.FLAME, 1, true);
+            book.setItemMeta(meta);
+        }
+        return book;
+    }
+
+    /**
+     * Learn the role of the first player (possibly Okein himself) who takes damage.
+     *
+     * @param targetId UUID of the damaged player
+     */
     public void registerFirstDamagedPlayer(UUID targetId) {
         if (firstDamageKnown) {
             return;
@@ -54,36 +103,39 @@ public class OkeinRole extends Role {
         Player player = getPlayer();
         var target = plugin.getPlayerManager().getNGNLPlayer(targetId);
         if (player != null && target != null && target.getRole() != null) {
-            MessageUtil.sendMessage(player, "&eFirst damaged player role: &f" + target.getRole().getDisplayName());
+            MessageUtil.sendMessage(player, "&eLe premier joueur blessé a le rôle : &f" + target.getRole().getDisplayName());
         }
     }
 
-    private void startWaterTask() {
-        if (waterTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(waterTaskId);
+    /**
+     * Hurt Okein by 1 heart when he is in water or under the rain.
+     */
+    private void applyWaterDamage() {
+        Player player = getPlayer();
+        if (player == null || !isAlive()) {
+            return;
         }
-        waterTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
-            Player player = getPlayer();
-            if (player == null || !plugin.getGameManager().isPlayerAlive(playerId)) {
-                return;
-            }
-            Block feet = player.getLocation().getBlock();
-            if (feet.isLiquid() || player.isInWater()) {
-                player.damage(2.0);
-                MessageUtil.sendMessage(player, "&cWater burns you for 1 heart.");
-            }
-        }, 20L, 20L);
+        Block feet = player.getLocation().getBlock();
+        boolean inWater = feet.getType() == Material.WATER || player.isInWater();
+        boolean underRain = player.getWorld().hasStorm() && player.getLocation().getBlock().getLightFromSky() == 15
+                && player.getWorld().getHighestBlockYAt(player.getLocation()) <= player.getLocation().getBlockY();
+        if (inWater || underRain) {
+            player.damage(2.0);
+            MessageUtil.sendMessage(player, "&cL'eau te brûle !");
+        }
+    }
+
+    @Override
+    public void onArenaPhaseStart() {
+        super.onArenaPhaseStart();
+        resetCooldown("hammer");
     }
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        ItemStack hammer = new ItemBuilder(Material.IRON_AXE)
-                .name("&8&lHammer of Destruction")
-                .lore("&7Drops anvils on a 5x5 area.", "&cCooldown: 15 minutes")
-                .glow(true)
-                .setTag("role_item", "OKEIN")
-                .build();
-        player.getInventory().addItem(hammer);
+        giveItem(player, buildRoleItem(Material.IRON_AXE, "&8&lMarteau de destruction",
+                "&7Fait tomber des enclumes sur une zone de 5x5.", "&7Chaque enclume retire 4 cœurs.", "",
+                "&eClic droit pour activer", "&cRecharge : 15 minutes (5 minutes si kill)"));
     }
 
     @Override
@@ -91,47 +143,86 @@ public class OkeinRole extends Role {
         return item != null && item.getType() == Material.IRON_AXE && useHammer();
     }
 
+    /**
+     * Drop anvils on a 5x5 area where Okein looks.
+     *
+     * @return True if the hammer was used
+     */
     private boolean useHammer() {
         Player player = getPlayer();
-        if (player == null || !isArenaPhaseActive()) {
+        if (player == null || !isArenaPhaseActive() || !tryUseCooldown("hammer", HAMMER_COOLDOWN)) {
             return false;
         }
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastHammerUse < HAMMER_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cHammer cooldown active.");
-            return false;
-        }
-        lastHammerUse = now;
-        var center = player.getTargetBlockExact(30);
-        if (center == null) {
-            center = player.getLocation().getBlock();
-        }
-        for (int x = -2; x <= 2; x++) {
-            for (int z = -2; z <= 2; z++) {
-                FallingBlock anvil = player.getWorld().spawnFallingBlock(center.getLocation().clone().add(x, 12, z), Material.ANVIL.createBlockData());
-                anvil.setDropItem(false);
-                anvil.setHurtEntities(true);
+        Block targetBlock = player.getTargetBlockExact(30);
+        Location center = targetBlock != null ? targetBlock.getLocation() : player.getLocation().getBlock().getLocation();
+        for (int x = -HAMMER_RADIUS; x <= HAMMER_RADIUS; x++) {
+            for (int z = -HAMMER_RADIUS; z <= HAMMER_RADIUS; z++) {
+                dropAnvil(center.clone().add(x, 0, z));
             }
         }
-        MessageUtil.broadcast("&8Okein called an anvil storm.");
+        MessageUtil.broadcast("&8Ōkein a déclenché une pluie d'enclumes !");
         return true;
+    }
+
+    /**
+     * Drop one marked anvil above a column.
+     *
+     * @param column Location in the column where the anvil lands
+     */
+    private void dropAnvil(Location column) {
+        int topY = column.getWorld().getHighestBlockYAt(column.getBlockX(), column.getBlockZ());
+        double spawnY = Math.max(column.getY(), topY) + 10;
+        Location spawn = new Location(column.getWorld(), column.getBlockX() + 0.5, spawnY, column.getBlockZ() + 0.5);
+        FallingBlock anvil = column.getWorld().spawnFallingBlock(spawn, Material.ANVIL.createBlockData());
+        anvil.setDropItem(false);
+        anvil.setHurtEntities(true);
+        anvil.setDamagePerBlock(2.0f);
+        anvil.setMaxDamage(ANVIL_DAMAGE);
+        anvil.getPersistentDataContainer().set(new NamespacedKey(plugin, ANVIL_TAG), PersistentDataType.STRING, playerId.toString());
+    }
+
+    /**
+     * Remember that a player was hit by one of Okein's anvils.
+     *
+     * @param victimId UUID of the player hit
+     */
+    public void registerAnvilHit(UUID victimId) {
+        anvilVictims.put(victimId, System.currentTimeMillis());
+        plugin.getCombatTracker().setLastDamager(victimId, playerId);
+    }
+
+    @Override
+    public void onAnyPlayerEliminated(UUID victimId, UUID killerId) {
+        Long hitTime = anvilVictims.get(victimId);
+        if (hitTime == null || System.currentTimeMillis() - hitTime > KILL_ATTRIBUTION_MS) {
+            return;
+        }
+        var data = getNGNLPlayer();
+        if (data != null) {
+            data.reduceCooldownTo("hammer", HAMMER_COOLDOWN, HAMMER_KILL_COOLDOWN);
+            Player player = getPlayer();
+            if (player != null) {
+                MessageUtil.sendMessage(player, "&aKill à l'enclume : ton marteau se recharge en 5 minutes.");
+            }
+        }
     }
 
     @Override
     public List<String> getDescription() {
         return Arrays.asList(
                 "You are Okein.",
-                "Your goal is to win alone or with an alliance.",
-                "You learn the role of the first player to take damage.",
-                "You receive an anvil, 200 levels and permanent fire resistance."
+                "Your goal is to win alone or with an alliance (/alliance).",
+                "You learn the role of the first player to take damage (maybe yourself).",
+                "You start with an anvil, 200 levels, Fire Resistance and a Flame book.",
+                "You are the only role allowed to use fire. Water hurts you (1 heart/second)."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "You receive the Hammer of Destruction in finale.",
-                "It summons an anvil rain on a 5x5 area every 15 minutes."
+                "Hammer of Destruction: anvil rain on a 5x5 area, each anvil removes 4 hearts",
+                "(every 15 minutes, 5 minutes if it kills)."
         );
     }
 

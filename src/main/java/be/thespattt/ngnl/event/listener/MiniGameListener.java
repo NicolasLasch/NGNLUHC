@@ -143,27 +143,6 @@ public class MiniGameListener implements Listener {
 
         // Apply mini-game specific items or abilities based on mini-game type
         switch (miniGameType) {
-            case SUMO:
-                // Check for Nonna and Ivan roles (they get special items in Sumo)
-                if (ngnlPlayer1 != null && ngnlPlayer1.getRole() != null &&
-                        (ngnlPlayer1.getRole().getRoleType() == be.thespattt.ngnl.role.RoleType.NONNA ||
-                                ngnlPlayer1.getRole().getRoleType() == be.thespattt.ngnl.role.RoleType.IVAN)) {
-
-                    // Give knockback stick - will be implemented in ItemManager
-                    plugin.getItemManager().giveSpecialItem(player1, "knockback_stick");
-                    MessageUtil.sendMessage(player1, "&aYou received a &eKnockback Stick &afor the Sumo mini-game!");
-                }
-
-                if (ngnlPlayer2 != null && ngnlPlayer2.getRole() != null &&
-                        (ngnlPlayer2.getRole().getRoleType() == be.thespattt.ngnl.role.RoleType.NONNA ||
-                                ngnlPlayer2.getRole().getRoleType() == be.thespattt.ngnl.role.RoleType.IVAN)) {
-
-                    // Give knockback stick - will be implemented in ItemManager
-                    plugin.getItemManager().giveSpecialItem(player2, "knockback_stick");
-                    MessageUtil.sendMessage(player2, "&aYou received a &eKnockback Stick &afor the Sumo mini-game!");
-                }
-                break;
-
             case BLOC_PARTY:
                 // Check for Kurami and Izuna roles (they get special abilities in Bloc Party)
                 if (ngnlPlayer1 != null && ngnlPlayer1.getRole() != null) {

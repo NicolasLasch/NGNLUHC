@@ -24,6 +24,11 @@ public class RiteCommand implements CommandExecutor {
             return true;
         }
 
+        if (!plugin.getGameManager().isGameRunning() || !plugin.getGameManager().isPlayerAlive(player.getUniqueId())) {
+            MessageUtil.sendMessage(player, "&cLes rites ne sont utilisables que pendant la partie.");
+            return true;
+        }
+
         NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
         if (ngnlPlayer == null || ngnlPlayer.getRole() == null || ngnlPlayer.getRole().getRoleType() != RoleType.THINK) {
             MessageUtil.sendMessage(player, "&cOnly Think Nirvalen can use this command.");

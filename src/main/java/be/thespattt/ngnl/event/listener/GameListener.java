@@ -1,36 +1,38 @@
 package be.thespattt.ngnl.event.listener;
 
 import be.thespattt.ngnl.NoGameNoLife;
-import be.thespattt.ngnl.event.custom.MiniGameEndEvent;
-import be.thespattt.ngnl.event.custom.MiniGameStartEvent;
 import be.thespattt.ngnl.event.custom.PhaseChangeEvent;
 import be.thespattt.ngnl.game.GameState;
+import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.role.duo.StephanieRole;
 import be.thespattt.ngnl.util.MessageUtil;
 
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.UUID;
-import be.thespattt.ngnl.arena.ArenaCombatManager;
 
 /**
- * Event listener for game-related events
+ * Event listener for game-related events: phase changes, right-clicks on role/special items,
+ * mining bonuses and the mini-game selection GUI.
  */
 public class GameListener implements Listener {
 
@@ -45,212 +47,117 @@ public class GameListener implements Listener {
         this.plugin = plugin;
     }
 
+    // ------------------------------------------------------------------ phases
+
+    /**
+     * Pledges disappear when the arena phase starts.
+     *
+     * @param event Phase change event
+     */
     @EventHandler
     public void onPhaseChange(PhaseChangeEvent event) {
-        GameState oldState = event.getOldState();
-        GameState newState = event.getNewState();
-
-        // Handle phase transitions
-        if (oldState == GameState.MINING_PHASE && newState == GameState.ARENA_PHASE) {
-            // Mining phase to arena phase transition
-            handleMiningToArenaTransition();
-        } else if (oldState == GameState.STARTING && newState == GameState.MINING_PHASE) {
-            // Starting to mining phase transition
-            handleStartToMiningTransition();
-        } else if (newState == GameState.ENDED) {
-            // Game ending
-            handleGameEnd();
-        }
-    }
-
-    // Todo : Verify that it's of use
-    /**
-     * Handle transition from mining phase to arena phase
-     * Not sure if needed...
-     */
-    private void handleMiningToArenaTransition() {
-        // Deactivate pledges
-        if (plugin.getCommandManager().getPledgeCommand() != null) {
+        boolean arenaStarts = event.getOldState() == GameState.MINING_PHASE && event.getNewState() == GameState.ARENA_PHASE;
+        if (arenaStarts && plugin.getCommandManager().getPledgeCommand() != null) {
             plugin.getCommandManager().getPledgeCommand().clearAllPledges();
         }
-
-        plugin.getRoleManager().activateArenaPhaseAbilities();
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (plugin.getGameManager().isPlayerAlive(player.getUniqueId())) {
-                if (plugin.getWorldManager().getRandomSpawnLocation(be.thespattt.ngnl.game.world.WorldType.ARENA) != null) {
-                    player.teleport(plugin.getWorldManager().getRandomSpawnLocation(be.thespattt.ngnl.game.world.WorldType.ARENA));
-                }
-            } else {
-                // Teleport spectators to arena center
-                if (plugin.getWorldManager().getSpawnLocation(be.thespattt.ngnl.game.world.WorldType.ARENA) != null) {
-                    player.teleport(plugin.getWorldManager().getSpawnLocation(be.thespattt.ngnl.game.world.WorldType.ARENA));
-                }
-            }
-        }
-
-        int borderSize = plugin.getConfigManager().getGameConfig().getArenaWorldBorderSize();
-        if (plugin.getWorldManager().getArenaWorld() != null) {
-            plugin.getWorldManager().getArenaWorld().getWorldBorder().setSize(borderSize * 2);
-        }
-        plugin.getGameManager().getGame().getScoreboardManager().updateScoreboardsForAllPlayers();
     }
+
+    // ------------------------------------------------------------------ item use
 
     /**
-     * Handle transition from starting to mining phase
+     * Route right-clicks on role items and special items to their owners, and block traditional
+     * weapons in the arena.
+     *
+     * @param event Interact event
      */
-    private void handleStartToMiningTransition() {
-        // Start episode timer
-        plugin.getGameManager().getGame().getEpisodeManager().startEpisodeTimer();
-
-        // Set world border for mining world
-        int borderSize = plugin.getConfigManager().getGameConfig().getMiningWorldBorderSize();
-        if (plugin.getWorldManager().getMiningWorld() != null) {
-            plugin.getWorldManager().getMiningWorld().getWorldBorder().setSize(borderSize * 2);
-        }
-
-        // Schedule Aka Si Anse appearance
-        int akaSiAnseTime = plugin.getConfigManager().getGameConfig().getAkaSiAnseAppearTime();
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (plugin.getGameManager().isGameRunning() &&
-                    plugin.getGameManager().getGameState() == GameState.MINING_PHASE) {
-                spawnAkaSiAnse();
-            }
-        }, akaSiAnseTime * 60 * 20L); // Convert minutes to ticks
-
-        // Broadcast game start
-        MessageUtil.broadcastTitle("&6&lGAME START", "&eGood luck and have fun!", 10, 70, 20);
-        MessageUtil.broadcast("&7&m                    ");
-        MessageUtil.broadcast("&fGAME HAS STARTED!");
-        MessageUtil.broadcast("&fRemember: In this world, &5games &fdecide everything!");
-        MessageUtil.broadcast("&7&m                    ");
-    }
-
-    /**
-     * Handle game end
-     */
-    private void handleGameEnd() {
-        // Stop episode timer
-        plugin.getGameManager().getGame().getEpisodeManager().stopEpisodeTimer();
-
-        // Reset player states
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.setGameMode(GameMode.ADVENTURE);
-            player.setMaxHealth(20.0);
-            player.setHealth(20.0);
-            player.getInventory().clear();
-
-            // Teleport to lobby
-            if (plugin.getWorldManager().getSpawnLocation(be.thespattt.ngnl.game.world.WorldType.WAITING) != null) {
-                player.teleport(plugin.getWorldManager().getSpawnLocation(be.thespattt.ngnl.game.world.WorldType.WAITING));
-            }
-        }
-
-        // Clean up game data
-        plugin.getPlayerManager().clearAllPlayers();
-        plugin.getRoleManager().clearRoles();
-
-        // Destroy worlds if configured
-        if (plugin.getConfigManager().getGameConfig().isDestroyWorldsAfterGame()) {
-            plugin.getWorldManager().destroyGameWorlds();
-        }
-
-        // Broadcast game end
-        MessageUtil.broadcastTitle("&c&lGAME OVER", "&eThank you for playing!", 10, 70, 20);
-    }
-
-    @EventHandler
-    public void onMiniGameStart(MiniGameStartEvent event) {
-        // Mini-game lifecycle is handled by MiniGameListener.
-    }
-
-    @EventHandler
-    public void onMiniGameEnd(MiniGameEndEvent event) {
-        // Mini-game lifecycle is handled by MiniGameListener.
-    }
-
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!isRightClickWithMainHand(event)) {
+            return;
+        }
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
-
-        // Check if game is running
-        if (!plugin.getGameManager().isGameRunning()) {
+        if (item == null || !plugin.getGameManager().isGameRunning()
+                || !plugin.getGameManager().isPlayerAlive(player.getUniqueId())) {
             return;
         }
-
-        // Check if player is alive
-        if (!plugin.getGameManager().isPlayerAlive(player.getUniqueId())) {
-            return;
-        }
-
-        // Check if item is null
-        if (item == null) {
-            return;
-        }
-
-        // Check if item has meta
         ItemMeta meta = item.getItemMeta();
         if (meta == null) {
             return;
         }
 
-        // Check for special items
         PersistentDataContainer container = meta.getPersistentDataContainer();
-
-        // Check for role items
-        if (container.has(
-                plugin.getNamespacedKey("role_item"),
-                PersistentDataType.STRING)) {
-            // Handle role item
-            String roleId = container.get(
-                    plugin.getNamespacedKey("role_item"),
-                    PersistentDataType.STRING);
-
-            // Forward to role handler
-            NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
-            if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
-                // Check if this item is for this role
-                if (ngnlPlayer.getRole().getRoleType().name().equals(roleId)) {
-                    // Use item
-                    event.setCancelled(true);
-                    ngnlPlayer.getRole().onItemUse(item);
-                } else {
-                    // Wrong role
-                    event.setCancelled(true);
-                    MessageUtil.sendMessage(player, "&cThis item can only be used by " + roleId + "!");
-                }
-            }
+        if (container.has(plugin.getNamespacedKey("role_item"), PersistentDataType.STRING)) {
+            handleRoleItem(event, player, item, container.get(plugin.getNamespacedKey("role_item"), PersistentDataType.STRING));
+            return;
         }
-
-        // Check for special game items
-        if (container.has(
-                plugin.getNamespacedKey("special_item"),
-                PersistentDataType.STRING)) {
-            // Handle special item
-            String itemId = container.get(
-                    plugin.getNamespacedKey("special_item"),
-                    PersistentDataType.STRING);
-
-            // Forward to item handler
+        if (container.has(plugin.getNamespacedKey("special_item"), PersistentDataType.STRING)) {
             event.setCancelled(true);
-            handleSpecialItem(player, itemId, item);
+            String itemId = container.get(plugin.getNamespacedKey("special_item"), PersistentDataType.STRING);
+            plugin.getSpecialItemManager().getEffects().use(player, itemId, item);
+            return;
         }
+        blockTraditionalWeaponsInArena(event, player, item);
+    }
 
-        if (plugin.getGameManager().getGameState() == GameState.ARENA_PHASE) {
+    /**
+     * Only a right-click made with the main hand counts as "using" an item.
+     *
+     * @param event Interact event
+     * @return True for main-hand right-clicks
+     */
+    private boolean isRightClickWithMainHand(PlayerInteractEvent event) {
+        boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK;
+        return rightClick && event.getHand() == EquipmentSlot.HAND;
+    }
 
-            String arenaWorldName = plugin.getConfigManager().getGameConfig().getArenaWorldName();
-            if (player.getWorld().getName().equals(arenaWorldName)) {
-                if (item.getType() == Material.BOW ||
-                        item.getType() == Material.CROSSBOW ||
-                        item.getType().name().contains("SWORD")) {
-                    event.setCancelled(true);
-                    MessageUtil.sendMessage(player, "&cUtilisez votre Love Gun !");
-                    return;
-                }
-            }
+    /**
+     * Forward a role item to the role it belongs to (or refuse it to other players).
+     *
+     * @param event  Interact event
+     * @param player Player using the item
+     * @param item   Item used
+     * @param roleId Name of the RoleType the item belongs to
+     */
+    private void handleRoleItem(PlayerInteractEvent event, Player player, ItemStack item, String roleId) {
+        NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
+        if (ngnlPlayer == null || ngnlPlayer.getRole() == null) {
+            return;
+        }
+        event.setUseItemInHand(Event.Result.DENY);
+        event.setCancelled(true);
+        if (ngnlPlayer.getRole().getRoleType().name().equals(roleId)) {
+            ngnlPlayer.getRole().onItemUse(item);
+        } else {
+            MessageUtil.sendMessage(player, "&cCet objet ne peut être utilisé que par " + roleId + " !");
         }
     }
 
+    /**
+     * Traditional weapons are disabled in the arena: only the Love Gun and role items work.
+     *
+     * @param event  Interact event
+     * @param player Player using the item
+     * @param item   Item used
+     */
+    private void blockTraditionalWeaponsInArena(PlayerInteractEvent event, Player player, ItemStack item) {
+        if (plugin.getGameManager().getGameState() != GameState.ARENA_PHASE) {
+            return;
+        }
+        String arenaWorldName = plugin.getConfigManager().getGameConfig().getArenaWorldName();
+        boolean weapon = item.getType() == Material.BOW || item.getType() == Material.CROSSBOW
+                || item.getType().name().contains("SWORD");
+        if (player.getWorld().getName().equals(arenaWorldName) && weapon) {
+            event.setCancelled(true);
+            MessageUtil.sendMessage(player, "&cUtilisez votre Love Gun !");
+        }
+    }
+
+    /**
+     * Stephanie's Love Gun snowball hitting a player.
+     *
+     * @param event Projectile hit event
+     */
     @EventHandler
     public void onStephanieLoveGunHit(ProjectileHitEvent event) {
         Projectile projectile = event.getEntity();
@@ -273,76 +180,18 @@ public class GameListener implements Listener {
         projectile.remove();
     }
 
-    /**
-     * Handle use of special game items
-     *
-     * @param player Player using the item
-     * @param itemId Item identifier
-     * @param item ItemStack
-     */
-    private void handleSpecialItem(Player player, String itemId, ItemStack item) {
-        // Handle different special items
-        switch (itemId) {
-            case "aka_si_anse":
-                // Handle Aka Si Anse
-                useAkaSiAnse(player, item);
-                break;
-
-            case "suniaster":
-                // Handle Suniaster
-                useSuniaster(player, item);
-                break;
-
-            // Add more special items as needed
-
-            default:
-                MessageUtil.sendMessage(player, "&cUnknown special item: " + itemId);
-                break;
-        }
-    }
+    // ------------------------------------------------------------------ mining
 
     /**
-     * Use the Aka Si Anse item
+     * Block breaking rules and faction mining bonuses.
      *
-     * @param player Player using the item
-     * @param item ItemStack
+     * @param event Block break event
      */
-    private void useAkaSiAnse(Player player, ItemStack item) {
-        // TODO: Implement Aka Si Anse functionality
-        MessageUtil.sendMessage(player, "&aYou used the Aka Si Anse!");
-
-        // For now, just consume the item
-        if (item.getAmount() > 1) {
-            item.setAmount(item.getAmount() - 1);
-        } else {
-            player.getInventory().remove(item);
-        }
-    }
-
-    /**
-     * Use the Suniaster item
-     *
-     * @param player Player using the item
-     * @param item ItemStack
-     */
-    private void useSuniaster(Player player, ItemStack item) {
-        // TODO: Implement Suniaster functionality
-        MessageUtil.sendMessage(player, "&aYou used the Suniaster!");
-
-        // For now, just consume the item
-        if (item.getAmount() > 1) {
-            item.setAmount(item.getAmount() - 1);
-        } else {
-            player.getInventory().remove(item);
-        }
-    }
-
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlock();
 
-        // Check if game is running
         if (!plugin.getGameManager().isGameRunning()) {
             // Only allow ops to break blocks outside of the game
             if (!player.isOp()) {
@@ -350,183 +199,111 @@ public class GameListener implements Listener {
             }
             return;
         }
-
-        // Check if player is alive
         if (!plugin.getGameManager().isPlayerAlive(player.getUniqueId())) {
             event.setCancelled(true);
             return;
         }
-
-        // Check game state
-        GameState gameState = plugin.getGameManager().getGameState();
-
-        if (gameState == GameState.ARENA_PHASE) {
-            if (block.getType() == Material.GRASS_BLOCK) {
-                event.setCancelled(true);
-                return;
-            }
+        if (plugin.getGameManager().getGameState() == GameState.ARENA_PHASE && block.getType() == Material.GRASS_BLOCK) {
+            event.setCancelled(true);
+            return;
         }
-
-        // Handle faction-specific mining bonuses
-        NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
-        if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
-            // Check faction
-            switch (ngnlPlayer.getRole().getRoleType().getFaction()) {
-                case EX_MACHINA:
-                    // Ex-Machina get extra drops from ores
-                    if (block.getType().name().contains("ORE")) {
-                        // Increase drops by 1
-                        event.setDropItems(false);
-                        block.getDrops(player.getInventory().getItemInMainHand(), player)
-                                .forEach(drop -> {
-                                    drop.setAmount(drop.getAmount() + 1);
-                                    player.getWorld().dropItemNaturally(block.getLocation(), drop);
-                                });
-                    }
-                    break;
-
-                // Add more faction-specific bonuses as needed
-            }
-        }
+        applyFactionMiningBonus(event, player, block);
     }
 
+    /**
+     * Ex-Machina members get one extra drop from ores.
+     *
+     * @param event  Block break event
+     * @param player Miner
+     * @param block  Broken block
+     */
+    private void applyFactionMiningBonus(BlockBreakEvent event, Player player, Block block) {
+        NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
+        if (ngnlPlayer == null || ngnlPlayer.getRole() == null
+                || ngnlPlayer.getRole().getRoleType().getFaction() != be.thespattt.ngnl.player.faction.FactionType.EX_MACHINA
+                || !block.getType().name().contains("ORE")) {
+            return;
+        }
+        event.setDropItems(false);
+        block.getDrops(player.getInventory().getItemInMainHand(), player).forEach(drop -> {
+            drop.setAmount(drop.getAmount() + 1);
+            player.getWorld().dropItemNaturally(block.getLocation(), drop);
+        });
+    }
+
+    // ------------------------------------------------------------------ GUIs
+
+    /**
+     * Clicks in the mini-game selection GUI.
+     *
+     * @param event Click event
+     */
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        // Check if player
-        if (!(event.getWhoClicked() instanceof Player)) {
+        if (!(event.getWhoClicked() instanceof Player player) || !plugin.getGameManager().isGameRunning()) {
             return;
         }
-
-        Player player = (Player) event.getWhoClicked();
-
-        // Check if game is running
-        if (!plugin.getGameManager().isGameRunning()) {
-            return;
-        }
-
-        // Check if inventory has a title (custom GUI)
-        if (event.getView().getTitle() == null) {
-            return;
-        }
-
-        // Handle different GUIs
         if (event.getView().getTitle().contains("Mini-Game Selection")) {
             event.setCancelled(true);
             handleMiniGameSelectionClick(player, event.getCurrentItem());
-        } else if (event.getView().getTitle().contains("Role Info")) {
-            event.setCancelled(true);
-            // No action needed, just displaying info
         }
     }
 
     /**
-     * Handle clicks in the mini-game selection GUI
+     * Start the mini-game clicked in the selection GUI.
      *
      * @param player Player clicking
-     * @param item Clicked item
+     * @param item   Clicked item
      */
     private void handleMiniGameSelectionClick(Player player, ItemStack item) {
         if (item == null || !item.hasItemMeta()) {
             return;
         }
-
         String displayName = item.getItemMeta().getDisplayName();
-
-        // Get clicked mini-game type
-        be.thespattt.ngnl.minigame.MiniGameType selectedType = null;
-
-        for (be.thespattt.ngnl.minigame.MiniGameType type : be.thespattt.ngnl.minigame.MiniGameType.values()) {
+        MiniGameType selectedType = null;
+        for (MiniGameType type : MiniGameType.values()) {
             if (displayName.contains(type.getDisplayName())) {
                 selectedType = type;
                 break;
             }
         }
-
         if (selectedType == null) {
             return;
         }
 
-        // Get player's scheduled mini-game
         UUID opponentId = plugin.getGameManager().getGame().getScheduledMiniGameOpponent(player.getUniqueId());
-
         if (opponentId == null) {
             player.closeInventory();
             MessageUtil.sendMessage(player, "&cYou don't have a scheduled mini-game!");
             return;
         }
 
-        // Set mini-game type
         plugin.getGameManager().getGame().setScheduledMiniGameType(player.getUniqueId(), opponentId, selectedType);
-
-        // Close inventory
         player.closeInventory();
-
-        // Notify player
         MessageUtil.sendMessage(player, "&aYou selected the mini-game: &e" + selectedType.getDisplayName());
-
-        // Start mini-game
         plugin.getMiniGameManager().startScheduledMiniGame(player.getUniqueId(), opponentId);
     }
 
-    @EventHandler
-    public void onWorldLoad(WorldLoadEvent event) {
-        // Check if this is a game world
-        String worldName = event.getWorld().getName();
-
-        if (worldName.equals(plugin.getWorldManager().getMiningWorldName())) {
-            // Setup mining world
-            plugin.getWorldManager().setupMiningWorld(event.getWorld());
-        }
-    }
+    // ------------------------------------------------------------------ combat tracking
 
     /**
-     * Spawn the Aka Si Anse special item
+     * Remember who hit whom (melee and projectiles) to attribute kills.
+     *
+     * @param event Damage event
      */
-    private void spawnAkaSiAnse() {
-        // Generate a random location
-        if (plugin.getWorldManager().getMiningWorld() == null) {
-            return;
-        }
-
-        // Get a random location within the world border
-        int borderSize = (int) plugin.getWorldManager().getMiningWorld().getWorldBorder().getSize() / 2;
-        int x = (int) (Math.random() * borderSize * 2) - borderSize;
-        int z = (int) (Math.random() * borderSize * 2) - borderSize;
-
-        // Find a safe location
-        int y = plugin.getWorldManager().getMiningWorld().getHighestBlockYAt(x, z);
-
-        // Broadcast location (approximate)
-        MessageUtil.broadcast("&c&l=== SPECIAL ITEM SPAWNED ===");
-        MessageUtil.broadcast("&cThe Aka Si Anse has appeared in the world!");
-        MessageUtil.broadcast("&cLocation (approximate): X: " + (x - 50 + (int) (Math.random() * 100)) +
-                ", Z: " + (z - 50 + (int) (Math.random() * 100)));
-        MessageUtil.broadcast("&c&l=========================");
-
-        // Spawn the guardian NPC
-        // TODO: Implement guardian NPC
-
-        // For now, just log the exact location
-        MessageUtil.logInfo("Aka Si Anse spawned at: X: " + x + ", Y: " + y + ", Z: " + z);
-    }
-
     @EventHandler
     public void onDamageByPlayer(EntityDamageByEntityEvent event) {
-        if (event.getEntity() instanceof Player victim && event.getDamager() instanceof Player damager) {
+        if (!(event.getEntity() instanceof Player victim)) {
+            return;
+        }
+        Player damager = null;
+        if (event.getDamager() instanceof Player direct) {
+            damager = direct;
+        } else if (event.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player shooter) {
+            damager = shooter;
+        }
+        if (damager != null && !damager.equals(victim)) {
             plugin.getCombatTracker().setLastDamager(victim.getUniqueId(), damager.getUniqueId());
         }
     }
-
-    @EventHandler
-    public void onMiniGameRoomCombat(EntityDamageByEntityEvent event) {
-        if (!(event.getEntity() instanceof Player victim && event.getDamager() instanceof Player)) return;
-
-        Location loc = victim.getLocation();
-        World world = Bukkit.getWorld("arena_minigame");
-
-        if (world != null && loc.getWorld().equals(world) && loc.getY() >= 70 && loc.getY() <= 75) {
-            event.setCancelled(true);
-        }
-    }
-
 }
