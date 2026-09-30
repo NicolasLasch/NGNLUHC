@@ -7,17 +7,12 @@ import be.thespattt.ngnl.arena.ArenaWorldHandler;
 import be.thespattt.ngnl.event.custom.PhaseChangeEvent;
 import be.thespattt.ngnl.game.episode.EpisodeManager;
 import be.thespattt.ngnl.game.scoreboard.NGNLScoreboardManager;
-import be.thespattt.ngnl.game.scoreboard.NGNLScoreboardManager;
 import be.thespattt.ngnl.game.world.WorldManager;
 import be.thespattt.ngnl.game.world.WorldType;
 import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.role.Role;
-import be.thespattt.ngnl.role.duo.InoRole;
-import be.thespattt.ngnl.role.solo.ArtoshRole;
-import be.thespattt.ngnl.role.solo.EinzigRole;
-import be.thespattt.ngnl.role.solo.GhostRole;
-import be.thespattt.ngnl.role.solo.ThinkRole;
+import be.thespattt.ngnl.role.solo.HolouRole;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
@@ -52,7 +47,6 @@ public class NGNLGame {
     private final Map<String, MiniGameType> scheduledMiniGameTypes = new HashMap<>();
 
     private ArenaCombatManager arenaCombatManager;
-    private ArenaWorldHandler arenaWorldHandler;
     private ArenaBorderShrinkTask borderShrinkTask;
 
     /**
@@ -72,7 +66,6 @@ public class NGNLGame {
         this.scoreboardManager = new NGNLScoreboardManager(plugin);
 
         this.arenaCombatManager = new ArenaCombatManager(plugin);
-        this.arenaWorldHandler = new ArenaWorldHandler(plugin);
 
         // Load config values
         loadConfigValues();
@@ -82,10 +75,8 @@ public class NGNLGame {
      * Load configuration values
      */
     private void loadConfigValues() {
-        // Load from config
-        this.remainingPlayersForArena = plugin.getConfigManager().getGameConfig().getArenaPlayerThreshold();
-        if (plugin.getConfigManager().getGameConfig().getArenaPlayerThreshold() == 0) this.remainingPlayersForArena = 2;
-        else this.remainingPlayersForArena = plugin.getConfigManager().getGameConfig().getArenaPlayerThreshold();
+        int threshold = plugin.getConfigManager().getGameConfig().getArenaPlayerThreshold();
+        this.remainingPlayersForArena = threshold > 0 ? threshold : 2;
     }
 
     /**
@@ -96,23 +87,46 @@ public class NGNLGame {
             MessageUtil.broadcast("&cThe game is already running!");
             return;
         }
-        // Change game state
         gameState = GameState.STARTING;
-        // Initialize alive players
+        loadConfigValues();
+        resetGameData();
         initializePlayers();
 
-        // Teleport players to starting positions
+        plugin.getWorldManager().ensureMiningWorld();
+        plugin.getWorldManager().clearMiniGameWorldMobs();
         teleportPlayersToMiningWorld();
+        plugin.getSpecialItemManager().prepareGame();
+        plugin.getImanityShop().rollPrices();
+        sendResourcePackToPlayers();
 
-        // Start episode timer
         episodeManager.startEpisodeTimer();
-
-        // Update game state
         gameState = GameState.MINING_PHASE;
 
-        // Broadcast game start
         MessageUtil.broadcast("&fNo Game No Life UHC has begun!");
         MessageUtil.broadcast("&fGood luck and remember: In this world, &5games &fdecide everything!");
+    }
+
+    /**
+     * Reset everything that belongs to a single game.
+     */
+    private void resetGameData() {
+        pledgesActive = true;
+        lastMiniGameLostBy.clear();
+        scheduledMiniGames.clear();
+        scheduledMiniGameTypes.clear();
+        plugin.getMiniGameStatsTracker().clearStats();
+    }
+
+    /**
+     * Send the role card resource pack to every player so it is loaded when the roles are revealed.
+     */
+    private void sendResourcePackToPlayers() {
+        for (UUID playerId : alivePlayers) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) {
+                plugin.getRoleCardManager().sendPack(player);
+            }
+        }
     }
 
     /**
@@ -130,45 +144,7 @@ public class NGNLGame {
                 .map(NGNLPlayer::getPlayerId)
                 .toList();
 
-        // Gagnants (si pas force)
-        if (!force && alivePlayers.size() == 1) {
-            UUID winnerId = alivePlayers.get(0);
-            Player winnerPlayer = Bukkit.getPlayer(winnerId);
-            String winnerName = winnerPlayer != null ? winnerPlayer.getName() : "Unknown";
-            String winnerRole = plugin.getPlayerManager().getNGNLPlayer(winnerId).getRole().getDisplayName();
-
-            MessageUtil.broadcast("&fWinner: &e" + winnerName);
-            MessageUtil.broadcast("&7   (" + winnerRole + ")");
-
-        } else if (!force && alivePlayers.size() == 2) {
-            UUID p1 = alivePlayers.get(0);
-            UUID p2 = alivePlayers.get(1);
-
-            NGNLPlayer ngnl1 = plugin.getPlayerManager().getNGNLPlayer(p1);
-            NGNLPlayer ngnl2 = plugin.getPlayerManager().getNGNLPlayer(p2);
-            Role r1 = ngnl1.getRole();
-            Role r2 = ngnl2.getRole();
-
-            boolean areDuo = r1 != null && r1.isDuo() && p2.equals(r1.getPartnerUUID());
-            boolean areAlliance = ngnl1.hasAlliancePartner() && p2.equals(ngnl1.getAlliancePartner());
-
-            if (areDuo || areAlliance) {
-                String name1 = Bukkit.getPlayer(p1) != null ? Bukkit.getPlayer(p1).getName() : "Player1";
-                String name2 = Bukkit.getPlayer(p2) != null ? Bukkit.getPlayer(p2).getName() : "Player2";
-                String role1 = r1 != null ? r1.getDisplayName() : "Unknown";
-                String role2 = r2 != null ? r2.getDisplayName() : "Unknown";
-
-                MessageUtil.broadcast("&fWinners: &e" + name1 + "&f and &e" + name2);
-                MessageUtil.broadcast("&5   (" + role1 + " / " + role2 + ")");
-            } else {
-                MessageUtil.broadcast("&fThe game has ended in a &edraw!");
-            }
-
-        } else if (!force && alivePlayers.isEmpty()) {
-            MessageUtil.broadcast("&fThe game has ended in a &edraw!");
-        } else if (force) {
-            MessageUtil.broadcast("&fThe game has been forcefully ended by an &3administrator.");
-        }
+        announceWinners(force);
 
         // Afficher TOUS les joueurs avec leur rôle, en mettant les gagnants en vert
         MessageUtil.broadcast("&fPlayers and Roles:");
@@ -187,44 +163,134 @@ public class NGNLGame {
 
         MessageUtil.broadcast("&5&m                    ");
 
-        resetPlayers();
         gameState = GameState.ENDED;
+        resetPlayers();
         cleanup();
         gameState = GameState.WAITING;
     }
 
     /**
-     * Start the arena phase
+     * Announce the winner(s): the last player, or every member of the last allied team.
+     *
+     * @param force True if an administrator ended the game
+     */
+    private void announceWinners(boolean force) {
+        if (force) {
+            MessageUtil.broadcast("&fThe game has been forcefully ended by an &3administrator.");
+            return;
+        }
+        if (alivePlayers.isEmpty() || !areAllAliveAllied()) {
+            MessageUtil.broadcast("&fThe game has ended in a &edraw!");
+            return;
+        }
+
+        List<String> names = new ArrayList<>();
+        List<String> roles = new ArrayList<>();
+        for (UUID winnerId : alivePlayers) {
+            Player winner = Bukkit.getPlayer(winnerId);
+            NGNLPlayer data = plugin.getPlayerManager().getNGNLPlayer(winnerId);
+            names.add(winner != null ? winner.getName() : "Unknown");
+            roles.add(data != null && data.getRole() != null ? data.getRole().getDisplayName() : "No Role");
+        }
+        MessageUtil.broadcast((names.size() == 1 ? "&fWinner: &e" : "&fWinners: &e") + String.join("&f, &e", names));
+        MessageUtil.broadcast("&5   (" + String.join(" / ", roles) + ")");
+    }
+
+    /**
+     * Check whether every alive player belongs to the same team (duo partners and alliances
+     * are chained together).
+     *
+     * @return True if all alive players are linked to each other
+     */
+    private boolean areAllAliveAllied() {
+        if (alivePlayers.size() <= 1) {
+            return true;
+        }
+        Set<UUID> reached = new HashSet<>();
+        Deque<UUID> queue = new ArrayDeque<>();
+        queue.add(alivePlayers.get(0));
+        reached.add(alivePlayers.get(0));
+        while (!queue.isEmpty()) {
+            UUID current = queue.poll();
+            for (UUID other : alivePlayers) {
+                if (!reached.contains(other) && areAllies(current, other)) {
+                    reached.add(other);
+                    queue.add(other);
+                }
+            }
+        }
+        return reached.size() == alivePlayers.size();
+    }
+
+    /**
+     * Check whether two players are duo partners or alliance partners.
+     *
+     * @param first  First player
+     * @param second Second player
+     * @return True if they are on the same side
+     */
+    private boolean areAllies(UUID first, UUID second) {
+        NGNLPlayer a = plugin.getPlayerManager().getNGNLPlayer(first);
+        NGNLPlayer b = plugin.getPlayerManager().getNGNLPlayer(second);
+        if (a == null || b == null) {
+            return false;
+        }
+        boolean duo = a.getRole() != null && a.getRole().isDuo() && second.equals(a.getRole().getPartnerUUID());
+        boolean allied = (a.hasAlliancePartner() && second.equals(a.getAlliancePartner()))
+                || (b.hasAlliancePartner() && first.equals(b.getAlliancePartner()));
+        return duo || allied;
+    }
+
+    /**
+     * Start the arena phase: teleport everybody to the arena, hand out the arena equipment,
+     * activate the finale abilities and start the shrinking border.
      */
     public void startArenaPhase() {
         if (gameState != GameState.MINING_PHASE) {
             MessageUtil.logWarning("Cannot start arena phase from state: " + gameState);
             return;
         }
-
-        MessageUtil.logInfo("Starting arena phase...");
-
-        // Fire event
         PhaseChangeEvent event = new PhaseChangeEvent(GameState.MINING_PHASE, GameState.ARENA_PHASE);
         Bukkit.getPluginManager().callEvent(event);
-
         if (event.isCancelled()) {
             MessageUtil.logWarning("Arena phase start was cancelled by event");
             return;
         }
 
-        // Initialiser le monde arène
-        MessageUtil.logInfo("Initializing arena world...");
-        arenaWorldHandler.initializeArenaWorld();
+        ArenaWorldHandler arenaHandler = plugin.getWorldManager().getArenaWorldHandler();
+        if (arenaHandler.getArenaWorld() == null) {
+            arenaHandler.initializeArenaWorld();
+        }
+        if (arenaHandler.getArenaWorld() == null) {
+            MessageUtil.logError("The arena world could not be loaded: staying in the mining phase.");
+            return;
+        }
+        arenaHandler.prepareForGame();
 
-        // Nettoyer les mobs
-        arenaWorldHandler.clearHostileMobs();
-
-        // Activer le système de combat
-        MessageUtil.logInfo("Activating arena combat...");
+        gameState = GameState.ARENA_PHASE;
+        pledgesActive = false;
         arenaCombatManager.activateArenaCombat();
+        announceArenaPhase();
 
-        // Broadcast phase change
+        List<Player> fighters = collectOnlinePlayers(alivePlayers);
+        arenaHandler.teleportPlayersToArena(fighters);
+        teleportSpectatorsToArena(arenaHandler);
+
+        plugin.getFactionManager().applyBetrayalMarks();
+
+        // Finale abilities and equipment once everybody has arrived
+        plugin.getRoleManager().activateArenaPhaseAbilities();
+        Bukkit.getScheduler().runTaskLater(plugin, () -> giveArenaEquipment(fighters), 40L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> startBorderShrink(arenaHandler), 100L);
+
+        scoreboardManager.updateScoreboardsForAllPlayers();
+        MessageUtil.logInfo("Arena phase started successfully!");
+    }
+
+    /**
+     * Broadcast the start of the final phase.
+     */
+    private void announceArenaPhase() {
         MessageUtil.broadcast("&5&m═══════════════════════════════════════════════");
         MessageUtil.broadcast("&5&l            LOVE FIGHT COMMENCÉ");
         MessageUtil.broadcast("&f Les qualifications sont terminées !");
@@ -232,128 +298,127 @@ public class NGNLGame {
         MessageUtil.broadcast("&c Les armes traditionnelles sont désactivées !");
         MessageUtil.broadcast("&6 Utilisez votre Love Gun pour combattre !");
         MessageUtil.broadcast("&5&m═══════════════════════════════════════════════");
+    }
 
-        // Deactivate pledges
-        pledgesActive = false;
-
-        // Téléporter les joueurs vers l'arène
-        List<Player> alivePlayers = new ArrayList<>();
-        for (UUID playerId : this.alivePlayers) {
-            Player player = Bukkit.getPlayer(playerId);
+    /**
+     * Resolve UUIDs to the online players.
+     *
+     * @param ids UUIDs to resolve
+     * @return Online players among them
+     */
+    private List<Player> collectOnlinePlayers(Collection<UUID> ids) {
+        List<Player> players = new ArrayList<>();
+        for (UUID id : ids) {
+            Player player = Bukkit.getPlayer(id);
             if (player != null) {
-                alivePlayers.add(player);
-                MessageUtil.logInfo("Adding player to arena: " + player.getName());
+                players.add(player);
             }
         }
-
-        MessageUtil.logInfo("Teleporting " + alivePlayers.size() + " players to arena");
-        arenaWorldHandler.teleportPlayersToArena(alivePlayers);
-
-        // Donner l'équipement d'arène avec un délai
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            for (Player player : alivePlayers) {
-                if (player.isOnline()) {
-                    arenaCombatManager.giveArenaEquipment(player);
-                    MessageUtil.logInfo("Gave arena equipment to: " + player.getName());
-                }
-            }
-        }, 40L); // 2 secondes après téléportation
-
-        // Update roles for arena phase
-        plugin.getRoleManager().activateArenaPhaseAbilities();
-
-        // Démarrer la tâche de rétrécissement de bordure avec un délai
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (borderShrinkTask != null) {
-                borderShrinkTask.cancel();
-            }
-            borderShrinkTask = new ArenaBorderShrinkTask(plugin, arenaWorldHandler.getArenaWorld());
-            borderShrinkTask.runTaskTimer(plugin, 20L, 20L); // Chaque seconde
-            MessageUtil.logInfo("Started border shrink task");
-        }, 100L); // 5 secondes après téléportation
-
-        // Update game state
-        gameState = GameState.ARENA_PHASE;
-        MessageUtil.logInfo("Arena phase started successfully!");
-
-        // Update scoreboard
-        scoreboardManager.updateScoreboardsForAllPlayers();
+        return players;
     }
+
     /**
-     * Initialize players for the game
+     * Send the eliminated players (spectators) to the arena center so they can watch.
+     *
+     * @param arenaHandler Arena world handler
+     */
+    private void teleportSpectatorsToArena(ArenaWorldHandler arenaHandler) {
+        if (arenaHandler.getCenterLocation() == null) {
+            return;
+        }
+        for (Player spectator : collectOnlinePlayers(eliminatedPlayers)) {
+            spectator.teleport(arenaHandler.getCenterLocation().clone().add(0, 15, 0));
+        }
+    }
+
+    /**
+     * Give the arena weapon (Love Gun) to every fighter who is still online.
+     *
+     * @param fighters Players in the arena
+     */
+    private void giveArenaEquipment(List<Player> fighters) {
+        for (Player player : fighters) {
+            if (player.isOnline() && isPlayerAlive(player.getUniqueId())) {
+                arenaCombatManager.giveArenaEquipment(player);
+            }
+        }
+    }
+
+    /**
+     * Start the task that shrinks the arena border.
+     *
+     * @param arenaHandler Arena world handler
+     */
+    private void startBorderShrink(ArenaWorldHandler arenaHandler) {
+        if (gameState != GameState.ARENA_PHASE) {
+            return;
+        }
+        if (borderShrinkTask != null) {
+            borderShrinkTask.cancel();
+        }
+        borderShrinkTask = new ArenaBorderShrinkTask(plugin, arenaHandler.getArenaWorld());
+        borderShrinkTask.runTaskTimer(plugin, 20L, 20L);
+        MessageUtil.logInfo("Started border shrink task");
+    }
+
+    /**
+     * Initialize players for the game: full health, empty inventory, no effects.
      */
     private void initializePlayers() {
         alivePlayers.clear();
         eliminatedPlayers.clear();
 
-        // Setup all online players
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.getGameMode() == GameMode.SPECTATOR) {
                 continue;
             }
-
-            // Add to alive players
             alivePlayers.add(player.getUniqueId());
-
-            // Set up player data
-            NGNLPlayer ngnlPlayer = new NGNLPlayer(player.getUniqueId());
-            plugin.getPlayerManager().registerNGNLPlayer(ngnlPlayer);
-
-            // Set up player state
-            player.setGameMode(GameMode.SURVIVAL);
-            player.setHealth(20.0);
-            player.setFoodLevel(20);
-            player.getInventory().clear();
-            player.setLevel(0);
-            player.setExp(0);
+            plugin.getPlayerManager().registerNGNLPlayer(new NGNLPlayer(player.getUniqueId()));
+            resetPlayerState(player);
         }
     }
 
     /**
-     * Reset all players
+     * Put a player in the starting state of a game.
+     *
+     * @param player Player to reset
+     */
+    private void resetPlayerState(Player player) {
+        player.setGameMode(GameMode.SURVIVAL);
+        player.setMaxHealth(20.0);
+        player.setHealth(20.0);
+        player.setFoodLevel(20);
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+        player.setLevel(0);
+        player.setExp(0);
+        player.setAllowFlight(false);
+        player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
+    }
+
+    /**
+     * Send everybody back to the lobby in a clean state after the game.
      */
     private void resetPlayers() {
+        Location lobby = plugin.getWorldManager().getSpawnLocation(WorldType.WAITING);
         for (Player player : Bukkit.getOnlinePlayers()) {
+            resetPlayerState(player);
             player.setGameMode(GameMode.ADVENTURE);
-            player.setHealth(player.getMaxHealth());
-            player.setFoodLevel(20);
-            player.getInventory().clear();
-            player.setLevel(0);
-            player.setExp(0);
-
-            // Teleport to lobby
-            player.teleport(plugin.getWorldManager().getSpawnLocation(WorldType.WAITING));
+            if (lobby != null) {
+                player.teleport(lobby);
+            }
         }
-
-        // Clear player data
         plugin.getPlayerManager().clearAllPlayers();
     }
 
     /**
-     * Teleport players to the mining world
+     * Teleport every player to his own spawn point of the mining world.
      */
     private void teleportPlayersToMiningWorld() {
-        WorldManager worldManager = plugin.getWorldManager();
-
-        for (UUID playerId : alivePlayers) {
-            Player player = Bukkit.getPlayer(playerId);
-            if (player != null) {
-                player.teleport(worldManager.getRandomSpawnLocation(WorldType.MINING));
-            }
-        }
-    }
-
-    /**
-     * Teleport players to the arena world
-     */
-    private void teleportPlayersToArenaWorld() {
-        WorldManager worldManager = plugin.getWorldManager();
-
-        for (UUID playerId : alivePlayers) {
-            Player player = Bukkit.getPlayer(playerId);
-            if (player != null) {
-                player.teleport(worldManager.getRandomSpawnLocation(WorldType.ARENA));
-            }
+        List<Player> players = collectOnlinePlayers(alivePlayers);
+        List<Location> spawns = plugin.getWorldManager().getMiningSpawns(players.size());
+        for (int i = 0; i < players.size(); i++) {
+            players.get(i).teleport(spawns.get(i));
         }
     }
 
@@ -372,61 +437,88 @@ public class NGNLGame {
         eliminatedPlayers.add(playerId);
 
         Player player = Bukkit.getPlayer(playerId);
-        Player killerPlayer = killer != null ? Bukkit.getPlayer(killer) : null;
-
         if (player != null) {
             player.setGameMode(GameMode.SPECTATOR);
-
-            NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
-            if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
-                ngnlPlayer.getRole().onDeath(killer);
-                String roleName = ngnlPlayer.getRole().getDisplayName();
-                MessageUtil.broadcast("§c☠ §7(" + roleName + "§7) has been eliminated!");
-
-                if (ngnlPlayer.getRole().isDuo()) {
-                    UUID partnerId = ngnlPlayer.getRole().getPartnerUUID();
-                    if (partnerId != null) {
-                        NGNLPlayer partner = plugin.getPlayerManager().getNGNLPlayer(partnerId);
-                        if (partner != null && partner.getRole() != null) {
-                            partner.getRole().onPartnerDeath(playerId, killer);
-                        }
-                    }
-                }
-            }
-
-            for (Role role : plugin.getRoleManager().getAllRoles()) {
-                if (role instanceof InoRole inoRole) {
-                    inoRole.onAnyPlayerEliminated(playerId, killer);
-                }
-                if (role instanceof ThinkRole thinkRole) {
-                    thinkRole.onAnyPlayerEliminated(playerId, killer);
-                }
-                if (role instanceof ArtoshRole artoshRole) {
-                    artoshRole.onAnyPlayerEliminated(playerId, killer);
-                }
-                if (role instanceof EinzigRole einzigRole) {
-                    einzigRole.onAnyPlayerEliminated(playerId, killer);
-                }
-                if (role instanceof GhostRole ghostRole) {
-                    ghostRole.onAnyPlayerEliminated(playerId, killer);
-                }
-            }
         }
+        handleEliminatedRole(playerId, killer, player);
+
+        for (Role role : plugin.getRoleManager().getAllRoles()) {
+            role.onAnyPlayerEliminated(playerId, killer);
+        }
+        plugin.getFactionManager().onElimination(playerId, killer);
 
         MessageUtil.logInfo("Player eliminated. Alive players: " + alivePlayers.size() + "/" + remainingPlayersForArena);
-        MessageUtil.logInfo("Current game state: " + gameState);
-
-        checkArenaPhase();
-
-        checkGameEnd();
+        if (!checkGameEnd()) {
+            checkArenaPhase();
+        }
     }
 
     /**
-     * Check if arena phase should start
+     * Announce the elimination and notify the role of the eliminated player and his partner.
+     *
+     * @param playerId UUID of the eliminated player
+     * @param killer   UUID of the killer (can be null)
+     * @param player   The eliminated player if online
+     */
+    private void handleEliminatedRole(UUID playerId, UUID killer, Player player) {
+        NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
+        if (ngnlPlayer == null || ngnlPlayer.getRole() == null) {
+            return;
+        }
+        Role role = ngnlPlayer.getRole();
+        announceElimination(role, player != null ? player.getName() : "Unknown");
+        role.onDeath(killer);
+
+        if (role.isDuo() && role.getPartnerUUID() != null) {
+            NGNLPlayer partner = plugin.getPlayerManager().getNGNLPlayer(role.getPartnerUUID());
+            if (partner != null && partner.getRole() != null) {
+                partner.getRole().onPartnerDeath(playerId, killer);
+            }
+        }
+        role.cleanup();
+    }
+
+    /**
+     * Announce a death: only the ROLE of the dead player is revealed, never his name.
+     * If Holou hides the dead, only Holou sees who died and everybody else just learns that
+     * somebody was eliminated.
+     *
+     * @param role Role of the eliminated player
+     * @param name Name of the eliminated player
+     */
+    private void announceElimination(Role role, String name) {
+        HolouRole hider = findDeathHider();
+        if (hider == null) {
+            MessageUtil.broadcast("&c☠ &7Le rôle &f" + role.getDisplayName() + " &7a été éliminé !");
+            return;
+        }
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online.getUniqueId().equals(hider.getPlayerId())) {
+                MessageUtil.sendMessage(online, "&c☠ &f" + name + " &7(" + role.getDisplayName() + "&7) a été éliminé ! &8[Voile des morts]");
+            } else {
+                MessageUtil.sendMessage(online, "&c☠ &7Un joueur a été éliminé !");
+            }
+        }
+    }
+
+    /**
+     * Find an alive Holou who chose to hide the dead.
+     *
+     * @return His role, or null if nobody hides the deaths
+     */
+    private HolouRole findDeathHider() {
+        for (Role role : plugin.getRoleManager().getAllRoles()) {
+            if (role instanceof HolouRole holou && holou.hidesDeaths() && isPlayerAlive(holou.getPlayerId())) {
+                return holou;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Start the arena phase when few enough players remain.
      */
     private void checkArenaPhase() {
-        MessageUtil.logInfo("Checking arena phase: " + alivePlayers.size() + " players alive, threshold: " + remainingPlayersForArena);
-
         if (gameState == GameState.MINING_PHASE && alivePlayers.size() <= remainingPlayersForArena) {
             MessageUtil.logInfo("Arena phase triggered!");
             startArenaPhase();
@@ -434,53 +526,40 @@ public class NGNLGame {
     }
 
     /**
-     * Check if the game should end
+     * End the game when one player (or one allied team) remains.
+     *
+     * @return True if the game ended
      */
-    private void checkGameEnd() {
-        if (alivePlayers.size() <= 1) {
+    private boolean checkGameEnd() {
+        if (alivePlayers.size() <= 1 || (alivePlayers.size() > 1 && areAllAliveAllied())) {
             endGame(false);
-            return;
+            return true;
         }
-
-        if (alivePlayers.size() == 2) {
-            UUID p1 = alivePlayers.get(0);
-            UUID p2 = alivePlayers.get(1);
-
-            NGNLPlayer ngnl1 = plugin.getPlayerManager().getNGNLPlayer(p1);
-            NGNLPlayer ngnl2 = plugin.getPlayerManager().getNGNLPlayer(p2);
-
-            if (ngnl1 != null && ngnl2 != null) {
-                Role r1 = ngnl1.getRole();
-                Role r2 = ngnl2.getRole();
-
-                boolean areDuo = r1 != null && r1.isDuo() && p2.equals(r1.getPartnerUUID());
-                boolean areAlliance = ngnl1.hasAlliancePartner() && p2.equals(ngnl1.getAlliancePartner());
-
-                if (areDuo || areAlliance) {
-                    endGame(false);
-                }
-            }
-        }
+        return false;
     }
 
     /**
-     * Clean up resources
+     * Clean up all the resources of the finished game.
      */
     private void cleanup() {
-        // Cleanup existant
         episodeManager.stopEpisodeTimer();
 
-        // Nouveau nettoyage arena
         if (borderShrinkTask != null) {
             borderShrinkTask.cancel();
             borderShrinkTask = null;
-            MessageUtil.logInfo("Cancelled border shrink task");
         }
-
         if (arenaCombatManager != null) {
             arenaCombatManager.deactivateArenaCombat();
-            MessageUtil.logInfo("Deactivated arena combat");
         }
+
+        plugin.getRoleManager().clearRoles();
+        plugin.getCloneManager().cleanup();
+        plugin.getDisguiseService().restoreAll();
+        plugin.getSpecialItemManager().cleanup();
+        plugin.getMiniGameStatsTracker().clearStats();
+        plugin.getWorldManager().cleanup();
+        alivePlayers.clear();
+        eliminatedPlayers.clear();
     }
 
     public void forceArenaPhaseForTesting() {
@@ -549,8 +628,21 @@ public class NGNLGame {
             player.teleport(location);
         }
 
+        reactivateRoleAfterRevive(playerId);
         MessageUtil.broadcast("&a" + player.getName() + " has been revived!");
         return true;
+    }
+
+    /**
+     * A revived player lost the tasks of his role when he died: restart the finale abilities.
+     *
+     * @param playerId UUID of the revived player
+     */
+    private void reactivateRoleAfterRevive(UUID playerId) {
+        NGNLPlayer data = plugin.getPlayerManager().getNGNLPlayer(playerId);
+        if (gameState == GameState.ARENA_PHASE && data != null && data.getRole() != null) {
+            data.getRole().onArenaPhaseStart();
+        }
     }
 
     /**

@@ -544,6 +544,26 @@ public class FloorIsLavaMiniGame extends MiniGameBase implements Listener {
         }
     }
 
+    /**
+     * Lava, fire and falls never hurt the players: lava only eliminates them by position.
+     *
+     * @param event Damage event
+     */
+    @EventHandler
+    public void onEnvironmentalDamage(org.bukkit.event.entity.EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Player player) || !isParticipant(player)) {
+            return;
+        }
+        switch (event.getCause()) {
+            case LAVA, FIRE, FIRE_TICK, HOT_FLOOR, FALL -> {
+                event.setCancelled(true);
+                player.setFireTicks(0);
+            }
+            default -> {
+            }
+        }
+    }
+
     private boolean isParticipant(Player player) {
         return player.getUniqueId().equals(player1UUID) || player.getUniqueId().equals(player2UUID);
     }
@@ -612,5 +632,6 @@ public class FloorIsLavaMiniGame extends MiniGameBase implements Listener {
         super.endGame(winnerUUID);
 
         PlayerMoveEvent.getHandlerList().unregister(this);
+        org.bukkit.event.entity.EntityDamageEvent.getHandlerList().unregister(this);
     }
 }

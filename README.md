@@ -42,7 +42,7 @@ The plugin features a massive suite of 14 custom mini-games. Players' roles ofte
 
 ## 🎭 Factions & Characters (Roles)
 
-Players are assigned roles tied to specific factions (Imanity, Flugel, Werebeasts, Ex-Machina, Elves, Old Deus, or Other). Roles dictate your win conditions, mini-game modifiers, and Arena Phase abilities.
+Players are assigned roles tied to specific factions (Imanity, Flugel, Werebeasts, Ex-Machina, Elves, Old Deus, or Other). Roles are revealed in a popup **role card** (see below); reopen it any time with `/role`. Roles dictate your win conditions, mini-game modifiers, and Arena Phase abilities.
 
 ### 👯 Duo Roles
 
@@ -77,6 +77,49 @@ These roles win alone or by forming alliances via the `/alliance` command.
 
 ## ⚙️ Core Systems
 
-* **Advanced Clone Manager:** Powered by `NPCLib` and `ArmorStands`, this system creates highly accurate, moving clones of players to act as decoys for abilities (like Shiro/Sora's crowns and Izuna's abilities).
+* **Clone Manager:** dependency-free decoys (armor stands wearing the player's head and armor) that wander around their owner. Used by the Sora/Shiro/Izuna crowns and by Fiel's illusion (one decoy placed where she looks, swappable once per game). Hitting a clone makes it vanish.
 * **Dynamic Scoreboard:** A smart, rotating scoreboard displays the current Game State, Episode, Timer, Border Size, and the player's Role/Faction/Alliance. It also periodically cycles to show a list of all currently active roles in the match.
 * **Config GUIManager:** A fully loaded config system allows server admins to tweak Episode lengths, Border sizes, Mini-Game damage values, and toggle specific roles/mini-games directly from configuration files.
+
+## 🃏 Role cards & resource pack
+
+When roles are revealed, every player gets a popup card (picture + explanation, two pages: front and powers).
+Close it with ESC and reopen it with `/role`.
+
+* The pictures come from a resource pack: the card is cut in 2x2 tiles of 256 px and drawn by the inventory title through a custom font (no mod, no shader).
+* The pack is bundled in the jar (`resourcepack/NGNL-ResourcePack.zip`). Configure how players get it in `config.yml` (`resourcepack`): either your own URL (+ `sha1`), or `self-host.enabled: true` to let the plugin serve it (open the TCP port and set `public-host`).
+* Players without the pack get a plain text card.
+* **Regenerate / customise**: `pip install pillow && python3 tools/generate_resourcepack.py`. Drop portraits named after the role (`tools/portraits/SORA.png`, `SHIRO.png`...) to replace the generated placeholder pictures, edit the texts in `tools/cards_data.py`, use `--size 1024` for sharper cards.
+
+## 🌍 Worlds
+
+| World | Purpose |
+| --- | --- |
+| `ngnl_waiting` | Lobby (a quartz platform is generated automatically) |
+| `ngnl_mining` | Qualification world, border = `world.mining_world_border_size`; deleted and regenerated after each game when `destroy_worlds_after_game` is true (optional fixed `world.generation.mining_seed`) |
+| `ngnl_minigame` | Void world hosting the mini-game rooms |
+| `ngnl_arena_city` | Final "Love Fight" arena. Put your own map in this folder; otherwise a city of towers is generated on the first start |
+
+## 🧿 Special items
+
+* **Aka Si Anse**: hidden in a dungeon guarded by **Nina Clive** (fragile but powerful; she cannot kill: a lethal hit teleports you away with 5 hearts). Approximate coordinates are announced between 50 and 80 minutes (`game.aka_si_anse_appear_time` ± ). Right-click opens a target menu (one use). Think Nirvalen knows the exact position.
+* **Suniaster**: on a cloud near the spawn. The first Old Deus to take it gets 15 hearts; Old Deus know the exact coordinates.
+* **Blood Destruction Bomb, Elf Runes, Imanity Crown, Ex-Machina Core, Old Deus Fragment**: sold in the Imanity shop (`/shop`, random prices in emeralds/gold drawn every game).
+
+## 🏷️ Faction advantages
+
+| Faction | Advantage |
+| --- | --- |
+| Imanity | `/shop` (special items for emeralds/gold, random prices) |
+| Flügel | A hidden library (enchanting table + bookshelves) usable once per game by Flügel only; its coordinates are given to them at the reveal |
+| Werebeasts | An anonymous arrow in the action bar shows the closest player within 40 blocks |
+| Ex-Machina | +1 drop from ores |
+| Elves | +1 level on the enchantments they get |
+| Old Deus | 30% less damage from mobs and the environment |
+| Other | Defined by the role |
+
+Members of the same faction within 15 blocks also get a small buff (Speed, Jump Boost, Night Vision, Haste, Luck or Resistance depending on the faction). Killing a member of your own faction before the arena marks you as a **traitor**: you glow during the finale. (`factions.*` options in the config.)
+
+## ⚙️ Building
+
+`./gradlew build` (copies the jar to `server/plugins`). Targets Purpur/Paper 1.21.4. No external plugin is required.

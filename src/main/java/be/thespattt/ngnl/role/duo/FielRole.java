@@ -1,29 +1,45 @@
 package be.thespattt.ngnl.role.duo;
 
 import be.thespattt.ngnl.NoGameNoLife;
-import be.thespattt.ngnl.minigame.MiniGameType;
-import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.role.RoleType;
-import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
+
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Fiel: creates illusions (a decoy clone of herself, once per episode, that she can swap places
+ * with once per game) and, in the finale, disguises as another player for 30 seconds.
+ */
 public class FielRole extends DuoRole {
 
+    /** Lifetime of an illusion in seconds. */
+    private static final int ILLUSION_SECONDS = 120;
+    /** Maximum distance (blocks) at which the illusion can be placed. */
+    private static final int ILLUSION_RANGE = 30;
+    /** Cooldown of the disguise in seconds. */
     private static final int DISGUISE_COOLDOWN = 15 * 60;
-    private int lastIllusionEpisode = -1;
-    private int lastShardEpisode = -1;
-    private long lastDisguiseUse = 0L;
+    /** Duration of the disguise in seconds. */
+    private static final int DISGUISE_SECONDS = 30;
 
+    private int lastIllusionEpisode = -1;
+    private boolean swapUsed = false;
+
+    /**
+     * Constructor
+     *
+     * @param plugin   Plugin instance
+     * @param playerId UUID of the player
+     * @param roleType Role type (FIEL)
+     */
     public FielRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
@@ -31,54 +47,30 @@ public class FielRole extends DuoRole {
     @Override
     protected void onRoleSetup() {
         Player player = getPlayer();
-        Player partner = getPartnerPlayer();
-        if (player != null && partner != null) {
-            MessageUtil.sendMessage(player, "&eChlammy is: &a" + partner.getName());
-            giveMindItem(player);
-        }
-    }
-
-    @Override
-    public void onMiniGameStart(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        Player player = getPlayer();
         if (player == null) {
             return;
         }
-
-        int episode = plugin.getGameManager().getGame().getEpisodeManager().getCurrentEpisode();
-        if (lastIllusionEpisode < episode) {
-            lastIllusionEpisode = episode;
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 0, false, false));
-            MessageUtil.sendMessage(player, "&dYour once-per-episode illusion gives you Speed I for this start.");
+        Player chlammy = getPartnerPlayer();
+        if (chlammy != null) {
+            MessageUtil.sendMessage(player, "&eChlammy est : &a" + chlammy.getName());
         }
+        trackPartnerWithArrow("Chlammy");
+        giveItem(player, buildRoleItem(Material.AMETHYST_SHARD, "&d&lÉclat d'illusion",
+                "&7Clic droit : place une illusion de toi là où tu regardes", "&7(une fois par épisode).",
+                "&7Clic droit en étant accroupi : échange ta place avec elle", "&7(une fois par partie)."));
     }
 
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-        lastDisguiseUse = 0L;
+        resetCooldown("disguise");
     }
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        giveMindItem(player);
-        ItemStack mask = new ItemBuilder(Material.CARVED_PUMPKIN)
-                .name("&d&lIllusion Mask")
-                .lore("&730 seconds of disguise-like stealth.", "&cCooldown: 15 minutes")
-                .glow(true)
-                .setTag("role_item", "FIEL")
-                .build();
-        player.getInventory().addItem(mask);
-    }
-
-    private void giveMindItem(Player player) {
-        ItemStack item = new ItemBuilder(Material.AMETHYST_SHARD)
-                .name("&d&lIllusion Shard")
-                .lore("&7Once per episode, disturb nearby players.", "&7Applies Blindness and confusion.")
-                .glow(true)
-                .setTag("role_item", "FIEL")
-                .build();
-        player.getInventory().addItem(item);
+        giveItem(player, buildRoleItem(Material.CARVED_PUMPKIN, "&d&lMasque d'illusion",
+                "&7Clic droit : choisis un joueur dont tu prends l'apparence", "&7pendant 30 secondes.", "",
+                "&cRecharge : 15 minutes"));
     }
 
     @Override
@@ -86,62 +78,130 @@ public class FielRole extends DuoRole {
         if (item == null) {
             return false;
         }
-
-        if (item.getType() == Material.CARVED_PUMPKIN) {
-            return useDisguise();
-        }
         if (item.getType() == Material.AMETHYST_SHARD) {
             return useIllusionShard();
+        }
+        if (item.getType() == Material.CARVED_PUMPKIN) {
+            return useDisguise();
         }
         return false;
     }
 
+    // ------------------------------------------------------------------ mining phase: illusion
+
+    /**
+     * Place an illusion (or swap with it when sneaking).
+     *
+     * @return True if something happened
+     */
     private boolean useIllusionShard() {
         Player player = getPlayer();
         if (player == null) {
             return false;
         }
+        return player.isSneaking() ? swapWithIllusion(player) : placeIllusion(player);
+    }
 
+    /**
+     * Place a decoy clone where the player looks (once per episode).
+     *
+     * @param player Fiel
+     * @return True if the illusion was placed
+     */
+    private boolean placeIllusion(Player player) {
         int episode = plugin.getGameManager().getGame().getEpisodeManager().getCurrentEpisode();
-        if (lastShardEpisode == episode) {
-            MessageUtil.sendMessage(player, "&cYou already used your illusion this episode.");
+        if (lastIllusionEpisode == episode) {
+            MessageUtil.sendMessage(player, "&cTu as déjà créé ton illusion pendant cet épisode.");
             return false;
         }
 
-        for (Player nearby : Bukkit.getOnlinePlayers()) {
-            if (nearby.getUniqueId().equals(playerId) || !plugin.getGameManager().isPlayerAlive(nearby.getUniqueId())) {
-                continue;
-            }
-            if (!nearby.getWorld().equals(player.getWorld()) || nearby.getLocation().distance(player.getLocation()) > 12.0) {
-                continue;
-            }
-            nearby.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 4 * 20, 0, false, false));
-            nearby.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 4 * 20, 0, false, false));
-            MessageUtil.sendMessage(nearby, "&5An illusion disturbs your senses.");
+        Block target = player.getTargetBlockExact(ILLUSION_RANGE);
+        Location spot = target != null ? target.getLocation().add(0.5, 1, 0.5) : player.getLocation();
+        spot.setYaw(player.getLocation().getYaw());
+        if (plugin.getCloneManager().placeDecoy(player, spot, ILLUSION_SECONDS) == null) {
+            MessageUtil.sendMessage(player, "&cImpossible de créer l'illusion.");
+            return false;
         }
 
-        lastShardEpisode = episode;
-        MessageUtil.sendMessage(player, "&aYour illusion shard affected nearby players.");
+        lastIllusionEpisode = episode;
+        MessageUtil.sendMessage(player, "&aIllusion créée ! Clic droit accroupi pour échanger ta place avec elle (une fois par partie).");
         return true;
     }
 
+    /**
+     * Swap places with the illusion (once per game).
+     *
+     * @param player Fiel
+     * @return True if the swap happened
+     */
+    private boolean swapWithIllusion(Player player) {
+        if (swapUsed) {
+            MessageUtil.sendMessage(player, "&cTu as déjà échangé ta place avec une illusion.");
+            return false;
+        }
+        if (!plugin.getCloneManager().swapWithDecoy(player)) {
+            MessageUtil.sendMessage(player, "&cTu n'as pas d'illusion active.");
+            return false;
+        }
+        swapUsed = true;
+        MessageUtil.sendMessage(player, "&aTu as échangé ta place avec ton illusion !");
+        return true;
+    }
+
+    // ------------------------------------------------------------------ finale: disguise
+
+    /**
+     * Ask which player to imitate, then disguise Fiel as him.
+     *
+     * @return True if the picker was opened
+     */
     private boolean useDisguise() {
         Player player = getPlayer();
         if (player == null || !isArenaPhaseActive()) {
             return false;
         }
-
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastDisguiseUse < DISGUISE_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cCooldown: " + formatTime(DISGUISE_COOLDOWN - (now - lastDisguiseUse)));
-            return false;
-        }
-
-        lastDisguiseUse = now;
-        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 30 * 20, 0, false, false));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30 * 20, 0, false, false));
-        MessageUtil.sendMessage(player, "&aYou veil yourself for 30 seconds.");
+        plugin.getPlayerPicker().open(player, "Masque d'illusion - qui imiter ?",
+                plugin.getPlayerPicker().aliveCandidates(player), this::disguiseAs);
         return true;
+    }
+
+    /**
+     * Disguise as the chosen player for 30 seconds.
+     *
+     * @param targetId UUID of the player to imitate
+     */
+    private void disguiseAs(UUID targetId) {
+        Player player = getPlayer();
+        Player target = Bukkit.getPlayer(targetId);
+        if (player == null || target == null || !tryUseCooldown("disguise", DISGUISE_COOLDOWN)) {
+            return;
+        }
+        if (!plugin.getDisguiseService().disguise(player, target)) {
+            resetCooldown("disguise");
+            MessageUtil.sendMessage(player, "&cLe déguisement a échoué.");
+            return;
+        }
+        MessageUtil.sendMessage(player, "&aTu ressembles à " + target.getName() + " pendant " + DISGUISE_SECONDS + " secondes.");
+        runLater(() -> endDisguise(player), DISGUISE_SECONDS * 20L);
+    }
+
+    /**
+     * End the disguise.
+     *
+     * @param player Fiel
+     */
+    private void endDisguise(Player player) {
+        plugin.getDisguiseService().restore(player);
+        MessageUtil.sendMessage(player, "&eTon déguisement prend fin.");
+    }
+
+    @Override
+    public void cleanup() {
+        super.cleanup();
+        Player player = getPlayer();
+        if (player != null) {
+            plugin.getDisguiseService().restore(player);
+        }
     }
 
     @Override
@@ -149,25 +209,21 @@ public class FielRole extends DuoRole {
         return Arrays.asList(
                 "You are Fiel.",
                 "Your goal is to win with Chlammy.",
-                "You know Chlammy's identity from the start.",
-                "Once per episode, your illusion shard disrupts nearby players."
+                "You know Chlammy's identity and position from the start.",
+                "Once per episode you can create an illusion of yourself where you look,",
+                "and once per game you can swap places with it."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "You receive an Illusion Mask in finale.",
-                "It grants 30 seconds of stealth every 15 minutes."
+                "You can disguise as another player for 30 seconds (every 15 minutes)."
         );
     }
 
     @Override
     public String getObjective() {
         return "Win the game with Chlammy.";
-    }
-
-    private String formatTime(long seconds) {
-        return String.format("%d:%02d", seconds / 60, seconds % 60);
     }
 }

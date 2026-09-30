@@ -2,8 +2,8 @@ package be.thespattt.ngnl.role.duo;
 
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.role.RoleType;
-import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -16,12 +16,28 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Chlammy: reads the inventory of a player once per episode and, in the finale, anticipates the
+ * movements of a nearby opponent (Slowness for 20 seconds).
+ */
 public class ChlammyRole extends DuoRole {
 
-    private static final int SLOW_COOLDOWN = 15 * 60;
-    private long lastSlowUse = 0L;
+    /** Cooldown of the Prediction Orb in seconds. */
+    private static final int PREDICTION_COOLDOWN = 15 * 60;
+    /** Duration of the Slowness effect in seconds. */
+    private static final int SLOWNESS_SECONDS = 20;
+    /** Range (blocks) in which an opponent can be predicted. */
+    private static final double PREDICTION_RANGE = 30.0;
+
     private int lastReadEpisode = -1;
 
+    /**
+     * Constructor
+     *
+     * @param plugin   Plugin instance
+     * @param playerId UUID of the player
+     * @param roleType Role type (CHLAMMY)
+     */
     public ChlammyRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
@@ -29,42 +45,29 @@ public class ChlammyRole extends DuoRole {
     @Override
     protected void onRoleSetup() {
         Player player = getPlayer();
-        Player partner = getPartnerPlayer();
-        if (player != null && partner != null) {
-            MessageUtil.sendMessage(player, "&eFiel is: &a" + partner.getName());
-            giveMindEye(player);
+        if (player == null) {
+            return;
         }
+        Player fiel = getPartnerPlayer();
+        if (fiel != null) {
+            MessageUtil.sendMessage(player, "&eFiel est : &a" + fiel.getName());
+        }
+        trackPartnerWithArrow("Fiel");
+        giveItem(player, buildRoleItem(Material.BOOK, "&b&lLecture d'esprit",
+                "&7Clic droit : choisis un joueur et découvre son inventaire", "&7(une fois par épisode)."));
     }
 
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-        lastSlowUse = 0L;
-        Player player = getPlayer();
-        if (player != null) {
-            giveMindEye(player);
-        }
+        resetCooldown("prediction");
     }
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        ItemStack orb = new ItemBuilder(Material.ENDER_PEARL)
-                .name("&b&lPrediction Orb")
-                .lore("&7Slows a nearby enemy for 20 seconds.", "&cCooldown: 15 minutes")
-                .glow(true)
-                .setTag("role_item", "CHLAMMY")
-                .build();
-        player.getInventory().addItem(orb);
-    }
-
-    private void giveMindEye(Player player) {
-        ItemStack eye = new ItemBuilder(Material.BOOK)
-                .name("&b&lMind Reading")
-                .lore("&7Once per episode, reveal the inventory", "&7of the nearest player.")
-                .glow(true)
-                .setTag("role_item", "CHLAMMY")
-                .build();
-        player.getInventory().addItem(eye);
+        giveItem(player, buildRoleItem(Material.ENDER_PEARL, "&b&lOrbe de prédiction",
+                "&7Ralentit un adversaire proche pendant 20 secondes.", "",
+                "&eClic droit pour activer", "&cRecharge : 15 minutes"));
     }
 
     @Override
@@ -73,7 +76,7 @@ public class ChlammyRole extends DuoRole {
             return false;
         }
         if (item.getType() == Material.BOOK) {
-            return useMindRead();
+            return openMindReadingPicker();
         }
         if (item.getType() == Material.ENDER_PEARL) {
             return usePrediction();
@@ -81,79 +84,86 @@ public class ChlammyRole extends DuoRole {
         return false;
     }
 
-    private boolean useMindRead() {
+    // ------------------------------------------------------------------ mind reading
+
+    /**
+     * Ask which player's mind to read (once per episode).
+     *
+     * @return True if the picker was opened
+     */
+    private boolean openMindReadingPicker() {
         Player player = getPlayer();
         if (player == null) {
             return false;
         }
-
         int episode = plugin.getGameManager().getGame().getEpisodeManager().getCurrentEpisode();
         if (lastReadEpisode == episode) {
-            MessageUtil.sendMessage(player, "&cYou already used mind reading this episode.");
+            MessageUtil.sendMessage(player, "&cTu as déjà lu un esprit pendant cet épisode.");
             return false;
         }
-
-        Player target = getNearestValidPlayer(player, 12.0);
-        if (target == null) {
-            MessageUtil.sendMessage(player, "&cNo valid target nearby.");
-            return false;
-        }
-
-        lastReadEpisode = episode;
-        MessageUtil.sendMessage(player, "&bInventory of " + target.getName() + ":");
-        for (ItemStack stack : target.getInventory().getContents()) {
-            if (stack == null || stack.getType() == Material.AIR) {
-                continue;
-            }
-            ItemMeta meta = stack.getItemMeta();
-            String name = meta != null && meta.hasDisplayName() ? meta.getDisplayName() : stack.getType().name();
-            MessageUtil.sendMessage(player, "&7- &f" + name + " &7x" + stack.getAmount());
-        }
+        plugin.getPlayerPicker().open(player, "Lecture d'esprit - qui lire ?",
+                plugin.getPlayerPicker().aliveCandidates(player), this::readMind);
         return true;
     }
 
+    /**
+     * Show the inventory of the chosen player.
+     *
+     * @param targetId UUID of the chosen player
+     */
+    private void readMind(UUID targetId) {
+        Player player = getPlayer();
+        Player target = Bukkit.getPlayer(targetId);
+        if (player == null || target == null) {
+            return;
+        }
+        lastReadEpisode = plugin.getGameManager().getGame().getEpisodeManager().getCurrentEpisode();
+        MessageUtil.sendMessage(player, "&bInventaire de " + target.getName() + " :");
+        for (ItemStack stack : target.getInventory().getContents()) {
+            if (stack != null && stack.getType() != Material.AIR) {
+                MessageUtil.sendMessage(player, "&7- &f" + describeStack(stack));
+            }
+        }
+    }
+
+    /**
+     * Describe an item stack for the inventory report.
+     *
+     * @param stack Item stack
+     * @return "Name xAmount"
+     */
+    private String describeStack(ItemStack stack) {
+        ItemMeta meta = stack.getItemMeta();
+        String name = meta != null && meta.hasDisplayName() ? meta.getDisplayName() : stack.getType().name();
+        return name + " &7x" + stack.getAmount();
+    }
+
+    // ------------------------------------------------------------------ prediction
+
+    /**
+     * Slow the nearest opponent for 20 seconds.
+     *
+     * @return True if the orb was used
+     */
     private boolean usePrediction() {
         Player player = getPlayer();
         if (player == null || !isArenaPhaseActive()) {
             return false;
         }
-
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastSlowUse < SLOW_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cCooldown: " + formatTime(SLOW_COOLDOWN - (now - lastSlowUse)));
-            return false;
-        }
-
-        Player target = getNearestValidPlayer(player, 18.0);
+        Player target = nearestEnemy(PREDICTION_RANGE);
         if (target == null) {
-            MessageUtil.sendMessage(player, "&cNo target nearby.");
+            MessageUtil.sendMessage(player, "&cAucun adversaire à portée.");
             return false;
         }
-
-        lastSlowUse = now;
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 20, 1, false, false));
-        MessageUtil.sendMessage(player, "&aYou predicted " + target.getName() + "'s movement.");
-        MessageUtil.sendMessage(target, "&cChlammy anticipated your movements.");
-        return true;
-    }
-
-    private Player getNearestValidPlayer(Player player, double range) {
-        Player result = null;
-        double best = Double.MAX_VALUE;
-        for (Player other : Bukkit.getOnlinePlayers()) {
-            if (other.getUniqueId().equals(playerId) || other.getUniqueId().equals(getPartnerUUID())) {
-                continue;
-            }
-            if (!plugin.getGameManager().isPlayerAlive(other.getUniqueId()) || !other.getWorld().equals(player.getWorld())) {
-                continue;
-            }
-            double distance = other.getLocation().distance(player.getLocation());
-            if (distance <= range && distance < best) {
-                best = distance;
-                result = other;
-            }
+        if (!tryUseCooldown("prediction", PREDICTION_COOLDOWN)) {
+            return false;
         }
-        return result;
+        PotionEffect slowness = new PotionEffect(PotionEffectType.SLOWNESS, SLOWNESS_SECONDS * 20, 1, false, false);
+        target.addPotionEffect(slowness);
+        plugin.getSpecialItemManager().getEffects().recordAbilityUsedAgainst(target, "Orbe de prédiction", slowness);
+        MessageUtil.sendMessage(player, "&aTu as anticipé les mouvements de " + target.getName() + ".");
+        MessageUtil.sendMessage(target, "&cChlammy a anticipé tes mouvements.");
+        return true;
     }
 
     @Override
@@ -161,25 +171,21 @@ public class ChlammyRole extends DuoRole {
         return Arrays.asList(
                 "You are Chlammy.",
                 "Your goal is to win with Fiel.",
-                "You know Fiel's identity from the start.",
-                "Once per episode, you can inspect the inventory of a nearby player."
+                "You know Fiel's identity and position from the start.",
+                "Once per episode you can read another player's mind to see his inventory."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "You receive the Prediction Orb in finale.",
-                "It inflicts Slowness on a nearby enemy for 20 seconds every 15 minutes."
+                "Prediction Orb: anticipate an opponent's movements, Slowness for 20 seconds",
+                "(every 15 minutes)."
         );
     }
 
     @Override
     public String getObjective() {
         return "Win the game with Fiel.";
-    }
-
-    private String formatTime(long seconds) {
-        return String.format("%d:%02d", seconds / 60, seconds % 60);
     }
 }

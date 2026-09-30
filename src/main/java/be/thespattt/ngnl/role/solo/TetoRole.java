@@ -2,10 +2,11 @@ package be.thespattt.ngnl.role.solo;
 
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.player.NGNLPlayer;
+import be.thespattt.ngnl.role.CombatRestrictions;
 import be.thespattt.ngnl.role.Role;
 import be.thespattt.ngnl.role.RoleType;
-import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -13,18 +14,37 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class TetoRole extends Role {
+/**
+ * Teto: learns the role of one player of his choice at the start, always controls the mini-game
+ * selection, and in the finale owns the King's Piece (10 s of invincibility) and Royal Recall
+ * (revives any eliminated player as an ally).
+ */
+public class TetoRole extends Role implements CombatRestrictions {
 
+    /** Cooldown of the King's Piece in seconds. */
     private static final int KING_COOLDOWN = 10 * 60;
-    private long lastKingUse = 0L;
+    /** Invincibility duration in seconds. */
+    private static final int KING_SECONDS = 10;
+    /** Health (HP) paid to activate the King's Piece (2 hearts). */
+    private static final double KING_HEALTH_COST = 4.0;
+    /** Health (HP) of a player revived by Royal Recall. */
+    private static final double REVIVE_HEALTH = 10.0;
+
     private long attackLockUntil = 0L;
+    private boolean knowledgeUsed = false;
     private boolean reviveUsed = false;
 
+    /**
+     * Constructor
+     *
+     * @param plugin   Plugin instance
+     * @param playerId UUID of the player
+     * @param roleType Role type (TETO)
+     */
     public TetoRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
@@ -35,36 +55,61 @@ public class TetoRole extends Role {
         if (player == null) {
             return;
         }
-        List<Player> others = new ArrayList<>(Bukkit.getOnlinePlayers());
-        others.removeIf(other -> other.getUniqueId().equals(playerId));
-        if (!others.isEmpty()) {
-            Player target = others.get(0);
-            var ngnlTarget = plugin.getPlayerManager().getNGNLPlayer(target.getUniqueId());
-            if (ngnlTarget != null && ngnlTarget.getRole() != null) {
-                MessageUtil.sendMessage(player, "&eYou learned the role of &a" + target.getName() + "&e: &f" + ngnlTarget.getRole().getDisplayName());
-            }
-        }
+        giveItem(player, buildRoleItem(Material.ENDER_EYE, "&6&lŒil de Teto",
+                "&7Clic droit : choisis un joueur dont tu découvres le rôle", "&7(une seule fois)."));
+        openKnowledgePicker();
     }
 
+    /**
+     * Let Teto choose the player whose role he learns.
+     */
+    private void openKnowledgePicker() {
+        Player player = getPlayer();
+        if (player == null || knowledgeUsed) {
+            return;
+        }
+        MessageUtil.sendMessage(player, "&eChoisis le joueur dont tu veux connaître le rôle (ton Œil de Teto te permet de rouvrir ce menu).");
+        plugin.getPlayerPicker().open(player, "Œil de Teto - quel rôle connaître ?",
+                plugin.getPlayerPicker().aliveCandidates(player), this::revealRoleOf);
+    }
+
+    /**
+     * Reveal the role of the chosen player.
+     *
+     * @param targetId UUID of the chosen player
+     */
+    private void revealRoleOf(UUID targetId) {
+        Player player = getPlayer();
+        NGNLPlayer target = plugin.getPlayerManager().getNGNLPlayer(targetId);
+        if (player == null || knowledgeUsed || target == null || target.getRole() == null) {
+            return;
+        }
+        knowledgeUsed = true;
+        Player online = Bukkit.getPlayer(targetId);
+        String name = online != null ? online.getName() : targetId.toString();
+        MessageUtil.sendMessage(player, "&eTu découvres le rôle de &a" + name + "&e : &f" + target.getRole().getDisplayName());
+    }
+
+    /**
+     * Teto always chooses the mini-game, whether he won the PvP or not.
+     *
+     * @return Always true
+     */
     public boolean canChooseMiniGame() {
         return true;
     }
 
+    // ------------------------------------------------------------------ finale items
+
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        ItemStack king = new ItemBuilder(Material.NETHER_STAR)
-                .name("&6&lKing's Piece")
-                .lore("&710 seconds of invincibility.", "&cCosts 2 hearts and reveals you.")
-                .glow(true)
-                .setTag("role_item", "TETO")
-                .build();
-        ItemStack revive = new ItemBuilder(Material.TOTEM_OF_UNDYING)
-                .name("&e&lRoyal Recall")
-                .lore("&7Revive one eliminated player as your ally.")
-                .glow(true)
-                .setTag("role_item", "TETO")
-                .build();
-        player.getInventory().addItem(king, revive);
+        giveItem(player, buildRoleItem(Material.NETHER_STAR, "&6&lRoi d'échec",
+                "&710 secondes d'invincibilité, mais ta position est révélée.",
+                "&7Tu ne peux pas attaquer pendant ce temps et tu perds 2 cœurs.", "",
+                "&eClic droit pour activer", "&cRecharge : 10 minutes"));
+        giveItem(player, buildRoleItem(Material.TOTEM_OF_UNDYING, "&e&lRappel royal",
+                "&7Ressuscite le joueur éliminé de ton choix : il devient ton allié.", "",
+                "&eClic droit pour activer", "&cUne seule utilisation"));
     }
 
     @Override
@@ -72,86 +117,113 @@ public class TetoRole extends Role {
         if (item == null) {
             return false;
         }
-        if (item.getType() == Material.NETHER_STAR) {
-            return useKingPiece();
+        switch (item.getType()) {
+            case ENDER_EYE:
+                openKnowledgePicker();
+                return true;
+            case NETHER_STAR:
+                return useKingPiece();
+            case TOTEM_OF_UNDYING:
+                return openRoyalRecallPicker();
+            default:
+                return false;
         }
-        if (item.getType() == Material.TOTEM_OF_UNDYING) {
-            return useRoyalRecall();
-        }
-        return false;
     }
 
+    /**
+     * Become invincible for 10 seconds at the cost of 2 hearts (kills Teto if he has too few).
+     *
+     * @return True if the King's Piece was used
+     */
     private boolean useKingPiece() {
+        Player player = getPlayer();
+        if (player == null || !isArenaPhaseActive() || !tryUseCooldown("king_piece", KING_COOLDOWN)) {
+            return false;
+        }
+        if (player.getHealth() <= KING_HEALTH_COST) {
+            MessageUtil.sendMessage(player, "&4Le Roi d'échec t'a coûté trop cher...");
+            player.setHealth(0.0);
+            return true;
+        }
+        player.setHealth(player.getHealth() - KING_HEALTH_COST);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, KING_SECONDS * 20, 10, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, KING_SECONDS * 20, 0, false, false));
+        attackLockUntil = System.currentTimeMillis() + KING_SECONDS * 1000L;
+        MessageUtil.broadcast("&6Teto révèle sa position avec le Roi d'échec : "
+                + player.getLocation().getBlockX() + ", " + player.getLocation().getBlockY() + ", " + player.getLocation().getBlockZ());
+        return true;
+    }
+
+    /**
+     * Let Teto choose which eliminated player to bring back.
+     *
+     * @return True if the picker was opened
+     */
+    private boolean openRoyalRecallPicker() {
         Player player = getPlayer();
         if (player == null || !isArenaPhaseActive()) {
             return false;
         }
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastKingUse < KING_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cKing's Piece cooldown active.");
+        if (reviveUsed) {
+            MessageUtil.sendMessage(player, "&cLe Rappel royal a déjà été utilisé.");
             return false;
         }
-        if (player.getHealth() <= 4.0) {
-            player.setHealth(0.0);
-            return true;
+        List<UUID> dead = plugin.getGameManager().getGame().getEliminatedPlayers();
+        if (dead.isEmpty()) {
+            MessageUtil.sendMessage(player, "&cAucun joueur éliminé à ressusciter.");
+            return false;
         }
-        lastKingUse = now;
-        player.setHealth(player.getHealth() - 4.0);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 10 * 20, 10, false, false));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 10 * 20, 0, false, false));
-        attackLockUntil = System.currentTimeMillis() + 10_000L;
-        MessageUtil.broadcast("&6Teto revealed their position with the King's Piece: "
-                + player.getLocation().getBlockX() + ", "
-                + player.getLocation().getBlockY() + ", "
-                + player.getLocation().getBlockZ());
+        plugin.getPlayerPicker().open(player, "Rappel royal - qui ressusciter ?", dead, this::reviveAsAlly);
         return true;
     }
 
-    private boolean useRoyalRecall() {
+    /**
+     * Revive the chosen player as Teto's ally (works like /alliance).
+     *
+     * @param deadId UUID of the eliminated player
+     */
+    private void reviveAsAlly(UUID deadId) {
         Player player = getPlayer();
-        if (player == null || !isArenaPhaseActive() || reviveUsed) {
-            return false;
+        if (player == null || reviveUsed || !plugin.getGameManager().revivePlayer(deadId, player.getLocation(), REVIVE_HEALTH)) {
+            return;
         }
-
-        for (Player online : Bukkit.getOnlinePlayers()) {
-            if (online.getUniqueId().equals(playerId) || plugin.getGameManager().isPlayerAlive(online.getUniqueId())) {
-                continue;
-            }
-            if (plugin.getGameManager().revivePlayer(online.getUniqueId(), player.getLocation(), 8.0)) {
-                reviveUsed = true;
-                NGNLPlayer self = getNGNLPlayer();
-                NGNLPlayer ally = plugin.getPlayerManager().getNGNLPlayer(online.getUniqueId());
-                if (self != null && ally != null) {
-                    self.setAlliancePartner(online.getUniqueId());
-                    ally.setAlliancePartner(playerId);
-                }
-                MessageUtil.broadcast("&eTeto revived " + online.getName() + " as an ally.");
-                return true;
-            }
+        reviveUsed = true;
+        NGNLPlayer self = getNGNLPlayer();
+        NGNLPlayer ally = plugin.getPlayerManager().getNGNLPlayer(deadId);
+        if (self != null && ally != null) {
+            self.setAlliancePartner(deadId);
+            ally.setAlliancePartner(playerId);
         }
-        MessageUtil.sendMessage(player, "&cNo eliminated player could be revived.");
-        return false;
+        Player revived = Bukkit.getPlayer(deadId);
+        MessageUtil.broadcast("&eTeto a ressuscité " + (revived != null ? revived.getName() : "un joueur") + " comme allié !");
     }
 
-    public boolean isAttackLocked() {
+    @Override
+    public boolean isAttackBlocked() {
         return System.currentTimeMillis() < attackLockUntil;
+    }
+
+    @Override
+    public String attackBlockedMessage() {
+        return "&cLe Roi d'échec t'empêche d'attaquer pour le moment.";
     }
 
     @Override
     public List<String> getDescription() {
         return Arrays.asList(
                 "You are Teto.",
-                "Your goal is to win alone or with an alliance.",
-                "You learn one player's role at the start.",
-                "You always control mini-game selection when involved."
+                "Your goal is to win alone or with an alliance (/alliance).",
+                "You learn the role of one player of your choice at the start.",
+                "You always choose the mini-game, whether you won the PvP or not."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "Royal Recall revives one player as your ally.",
-                "King's Piece grants 10 seconds of invincibility every 10 minutes."
+                "King's Piece: 10 seconds of invincibility (position revealed, no attacks,",
+                "costs 2 hearts, every 10 minutes).",
+                "Royal Recall: revive any eliminated player as your ally (once)."
         );
     }
 

@@ -268,6 +268,7 @@ public class ItemManager {
                         "&7One use per round for Ivan and Nonna."
                 )
                 .enchant(Enchantment.KNOCKBACK, 1)
+                .setTag("sumo_stick", "1")
                 .build();
 
         specialItems.put("knockback_stick", stick);
@@ -377,6 +378,18 @@ public class ItemManager {
         }
 
         return item.getItemMeta().getDisplayName().contains("&l");
+    }
+
+    /**
+     * Check whether an item is the Sumo knockback stick
+     *
+     * @param item Item to check
+     * @return True if the item is the knockback stick
+     */
+    public boolean isKnockbackStick(ItemStack item) {
+        return item != null && item.hasItemMeta()
+                && item.getItemMeta().getPersistentDataContainer()
+                .has(plugin.getNamespacedKey("sumo_stick"), org.bukkit.persistence.PersistentDataType.STRING);
     }
 
     /**

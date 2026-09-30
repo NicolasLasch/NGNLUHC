@@ -3,10 +3,11 @@ package be.thespattt.ngnl.role.duo;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.player.NGNLPlayer;
+import be.thespattt.ngnl.role.CombatRestrictions;
 import be.thespattt.ngnl.role.RoleType;
-import be.thespattt.ngnl.util.ItemBuilder;
+import be.thespattt.ngnl.util.DirectionArrow;
 import be.thespattt.ngnl.util.MessageUtil;
-import org.bukkit.Bukkit;
+
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -17,25 +18,41 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class IzunaRole extends DuoRole {
+/**
+ * Izuna: blinds her opponent in Bloc Party (applied by the mini-game listener), Speed II and an
+ * arrow to Ino in the finale. When Ino dies she gets the clone crown and may join Miko's camp.
+ */
+public class IzunaRole extends DuoRole implements CombatRestrictions {
 
-    private static final int CLONE_COOLDOWN = 20 * 60;
-    private long lastCloneUse = 0L;
-    private int trackingTaskId = -1;
-    private boolean cloneUnlocked = false;
+    /** Cooldown of the clone crown in seconds. */
+    private static final int CROWN_COOLDOWN = 20 * 60;
+    /** Number of clones summoned by the crown. */
+    private static final int CLONE_AMOUNT = 5;
+    /** Lifetime of the clones in seconds. */
+    private static final int CLONE_DURATION = 10;
+    /** Duration of the Hatsuse Shield protection in seconds. */
+    private static final int SHIELD_SECONDS = 30;
+    /** Weakness duration paid to join Miko's camp, in seconds. */
+    private static final int MIKO_WEAKNESS_SECONDS = 5 * 60;
+
+    private boolean crownUnlocked = false;
+    private boolean crownGiven = false;
     private boolean shieldProtected = false;
 
+    /**
+     * Constructor
+     *
+     * @param plugin   Plugin instance
+     * @param playerId UUID of the player
+     * @param roleType Role type (IZUNA)
+     */
     public IzunaRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
 
     @Override
     protected void onRoleSetup() {
-        Player player = getPlayer();
-        Player partner = getPartnerPlayer();
-        if (player != null && partner != null) {
-            MessageUtil.sendMessage(player, "&eIno is: &a" + partner.getName());
-        }
+        // Blindness in Bloc Party is applied by the mini-game listener; nothing to do at reveal.
     }
 
     @Override
@@ -50,7 +67,20 @@ public class IzunaRole extends DuoRole {
         if (player != null) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1, false, false));
         }
-        startTrackingInoTask();
+        runRepeating(this::showInoArrow, 20L, 20L);
+        giveCrownIfUnlocked();
+    }
+
+    /**
+     * Show an arrow pointing to Ino in the action bar.
+     */
+    private void showInoArrow() {
+        Player player = getPlayer();
+        if (player == null || !isAlive()) {
+            return;
+        }
+        Player ino = isPartnerAlive() ? getPartnerPlayer() : null;
+        DirectionArrow.show(player, ino, "Ino", 30);
     }
 
     @Override
@@ -59,105 +89,137 @@ public class IzunaRole extends DuoRole {
         if (player == null || !partnerId.equals(getPartnerUUID())) {
             return;
         }
-        cloneUnlocked = true;
-        giveArenaPhaseItems(player);
-        MessageUtil.sendMessage(player, "&eYour clone crown has been unlocked.");
+        crownUnlocked = true;
+        giveCrownIfUnlocked();
+        MessageUtil.sendMessage(player, "&eTa couronne de clones est débloquée.");
+        MessageUtil.sendMessage(player, "&eTu peux rejoindre le camp de Miko avec &a/duo joinmiko &e(Faiblesse II pendant 5 minutes).");
     }
 
-    private void startTrackingInoTask() {
-        if (trackingTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(trackingTaskId);
+    /**
+     * Give the crown item once it is unlocked and while the finale is running.
+     */
+    private void giveCrownIfUnlocked() {
+        Player player = getPlayer();
+        if (player == null || !crownUnlocked || crownGiven) {
+            return;
         }
-
-        trackingTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
-            Player player = getPlayer();
-            Player ino = getPartnerPlayer();
-            if (player == null || ino == null) {
-                return;
-            }
-            player.setCompassTarget(ino.getLocation());
-        }, 20L, 20L);
+        crownGiven = true;
+        giveItem(player, buildRoleItem(Material.GOLDEN_HELMET, "&6&lCouronne d'Izuna",
+                "&75 clones pendant 10 secondes.", "", "&eClic droit pour activer", "&cRecharge : 20 minutes"));
     }
 
+    /**
+     * Protect Izuna with the Hatsuse Shield: invincible, invisible and unable to hit anybody.
+     */
     public void activateShieldProtection() {
         Player player = getPlayer();
-        if (player == null) {
+        if (player == null || shieldProtected) {
             return;
         }
         shieldProtected = true;
-        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 30 * 20, 0, false, false));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 30 * 20, 10, false, false));
-        MessageUtil.sendMessage(player, "&aIno protected you with the Hatsuse Shield.");
-        Bukkit.getScheduler().runTaskLater(plugin, () -> shieldProtected = false, 30 * 20L);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, SHIELD_SECONDS * 20, 0, false, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, SHIELD_SECONDS * 20, 10, false, false));
+        MessageUtil.sendMessage(player, "&aIno te protège avec le Bouclier Hatsuse pendant " + SHIELD_SECONDS + " secondes.");
+        runLater(() -> shieldProtected = false, SHIELD_SECONDS * 20L);
     }
 
+    @Override
+    public boolean isAttackBlocked() {
+        return shieldProtected;
+    }
+
+    @Override
+    public String attackBlockedMessage() {
+        return "&cTu ne peux pas attaquer tant que le Bouclier Hatsuse te protège.";
+    }
+
+    /**
+     * Check whether the Hatsuse Shield is currently protecting Izuna.
+     *
+     * @return True while the shield is active
+     */
     public boolean isProtectedByShield() {
         return shieldProtected;
     }
 
+    /**
+     * Join Miko's camp after Ino's death: alliance + Haste II for both, Weakness II for 5 minutes for Izuna.
+     */
     public void joinMikoCamp() {
         Player player = getPlayer();
         if (player == null) {
             return;
         }
-        if (plugin.getGameManager().isPlayerAlive(getPartnerUUID())) {
-            MessageUtil.sendMessage(player, "&cYou can only do this after Ino dies.");
+        if (isPartnerAlive()) {
+            MessageUtil.sendMessage(player, "&cTu ne peux faire cela qu'après la mort d'Ino.");
+            return;
+        }
+        UUID mikoId = plugin.getRoleManager().getPlayerByRole(RoleType.MIKO);
+        if (mikoId == null || !plugin.getGameManager().isPlayerAlive(mikoId)) {
+            MessageUtil.sendMessage(player, "&cMiko n'est pas disponible.");
             return;
         }
 
-        UUID mikoId = plugin.getRoleManager().getPlayerByRole(RoleType.MIKO);
-        NGNLPlayer self = plugin.getPlayerManager().getNGNLPlayer(playerId);
-        NGNLPlayer miko = mikoId != null ? plugin.getPlayerManager().getNGNLPlayer(mikoId) : null;
-        if (self != null && miko != null) {
-            self.setAlliancePartner(mikoId);
-            miko.setAlliancePartner(playerId);
+        linkAlliance(mikoId);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, MIKO_WEAKNESS_SECONDS * 20, 1, false, false));
+        giveHaste(player);
+        Player miko = org.bukkit.Bukkit.getPlayer(mikoId);
+        if (miko != null) {
+            giveHaste(miko);
+            MessageUtil.sendMessage(miko, "&aIzuna a rejoint ton camp : Hâte II pour vous deux.");
         }
-        player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 5 * 60 * 20, 1, false, false));
-        Player mikoPlayer = mikoId != null ? Bukkit.getPlayer(mikoId) : null;
-        if (mikoPlayer != null) {
-            PotionEffectType haste = PotionEffectType.getByName("HASTE");
-            if (haste != null) {
-                player.addPotionEffect(new PotionEffect(haste, Integer.MAX_VALUE, 1, false, false));
-                mikoPlayer.addPotionEffect(new PotionEffect(haste, Integer.MAX_VALUE, 1, false, false));
-            }
+        MessageUtil.sendMessage(player, "&eTu as rejoint le camp de Miko : Faiblesse II pendant 5 minutes.");
+    }
+
+    /**
+     * Create the alliance between Izuna and another player.
+     *
+     * @param otherId UUID of the new ally
+     */
+    private void linkAlliance(UUID otherId) {
+        NGNLPlayer self = getNGNLPlayer();
+        NGNLPlayer other = plugin.getPlayerManager().getNGNLPlayer(otherId);
+        if (self != null && other != null) {
+            self.setAlliancePartner(otherId);
+            other.setAlliancePartner(playerId);
         }
-        MessageUtil.sendMessage(player, "&eYou joined Miko's camp and gained Weakness II for 5 minutes.");
+    }
+
+    /**
+     * Give Haste II for the rest of the game.
+     *
+     * @param target Player receiving Haste II
+     */
+    private void giveHaste(Player target) {
+        target.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, Integer.MAX_VALUE, 1, false, false));
     }
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        if (!cloneUnlocked) {
-            return;
-        }
-        ItemStack crown = new ItemBuilder(Material.GOLDEN_HELMET)
-                .name("&6&lIzuna's Crown")
-                .lore("&75 clones for 10 seconds.", "&cCooldown: 20 minutes")
-                .glow(true)
-                .setTag("role_item", "IZUNA")
-                .build();
-        player.getInventory().addItem(crown);
+        // The crown is only given after Ino's death (see giveCrownIfUnlocked).
     }
 
     @Override
     public boolean onItemUse(ItemStack item) {
-        if (item != null && item.getType() == Material.GOLDEN_HELMET) {
-            return useCloneAbility();
-        }
-        return false;
+        return item != null && item.getType() == Material.GOLDEN_HELMET && useCloneAbility();
     }
 
+    /**
+     * Summon the clones of the crown.
+     *
+     * @return True if the clones were summoned
+     */
     private boolean useCloneAbility() {
         Player player = getPlayer();
-        if (player == null || !cloneUnlocked || !isArenaPhaseActive()) {
+        if (player == null || !crownUnlocked || !isArenaPhaseActive() || !tryUseCooldown("crown", CROWN_COOLDOWN)) {
             return false;
         }
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastCloneUse < CLONE_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cClone crown cooldown active.");
+        if (!plugin.getCloneManager().spawnClones(player, CLONE_AMOUNT, CLONE_DURATION)) {
+            resetCooldown("crown");
             return false;
         }
-        lastCloneUse = now;
-        return plugin.getCloneManager().spawnClones(player, 5, 10);
+        MessageUtil.broadcast("&c" + player.getName() + " a invoqué des clones !");
+        return true;
     }
 
     @Override
@@ -165,15 +227,16 @@ public class IzunaRole extends DuoRole {
         return Arrays.asList(
                 "You are Izuna Hatsuse.",
                 "Your goal is to win with Ino.",
-                "You inflict Blindness in Bloc Party."
+                "You inflict Blindness to your opponent in Bloc Party."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "You gain Speed II and your compass points to Ino.",
-                "After Ino's death, your clone crown becomes available."
+                "You get Speed II and an arrow pointing to Ino.",
+                "If Ino dies: a crown summoning 5 clones for 10 seconds (every 20 minutes)",
+                "and you may join Miko's camp (/duo joinmiko) for 5 minutes of Weakness II."
         );
     }
 

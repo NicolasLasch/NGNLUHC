@@ -19,7 +19,6 @@ import java.util.UUID;
 public class InoRole extends DuoRole {
 
     private static final int SHIELD_COOLDOWN = 20 * 60;
-    private long lastShieldUse = 0L;
     private UUID revengeTarget;
     private int revengeTaskId = -1;
 
@@ -29,11 +28,7 @@ public class InoRole extends DuoRole {
 
     @Override
     protected void onRoleSetup() {
-        Player player = getPlayer();
-        Player partner = getPartnerPlayer();
-        if (player != null && partner != null) {
-            MessageUtil.sendMessage(player, "&eIzuna is: &a" + partner.getName());
-        }
+        // Ino learns Izuna through the three-name list sent with the role.
     }
 
     @Override
@@ -44,7 +39,7 @@ public class InoRole extends DuoRole {
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-        lastShieldUse = 0L;
+        resetCooldown("hatsuse_shield");
     }
 
     @Override
@@ -55,6 +50,9 @@ public class InoRole extends DuoRole {
         }
 
         revengeTarget = killerId;
+        if (killerId == null) {
+            return;
+        }
         player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 10 * 20, 1, false, false));
         MessageUtil.sendMessage(player, "&cIzuna died. Kill her murderer in 10 seconds or you die too.");
 
@@ -99,7 +97,7 @@ public class InoRole extends DuoRole {
     protected void giveArenaPhaseItems(Player player) {
         ItemStack shield = new ItemBuilder(Material.SHIELD)
                 .name("&d&lHatsuse Shield")
-                .lore("&7Protects Izuna for 30 seconds.", "&cCooldown: 20 minutes")
+                .lore("&7Protège Izuna pendant 30 secondes", "&7(invincible, invisible, ne peut pas frapper).", "&cRecharge : 20 minutes")
                 .glow(true)
                 .setTag("role_item", "INO")
                 .build();
@@ -121,16 +119,14 @@ public class InoRole extends DuoRole {
             return false;
         }
 
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastShieldUse < SHIELD_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cShield cooldown active.");
+        if (!(plugin.getPlayerManager().getNGNLPlayer(izunaPlayer.getUniqueId()).getRole() instanceof IzunaRole izunaRole)) {
             return false;
         }
-        lastShieldUse = now;
-
-        if (plugin.getPlayerManager().getNGNLPlayer(izunaPlayer.getUniqueId()).getRole() instanceof IzunaRole izunaRole) {
-            izunaRole.activateShieldProtection();
+        if (!tryUseCooldown("hatsuse_shield", SHIELD_COOLDOWN)) {
+            return false;
         }
+        izunaRole.activateShieldProtection();
+        MessageUtil.sendMessage(player, "&aIzuna est protégée pendant 30 secondes.");
         return true;
     }
 

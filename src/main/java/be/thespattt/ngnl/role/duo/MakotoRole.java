@@ -27,14 +27,6 @@ public class MakotoRole extends DuoRole {
         Player player = getPlayer();
         if (player == null) return;
 
-        UUID stephanieUUID = getPartnerUUID();
-        if (stephanieUUID != null) {
-            Player stephaniePlayer = Bukkit.getPlayer(stephanieUUID);
-            if (stephaniePlayer != null) {
-                MessageUtil.sendMessage(player, "&eStephanie is: &a" + stephaniePlayer.getName());
-            }
-        }
-
         MessageUtil.sendMessage(player, "&eYou can cancel one mini-game defeat per game.");
         MessageUtil.sendMessage(player, "&eUse &a/duo cancel &ewhen you lose a mini-game to activate this.");
     }
@@ -58,14 +50,7 @@ public class MakotoRole extends DuoRole {
 
         if (!isWinner && !hasUsedDefeatCancellation) {
             MessageUtil.sendMessage(player, "&cYou lost the mini-game!");
-            MessageUtil.sendMessage(player, "&eYou have 10 seconds to use &a/duo cancel &eto reverse this defeat!");
-
-            // Schedule a task to remind them
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (player.isOnline() && !hasUsedDefeatCancellation) {
-                    MessageUtil.sendMessage(player, "&cTime's up! You can no longer cancel this defeat.");
-                }
-            }, 200L); // 10 seconds
+            MessageUtil.sendMessage(player, "&eYou have 60 seconds to use &a/duo cancel &eto reverse this defeat!");
         }
     }
 

@@ -1,22 +1,30 @@
 package be.thespattt.ngnl;
 
+import be.thespattt.ngnl.card.RoleCardManager;
 import be.thespattt.ngnl.command.CommandManager;
 import be.thespattt.ngnl.config.ConfigManager;
 import be.thespattt.ngnl.event.listener.CombatTracker;
+import be.thespattt.ngnl.event.listener.FactionBonusListener;
 import be.thespattt.ngnl.event.listener.GameListener;
 import be.thespattt.ngnl.event.listener.PlayerListener;
 import be.thespattt.ngnl.event.listener.MiniGameListener;
+import be.thespattt.ngnl.event.listener.RoleRulesListener;
+import be.thespattt.ngnl.event.listener.SpecialItemListener;
 import be.thespattt.ngnl.game.GameManager;
 import be.thespattt.ngnl.game.world.WorldManager;
+import be.thespattt.ngnl.item.ImanityShop;
 import be.thespattt.ngnl.item.ItemManager;
+import be.thespattt.ngnl.item.SpecialItemManager;
 import be.thespattt.ngnl.minigame.*;
 import be.thespattt.ngnl.player.PlayerManager;
 import be.thespattt.ngnl.player.faction.FactionManager;
 import be.thespattt.ngnl.role.RoleManager;
 import be.thespattt.ngnl.command.commands.PledgeCommand;
 import be.thespattt.ngnl.util.AdvancedCloneManager;
+import be.thespattt.ngnl.util.DisguiseService;
 import be.thespattt.ngnl.util.MessageUtil;
 import be.thespattt.ngnl.gui.ConfigGUIManager;
+import be.thespattt.ngnl.gui.PlayerPicker;
 
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -48,6 +56,11 @@ public class NoGameNoLife extends JavaPlugin {
     private AdvancedCloneManager cloneManager;
     private MiniGameSelectionManager miniGameSelectionManager;
     private MiniGameStatsTracker miniGameStatsTracker;
+    private PlayerPicker playerPicker;
+    private DisguiseService disguiseService;
+    private RoleCardManager roleCardManager;
+    private SpecialItemManager specialItemManager;
+    private ImanityShop imanityShop;
 
 
     // Register commands
@@ -78,6 +91,11 @@ public class NoGameNoLife extends JavaPlugin {
         this.cloneManager = new AdvancedCloneManager(this);
         this.miniGameSelectionManager = new MiniGameSelectionManager(this);
         this.miniGameStatsTracker = new MiniGameStatsTracker(this);
+        this.playerPicker = new PlayerPicker(this);
+        this.disguiseService = new DisguiseService(this);
+        this.roleCardManager = new RoleCardManager(this);
+        this.specialItemManager = new SpecialItemManager(this);
+        this.imanityShop = new ImanityShop(this);
 
 
 
@@ -85,9 +103,15 @@ public class NoGameNoLife extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
         Bukkit.getPluginManager().registerEvents(new GameListener(this), this);
         Bukkit.getPluginManager().registerEvents(new MiniGameListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new SpecialItemListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new RoleRulesListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new FactionBonusListener(this), this);
 
         // Register commands
         commandManager.registerCommands();
+        if (getCommand("shop") != null) {
+            getCommand("shop").setExecutor(imanityShop);
+        }
 
         // Load configurations
         configManager.loadConfigs();
@@ -110,17 +134,24 @@ public class NoGameNoLife extends JavaPlugin {
             configManager.saveConfigs();
         }
 
-        // Clean up worlds if needed
-        if (worldManager != null) {
-            worldManager.cleanup();
-        }
-
         if (miniGameEngine != null) {
             miniGameEngine.cleanup();
         }
 
         if (cloneManager != null) {
             cloneManager.cleanup();
+        }
+
+        if (disguiseService != null) {
+            disguiseService.restoreAll();
+        }
+
+        if (specialItemManager != null) {
+            specialItemManager.cleanup();
+        }
+
+        if (roleCardManager != null) {
+            roleCardManager.stop();
         }
 
         MessageUtil.logInfo("No Game No Life UHC has been disabled!");
@@ -144,6 +175,9 @@ public class NoGameNoLife extends JavaPlugin {
 
         // Initialize worlds if needed
         worldManager.initializeWorlds();
+
+        // Start the role card resource pack (built-in host / external URL)
+        roleCardManager.start();
     }
 
     /**
@@ -272,6 +306,26 @@ public class NoGameNoLife extends JavaPlugin {
 
     public MiniGameSelectionManager getMiniGameSelectionManager() {
         return miniGameSelectionManager;
+    }
+
+    public RoleCardManager getRoleCardManager() {
+        return roleCardManager;
+    }
+
+    public SpecialItemManager getSpecialItemManager() {
+        return specialItemManager;
+    }
+
+    public ImanityShop getImanityShop() {
+        return imanityShop;
+    }
+
+    public DisguiseService getDisguiseService() {
+        return disguiseService;
+    }
+
+    public PlayerPicker getPlayerPicker() {
+        return playerPicker;
     }
 
     public MiniGameStatsTracker getMiniGameStatsTracker() {

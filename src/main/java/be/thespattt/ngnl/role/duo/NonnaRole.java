@@ -7,6 +7,7 @@ import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -22,7 +23,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public class NonnaRole extends DuoRole {
 
     private static final int ORACLE_COOLDOWN = 20 * 60;
-    private long lastOracleUse = 0L;
     private boolean canChooseCamp = false;
     private int rikuWeaknessTaskId = -1;
 
@@ -32,11 +32,7 @@ public class NonnaRole extends DuoRole {
 
     @Override
     protected void onRoleSetup() {
-        Player player = getPlayer();
-        Player partner = getPartnerPlayer();
-        if (player != null && partner != null) {
-            MessageUtil.sendMessage(player, "&eIvan is: &a" + partner.getName());
-        }
+        // Nonna learns Ivan through the three-name list sent with the role.
     }
 
     @Override
@@ -52,7 +48,7 @@ public class NonnaRole extends DuoRole {
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-        lastOracleUse = 0L;
+        resetCooldown("oracle_card");
     }
 
     @Override
@@ -89,32 +85,47 @@ public class NonnaRole extends DuoRole {
         if (player == null || !isArenaPhaseActive()) {
             return false;
         }
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastOracleUse < ORACLE_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cOracle Card cooldown active.");
+
+        List<Player> candidates = new ArrayList<>();
+        for (Player other : Bukkit.getOnlinePlayers()) {
+            boolean valid = !other.getUniqueId().equals(playerId)
+                    && plugin.getGameManager().isPlayerAlive(other.getUniqueId())
+                    && !plugin.getCombatTracker().isInCombat(other.getUniqueId());
+            if (valid) {
+                candidates.add(other);
+            }
+        }
+        if (candidates.isEmpty()) {
+            MessageUtil.sendMessage(player, "&cAucune cible valide (hors combat).");
             return false;
         }
-
-        List<Player> candidates = new ArrayList<>(Bukkit.getOnlinePlayers().stream()
-                .filter(p -> plugin.getGameManager().isPlayerAlive(p.getUniqueId()))
-                .filter(p -> !plugin.getCombatTracker().isInCombat(p.getUniqueId()))
-                .filter(p -> !p.getUniqueId().equals(playerId))
-                .toList());
-        if (candidates.isEmpty()) {
-            MessageUtil.sendMessage(player, "&cNo valid target found.");
+        if (!tryUseCooldown("oracle_card", ORACLE_COOLDOWN)) {
             return false;
         }
 
         Player target = candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
-        Player teleported = ThreadLocalRandom.current().nextInt(100) < 20 ? player : target;
-        teleported.teleport(player.getWorld().getHighestBlockAt(
-                ThreadLocalRandom.current().nextInt(-100, 101),
-                ThreadLocalRandom.current().nextInt(-100, 101)
-        ).getLocation().add(0.5, 1, 0.5));
-
-        lastOracleUse = now;
-        MessageUtil.broadcast("&5Nonna used an Oracle Card.");
+        boolean mishap = ThreadLocalRandom.current().nextInt(100) < 20;
+        (mishap ? player : target).teleport(randomSpotInBorder(player));
+        MessageUtil.broadcast("&5Nonna a utilisé une Oracle Card.");
+        if (mishap) {
+            MessageUtil.sendMessage(player, "&cL'Oracle Card s'est retournée contre toi !");
+        }
         return true;
+    }
+
+    /**
+     * Pick a random safe spot inside the world border of the player's world.
+     *
+     * @param player Player whose world is used
+     * @return A random location on the surface
+     */
+    private Location randomSpotInBorder(Player player) {
+        org.bukkit.World world = player.getWorld();
+        Location center = world.getWorldBorder().getCenter();
+        double radius = world.getWorldBorder().getSize() / 2.0 * 0.8;
+        int x = (int) (center.getX() + ThreadLocalRandom.current().nextDouble(-radius, radius));
+        int z = (int) (center.getZ() + ThreadLocalRandom.current().nextDouble(-radius, radius));
+        return world.getHighestBlockAt(x, z).getLocation().add(0.5, 1, 0.5);
     }
 
     public void joinCoroneCamp() {

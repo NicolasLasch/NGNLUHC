@@ -19,7 +19,6 @@ import java.util.UUID;
 public class SchwiRole extends DuoRole {
 
     private static final int ALLIANCE_COOLDOWN = 10 * 60;
-    private long lastAllianceUse = 0L;
 
     public SchwiRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
@@ -28,10 +27,8 @@ public class SchwiRole extends DuoRole {
     @Override
     protected void onRoleSetup() {
         Player player = getPlayer();
-        Player partner = getPartnerPlayer();
-        if (player != null && partner != null) {
-            MessageUtil.sendMessage(player, "&eRiku is: &a" + partner.getName());
-            MessageUtil.sendMessage(player, "&eYou gain Speed and Jump Boost in every mini-game.");
+        if (player != null) {
+            MessageUtil.sendMessage(player, "&eTu as Vitesse et Saut amélioré dans TOUS les mini-jeux.");
         }
     }
 
@@ -57,7 +54,7 @@ public class SchwiRole extends DuoRole {
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-        lastAllianceUse = 0L;
+        resetCooldown("alliance_scanner");
         Player player = getPlayer();
         if (player != null) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, Integer.MAX_VALUE, 0, false, false));
@@ -70,7 +67,7 @@ public class SchwiRole extends DuoRole {
         if (player == null || !partnerId.equals(getPartnerUUID())) {
             return;
         }
-        MessageUtil.sendMessage(player, "&cRiku died. You die from sadness as well.");
+        MessageUtil.sendMessage(player, "&cRiku est mort. Tu meurs de tristesse...");
         if (plugin.getGameManager().isPlayerAlive(playerId)) {
             plugin.getGameManager().handlePlayerElimination(playerId, killerId);
         }
@@ -100,13 +97,10 @@ public class SchwiRole extends DuoRole {
         if (player == null || !isArenaPhaseActive()) {
             return false;
         }
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastAllianceUse < ALLIANCE_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cCooldown: " + String.format("%d:%02d", (ALLIANCE_COOLDOWN - (now - lastAllianceUse)) / 60, (ALLIANCE_COOLDOWN - (now - lastAllianceUse)) % 60));
+        if (!tryUseCooldown("alliance_scanner", ALLIANCE_COOLDOWN)) {
             return false;
         }
 
-        lastAllianceUse = now;
         for (Player nearby : Bukkit.getOnlinePlayers()) {
             if (nearby.getUniqueId().equals(playerId) || nearby.getUniqueId().equals(getPartnerUUID())) {
                 continue;

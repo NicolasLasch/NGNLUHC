@@ -3,105 +3,71 @@ package be.thespattt.ngnl.role.duo;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.minigame.MiniGameType;
 import be.thespattt.ngnl.role.RoleType;
-import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
+
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * Template for implementing duo roles
- * Use this as a starting point for creating new duo roles
+ * Riku: +1 heart per mini-game won (applied by the mini-game listener), revives Schwi after
+ * surviving 5 minutes, Strength II in the finale when Schwi is low, /heal to give her HP.
  */
 public class RikuRole extends DuoRole {
 
-    // Define constants for ability cooldowns, durations, etc.
-    private static final int ABILITY_COOLDOWN = 15 * 60; // 15 minutes in seconds
-    private static final int ABILITY_DURATION = 30; // 30 seconds
+    /** Time Riku must survive after Schwi's death to revive her (ticks). */
+    private static final long REVIVE_DELAY_TICKS = 5L * 60L * 20L;
+    /** Hearts both lose when Schwi is revived. */
+    private static final double REVIVE_HEART_COST = 3.0;
+    /** Health (HP) with which Schwi comes back. */
+    private static final double REVIVE_HEALTH = 8.0;
+    /** Schwi's health (HP) under which Riku gets Strength II (3 hearts). */
+    private static final double SCHWI_LOW_HEALTH = 6.0;
+    /** Duration of the Strength II effect in seconds. */
+    private static final int STRENGTH_SECONDS = 30;
+    /** HP transferred by /heal. */
+    private static final double HEAL_TRANSFER = 2.0;
 
-    // Define partner proximity settings if applicable
-    private static final int PARTNER_PROXIMITY_RANGE = 25; // 25 blocks
-
-    // Ability usage tracking
-    private long lastAbilityUsage = 0;
-    private int abilitiesUsed = 0;
-    private static final int MAX_ABILITY_USES = 3; // Maximum uses of ability per game
-
-    // Task IDs for scheduled tasks
-    private int proximityCheckTaskId = -1;
-    private int schwiReviveTaskId = -1;
-    private int arenaSupportTaskId = -1;
+    private BukkitTask reviveTask;
+    private long strengthActiveUntil = 0L;
 
     /**
      * Constructor
      *
-     * @param plugin Plugin instance
+     * @param plugin   Plugin instance
      * @param playerId UUID of the player
-     * @param roleType Role type
+     * @param roleType Role type (RIKU)
      */
     public RikuRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
 
-    /**
-     * For creating specific roles, use a simpler constructor
-     * Example for derived class:
-     * public SpecificRole(NoGameNoLife plugin, UUID playerId) {
-     *     super(plugin, playerId, RoleType.ROLE_NAME);
-     * }
-     */
-
     @Override
     protected void onRoleSetup() {
         Player player = getPlayer();
-        if (player == null) {
-            return;
+        if (player != null) {
+            MessageUtil.sendMessage(player, "&eTu gagnes 1 cœur de plus à chaque mini-jeu remporté.");
         }
-
-        // Find partner player
-        UUID partnerUUID = getPartnerUUID();
-        if (partnerUUID != null) {
-            Player partnerPlayer = Bukkit.getPlayer(partnerUUID);
-            if (partnerPlayer != null) {
-                // Send partner information
-                MessageUtil.sendMessage(player, "&eYour partner is: &a" + partnerPlayer.getName());
-            }
-        }
-
-        MessageUtil.sendMessage(player, "&eYou gain 1 heart whenever you win a mini-game.");
-    }
-
-    /**
-     * Start the proximity check task
-     */
-    @Override
-    public void onMiniGameStart(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        // No passive mini-game effect besides the extra heart on victory.
     }
 
     @Override
     public void onMiniGameEnd(UUID opponent, MiniGameType miniGameType, boolean isWinner) {
-        if (isWinner) {
-            Player player = getPlayer();
-            if (player != null) {
-                MessageUtil.sendMessage(player, "&aYour role bonus grants you 1 extra heart.");
-            }
+        Player player = getPlayer();
+        if (isWinner && player != null) {
+            MessageUtil.sendMessage(player, "&aTon rôle te donne 1 cœur supplémentaire.");
         }
     }
 
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-
-        lastAbilityUsage = 0;
-        startArenaSupportTask();
+        runRepeating(this::checkSchwiHealth, 20L, 20L);
     }
 
     @Override
@@ -110,38 +76,85 @@ public class RikuRole extends DuoRole {
         if (player == null || !partnerId.equals(getPartnerUUID())) {
             return;
         }
-
-        MessageUtil.sendMessage(player, "&cSchwi has been eliminated. Survive 5 minutes to revive her.");
-        if (schwiReviveTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(schwiReviveTaskId);
-        }
-
-        schwiReviveTaskId = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-            Player currentPlayer = getPlayer();
-            if (currentPlayer == null || !plugin.getGameManager().isPlayerAlive(playerId)) {
-                return;
-            }
-
-            if (plugin.getGameManager().isPlayerAlive(partnerId)) {
-                return;
-            }
-
-            if (plugin.getGameManager().revivePlayer(partnerId, currentPlayer.getLocation(), 8.0)) {
-                plugin.getGameManager().removePlayerHearts(playerId, 3.0);
-                plugin.getGameManager().removePlayerHearts(partnerId, 3.0);
-                MessageUtil.broadcast("&dRiku survived long enough to revive Schwi.");
-            }
-        }, 5L * 60L * 20L);
+        MessageUtil.sendMessage(player, "&cSchwi a été éliminée. Survis 5 minutes pour la ressusciter.");
+        cancelReviveTask();
+        reviveTask = runLater(() -> reviveSchwi(partnerId), REVIVE_DELAY_TICKS);
     }
 
     /**
-     * Use the role's primary ability
+     * Bring Schwi back next to Riku; both lose hearts. Does nothing if Riku died meanwhile.
      *
-     * @return True if ability was used successfully
+     * @param schwiId UUID of Schwi
      */
+    private void reviveSchwi(UUID schwiId) {
+        Player player = getPlayer();
+        if (player == null || !isAlive() || plugin.getGameManager().isPlayerAlive(schwiId)) {
+            return;
+        }
+        if (plugin.getGameManager().revivePlayer(schwiId, player.getLocation(), REVIVE_HEALTH)) {
+            plugin.getGameManager().removePlayerHearts(playerId, REVIVE_HEART_COST);
+            plugin.getGameManager().removePlayerHearts(schwiId, REVIVE_HEART_COST);
+            MessageUtil.broadcast("&dRiku a survécu assez longtemps pour ressusciter Schwi.");
+        }
+    }
+
+    /**
+     * Give Strength II for 30 seconds when Schwi falls under 3 hearts (finale).
+     */
+    private void checkSchwiHealth() {
+        Player player = getPlayer();
+        Player schwi = getPartnerPlayer();
+        if (player == null || schwi == null || !isAlive() || !isPartnerAlive()) {
+            return;
+        }
+        if (schwi.getHealth() < SCHWI_LOW_HEALTH && System.currentTimeMillis() >= strengthActiveUntil) {
+            strengthActiveUntil = System.currentTimeMillis() + STRENGTH_SECONDS * 1000L;
+            player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, STRENGTH_SECONDS * 20, 1, false, false));
+            MessageUtil.sendMessage(player, "&cSchwi est en danger ! Force II pendant " + STRENGTH_SECONDS + " secondes.");
+        }
+    }
+
+    /**
+     * Give 2 HP to Schwi (/heal, unlimited uses as long as Riku keeps more than 1 heart).
+     *
+     * @return True if the health was transferred
+     */
+    public boolean transferHealthToSchwi() {
+        Player player = getPlayer();
+        Player schwi = getPartnerPlayer();
+        if (player == null || schwi == null || !isPartnerAlive()) {
+            return false;
+        }
+        if (player.getHealth() <= HEAL_TRANSFER) {
+            MessageUtil.sendMessage(player, "&cIl te faut plus d'un cœur pour transférer de la vie.");
+            return false;
+        }
+        player.setHealth(player.getHealth() - HEAL_TRANSFER);
+        schwi.setHealth(Math.min(schwi.getMaxHealth(), schwi.getHealth() + HEAL_TRANSFER));
+        MessageUtil.sendMessage(player, "&aTu as transféré 2 PV à Schwi.");
+        MessageUtil.sendMessage(schwi, "&aRiku t'a transféré 2 PV.");
+        return true;
+    }
+
+    /**
+     * Cancel the pending revive of Schwi.
+     */
+    private void cancelReviveTask() {
+        if (reviveTask != null) {
+            reviveTask.cancel();
+            reviveTask = null;
+        }
+    }
+
+    @Override
+    public void onDeath(UUID killerId) {
+        super.onDeath(killerId);
+        cancelReviveTask();
+    }
+
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        MessageUtil.sendMessage(player, "&eUse &a/heal &eto transfer 2 HP to Schwi whenever needed.");
+        MessageUtil.sendMessage(player, "&eUtilise &a/heal &epour donner 2 PV à Schwi quand tu veux.");
     }
 
     @Override
@@ -163,75 +176,13 @@ public class RikuRole extends DuoRole {
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "If Schwi falls below 3 hearts, you periodically gain Strength II.",
-                "You can also use /heal to transfer 2 HP to Schwi at will."
+                "If Schwi has less than 3 hearts, you get Strength II for 30 seconds.",
+                "You can use /heal to give 2 HP to Schwi (unlimited)."
         );
     }
 
     @Override
     public String getObjective() {
         return "Win the game with Schwi.";
-    }
-
-    /**
-     * Format seconds into a readable time string
-     *
-     * @param seconds Time in seconds
-     * @return Formatted time string
-     */
-    protected String formatTime(long seconds) {
-        long minutes = seconds / 60;
-        long remainingSeconds = seconds % 60;
-
-        return String.format("%d:%02d", minutes, remainingSeconds);
-    }
-
-    @Override
-    public void onDeath(UUID killerId) {
-        super.onDeath(killerId);
-        if (schwiReviveTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(schwiReviveTaskId);
-            schwiReviveTaskId = -1;
-        }
-        if (arenaSupportTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(arenaSupportTaskId);
-            arenaSupportTaskId = -1;
-        }
-    }
-
-    public boolean transferHealthToSchwi() {
-        Player player = getPlayer();
-        Player schwi = getPartnerPlayer();
-        if (player == null || schwi == null) {
-            return false;
-        }
-        if (player.getHealth() <= 2.0) {
-            MessageUtil.sendMessage(player, "&cYou need more than 1 heart to transfer health.");
-            return false;
-        }
-
-        player.setHealth(Math.max(1.0, player.getHealth() - 2.0));
-        schwi.setHealth(Math.min(schwi.getMaxHealth(), schwi.getHealth() + 2.0));
-        MessageUtil.sendMessage(player, "&aYou transferred 2 HP to Schwi.");
-        MessageUtil.sendMessage(schwi, "&aRiku transferred 2 HP to you.");
-        return true;
-    }
-
-    private void startArenaSupportTask() {
-        if (arenaSupportTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(arenaSupportTaskId);
-        }
-
-        arenaSupportTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
-            Player player = getPlayer();
-            Player schwi = getPartnerPlayer();
-            if (player == null || schwi == null || !plugin.getGameManager().isPlayerAlive(playerId)) {
-                return;
-            }
-
-            if (schwi.getHealth() <= 6.0) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 40, 1, false, false));
-            }
-        }, 20L, 20L);
     }
 }

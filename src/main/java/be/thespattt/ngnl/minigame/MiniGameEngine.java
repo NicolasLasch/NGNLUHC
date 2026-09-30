@@ -7,8 +7,7 @@ import be.thespattt.ngnl.game.GameState;
 import be.thespattt.ngnl.minigame.games.*;
 import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.role.Role;
-import be.thespattt.ngnl.role.duo.FeelRole;
-import be.thespattt.ngnl.role.duo.KuramiRole;
+import be.thespattt.ngnl.role.duo.KuramiFeelBase;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.*;
@@ -28,6 +27,13 @@ public class MiniGameEngine {
     private final Map<String, MiniGameBase> activeMiniGames = new HashMap<>();
     private final Map<UUID, BukkitTask> returnTasks = new HashMap<>();
     private final Set<UUID> recentHeartChange = new HashSet<>();
+    /** Last heart loss of each player, kept so it can be cancelled (Makoto, Old Deus Fragment). */
+    private final Map<UUID, HeartLoss> lastHeartLoss = new HashMap<>();
+
+    /** Time (ms) during which a mini-game defeat can still be cancelled. */
+    private static final long CANCEL_WINDOW_MS = 60_000L;
+    /** Delay (ticks) before a mini-game is replayed after a second life was used. */
+    private static final long SECOND_LIFE_REPLAY_DELAY = 60L;
 
     /**
      * Constructor
@@ -172,6 +178,10 @@ public class MiniGameEngine {
         UUID player1UUID = miniGame.getPlayer1UUID();
         UUID player2UUID = miniGame.getPlayer2UUID();
 
+        if (replayIfLoserHasSecondLife(miniGame, winnerUUID)) {
+            return;
+        }
+
         boolean player1Winner = player1UUID.equals(winnerUUID);
         boolean player1WonPvP = miniGame.didPlayer1WinPvP();
 
@@ -206,18 +216,6 @@ public class MiniGameEngine {
         NGNLPlayer loserNGNLPlayer = plugin.getPlayerManager().getNGNLPlayer(loserId);
         Role loserRole = loserNGNLPlayer != null ? loserNGNLPlayer.getRole() : null;
 
-        if (loserRole instanceof KuramiRole kuramiRole && kuramiRole.consumeExtraLife(miniGameType)) {
-            MessageUtil.broadcast("&aKurami's special extra life negated the mini-game punishment.");
-            plugin.getMiniGameStatsTracker().recordWin(winnerId, miniGameType);
-            return;
-        }
-
-        if (loserRole instanceof FeelRole feelRole && feelRole.consumeExtraLife(miniGameType)) {
-            MessageUtil.broadcast("&aFeel's special extra life negated the mini-game punishment.");
-            plugin.getMiniGameStatsTracker().recordWin(winnerId, miniGameType);
-            return;
-        }
-
         if (recentHeartChange.contains(loserId)) {
             MessageUtil.logWarning("Skipping heart loss for " + loserId + " (already applied recently)");
             return;
@@ -233,6 +231,7 @@ public class MiniGameEngine {
             if (loserNGNLPlayer != null) {
                 loserNGNLPlayer.recordHeartsLost((int) Math.ceil(heartsToLose));
 
+                lastHeartLoss.put(loserId, new HeartLoss(heartsToLose, System.currentTimeMillis()));
                 plugin.getGameManager().removePlayerHearts(loserId, heartsToLose);
             }
 
@@ -252,10 +251,8 @@ public class MiniGameEngine {
         plugin.getMiniGameStatsTracker().recordWin(winnerId, miniGameType);
         plugin.getMiniGameStatsTracker().recordLoss(loserId, miniGameType);
 
-        if (loserRole instanceof KuramiRole kuramiRole) {
-            kuramiRole.handleJointLossIfNeeded();
-        } else if (loserRole instanceof FeelRole feelRole) {
-            feelRole.handleJointLossIfNeeded();
+        if (loserRole instanceof KuramiFeelBase linkedRole) {
+            linkedRole.handleJointLossIfNeeded();
         }
         // Broadcast result
         String winnerName = winner != null ? winner.getName() : "Unknown";
@@ -263,18 +260,9 @@ public class MiniGameEngine {
 
         MessageUtil.broadcast("&6Mini-game has ended: &e" + miniGameType.getDisplayName());
         MessageUtil.broadcast("&6Winner: &a" + winnerName + " &7| Loser: &c" + loserName);
-
-        if (loser != null) {
-            double maxHealth = loser.getMaxHealth();
-            if (maxHealth <= 2.0) {
-                MessageUtil.broadcast("&c" + loserName + " has been eliminated due to losing all hearts!");
-                plugin.getGameManager().handlePlayerElimination(loserId, winnerId);
-                loser.setGameMode(GameMode.SPECTATOR);
-            }
-        }
     }
 
-    private void giveRandomRewardBook(UUID winnerId) {
+    public void giveRandomRewardBook(UUID winnerId) {
         Player winner = Bukkit.getPlayer(winnerId);
         if (winner == null || !winner.isOnline()) {
             return;
@@ -482,6 +470,79 @@ public class MiniGameEngine {
         if (task != null) {
             task.cancel();
             returnTasks.remove(playerId);
+        }
+    }
+
+    /**
+     * If the loser owns a second life for this mini-game, consume it and replay the game.
+     *
+     * @param miniGame   The mini-game that just ended
+     * @param winnerUUID UUID of the winner (may be null)
+     * @return True if the game is replayed instead of being resolved
+     */
+    private boolean replayIfLoserHasSecondLife(MiniGameBase miniGame, UUID winnerUUID) {
+        if (winnerUUID == null) {
+            return false;
+        }
+        UUID loserId = winnerUUID.equals(miniGame.getPlayer1UUID()) ? miniGame.getPlayer2UUID() : miniGame.getPlayer1UUID();
+        NGNLPlayer loser = plugin.getPlayerManager().getNGNLPlayer(loserId);
+        Role role = loser != null ? loser.getRole() : null;
+        if (!(role instanceof KuramiFeelBase linkedRole) || !linkedRole.consumeSecondLife(miniGame.getMiniGameType())) {
+            return false;
+        }
+
+        MessageUtil.broadcast("&a" + role.getDisplayName() + " utilise sa seconde vie : le mini-jeu est rejoué !");
+        Player player1 = miniGame.getPlayer1();
+        Player player2 = miniGame.getPlayer2();
+        MiniGameType type = miniGame.getMiniGameType();
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (player1 != null && player2 != null && player1.isOnline() && player2.isOnline()) {
+                startGame(type, player1, player2);
+            }
+        }, SECOND_LIFE_REPLAY_DELAY);
+        return true;
+    }
+
+    /**
+     * Cancel the last mini-game defeat of a player: give back the lost hearts
+     * (and bring the player back if the defeat eliminated him).
+     *
+     * @param playerId UUID of the defeated player
+     * @return True if a recent defeat was cancelled
+     */
+    public boolean restoreLastLoss(UUID playerId) {
+        HeartLoss loss = lastHeartLoss.get(playerId);
+        if (loss == null || System.currentTimeMillis() - loss.timestamp > CANCEL_WINDOW_MS) {
+            return false;
+        }
+        lastHeartLoss.remove(playerId);
+
+        NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(playerId);
+        if (ngnlPlayer == null) {
+            return false;
+        }
+
+        boolean wasEliminated = !plugin.getGameManager().isPlayerAlive(playerId);
+        double restored = Math.max(0, ngnlPlayer.getMaxHealth()) + loss.hearts * 2;
+        ngnlPlayer.setMaxHealth(Math.min(restored, 40.0));
+        plugin.getMiniGameStatsTracker().cancelLastLoss(playerId);
+
+        if (wasEliminated) {
+            plugin.getGameManager().revivePlayer(playerId, ngnlPlayer.getLastLocation(), ngnlPlayer.getMaxHealth());
+        }
+        return true;
+    }
+
+    /**
+     * Record of the hearts lost by a player in his last mini-game defeat.
+     */
+    private static final class HeartLoss {
+        private final double hearts;
+        private final long timestamp;
+
+        private HeartLoss(double hearts, long timestamp) {
+            this.hearts = hearts;
+            this.timestamp = timestamp;
         }
     }
 

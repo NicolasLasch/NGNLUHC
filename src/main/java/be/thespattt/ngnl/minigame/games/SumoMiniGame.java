@@ -264,6 +264,7 @@ public class SumoMiniGame extends MiniGameBase implements Listener {
                     if (player2 != null) player2.playSound(player2.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
 
                     roundActive = true;
+                    giveRoleSticks();
                     cancel();
                 }
             }
@@ -309,6 +310,7 @@ public class SumoMiniGame extends MiniGameBase implements Listener {
 
             if (isParticipant(damager) && isParticipant(victim) && roundActive) {
                 event.setDamage(0);
+                consumeKnockbackStick(damager);
             } else if (isParticipant(damager) || isParticipant(victim)) {
                 event.setCancelled(true);
             }
@@ -334,6 +336,38 @@ public class SumoMiniGame extends MiniGameBase implements Listener {
                 // Cancel all other damage
                 event.setCancelled(true);
             }
+        }
+    }
+
+    /**
+     * Give the Knockback stick to Ivan and Nonna at the start of every round (one use per round).
+     */
+    private void giveRoleSticks() {
+        for (Player player : new Player[]{getPlayer1(), getPlayer2()}) {
+            if (player == null) {
+                continue;
+            }
+            var ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
+            if (ngnlPlayer == null || ngnlPlayer.getRole() == null) {
+                continue;
+            }
+            var roleType = ngnlPlayer.getRole().getRoleType();
+            if (roleType == be.thespattt.ngnl.role.RoleType.IVAN || roleType == be.thespattt.ngnl.role.RoleType.NONNA) {
+                plugin.getItemManager().giveSpecialItem(player, "knockback_stick");
+                MessageUtil.sendMessage(player, "&aBâton de recul reçu : une utilisation pour cette manche !");
+            }
+        }
+    }
+
+    /**
+     * Remove the Knockback stick from a player's hand once it has hit (one use per round).
+     *
+     * @param damager Player who just hit with his item
+     */
+    private void consumeKnockbackStick(Player damager) {
+        ItemStack held = damager.getInventory().getItemInMainHand();
+        if (plugin.getItemManager().isKnockbackStick(held)) {
+            damager.getInventory().setItemInMainHand(null);
         }
     }
 

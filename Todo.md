@@ -1,10 +1,4 @@
-Fix rock paper scissor\
-Fix pledges\
-Mini-games\
-Roles -> Last\
-Allow selection of playable roles
+# Remaining ideas
 
-TNT run faster OK!\
--> Remove mobs from mini-game world \
-Add\
-4 last mini games
+* Real artwork for the role cards: drop PNGs named after the role in `tools/portraits/` (SORA.png, ...)
+  and run `python3 tools/generate_resourcepack.py`

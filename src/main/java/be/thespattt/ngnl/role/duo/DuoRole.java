@@ -3,6 +3,7 @@ package be.thespattt.ngnl.role.duo;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.role.Role;
 import be.thespattt.ngnl.role.RoleType;
+import be.thespattt.ngnl.util.DirectionArrow;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
@@ -124,5 +125,22 @@ public abstract class DuoRole extends Role {
         }
 
         return Bukkit.getPlayer(partnerUUID);
+    }
+
+    /**
+     * Permanently show an action-bar arrow pointing to the partner (roles that know
+     * their partner's position from the start).
+     *
+     * @param partnerName Name displayed when the partner is unavailable
+     */
+    protected void trackPartnerWithArrow(String partnerName) {
+        runRepeating(() -> {
+            Player player = getPlayer();
+            if (player == null || !isAlive()) {
+                return;
+            }
+            Player partner = isPartnerAlive() ? getPartnerPlayer() : null;
+            DirectionArrow.show(player, partner, partnerName, 30);
+        }, 20L, 20L);
     }
 }

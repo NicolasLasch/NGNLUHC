@@ -1,0 +1,2100 @@
+{
+ "providers": [
+  {
+   "type": "space",
+   "advances": {
+    "\ue000": -20,
+    "\ue001": -1,
+    "\ue002": -201
+   }
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/sora_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue100"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/sora_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue101"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/sora_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue102"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/sora_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue103"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/sora_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue104"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/sora_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue105"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/sora_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue106"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/sora_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue107"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shiro_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue108"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shiro_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue109"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shiro_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue10a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shiro_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue10b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shiro_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue10c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shiro_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue10d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shiro_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue10e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shiro_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue10f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/stephanie_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue110"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/stephanie_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue111"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/stephanie_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue112"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/stephanie_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue113"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/stephanie_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue114"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/stephanie_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue115"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/stephanie_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue116"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/stephanie_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue117"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/makoto_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue118"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/makoto_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue119"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/makoto_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue11a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/makoto_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue11b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/makoto_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue11c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/makoto_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue11d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/makoto_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue11e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/makoto_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue11f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/riku_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue120"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/riku_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue121"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/riku_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue122"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/riku_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue123"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/riku_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue124"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/riku_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue125"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/riku_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue126"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/riku_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue127"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/corone_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue128"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/corone_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue129"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/corone_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue12a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/corone_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue12b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/corone_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue12c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/corone_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue12d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/corone_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue12e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/corone_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue12f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/einzig_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue130"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/einzig_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue131"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/einzig_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue132"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/einzig_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue133"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/einzig_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue134"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/einzig_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue135"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/einzig_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue136"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/einzig_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue137"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/jibril_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue138"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/jibril_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue139"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/jibril_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue13a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/jibril_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue13b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/jibril_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue13c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/jibril_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue13d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/jibril_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue13e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/jibril_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue13f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/azriel_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue140"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/azriel_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue141"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/azriel_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue142"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/azriel_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue143"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/azriel_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue144"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/azriel_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue145"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/azriel_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue146"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/azriel_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue147"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/izuna_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue148"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/izuna_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue149"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/izuna_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue14a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/izuna_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue14b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/izuna_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue14c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/izuna_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue14d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/izuna_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue14e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/izuna_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue14f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ino_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue150"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ino_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue151"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ino_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue152"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ino_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue153"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ino_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue154"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ino_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue155"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ino_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue156"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ino_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue157"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/plum_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue158"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/plum_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue159"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/plum_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue15a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/plum_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue15b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/plum_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue15c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/plum_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue15d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/plum_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue15e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/plum_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue15f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/schwi_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue160"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/schwi_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue161"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/schwi_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue162"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/schwi_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue163"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/schwi_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue164"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/schwi_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue165"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/schwi_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue166"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/schwi_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue167"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shi_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue168"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shi_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue169"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shi_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue16a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shi_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue16b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shi_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue16c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shi_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue16d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shi_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue16e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/shi_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue16f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ku_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue170"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ku_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue171"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ku_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue172"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ku_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue173"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ku_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue174"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ku_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue175"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ku_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue176"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ku_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue177"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kurami_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue178"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kurami_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue179"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kurami_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue17a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kurami_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue17b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kurami_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue17c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kurami_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue17d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kurami_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue17e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kurami_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue17f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/feel_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue180"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/feel_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue181"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/feel_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue182"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/feel_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue183"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/feel_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue184"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/feel_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue185"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/feel_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue186"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/feel_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue187"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/fiel_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue188"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/fiel_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue189"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/fiel_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue18a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/fiel_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue18b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/fiel_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue18c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/fiel_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue18d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/fiel_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue18e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/fiel_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue18f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/chlammy_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue190"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/chlammy_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue191"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/chlammy_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue192"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/chlammy_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue193"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/chlammy_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue194"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/chlammy_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue195"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/chlammy_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue196"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/chlammy_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue197"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/think_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue198"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/think_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue199"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/think_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue19a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/think_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue19b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/think_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue19c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/think_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue19d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/think_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue19e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/think_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue19f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/artosh_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1a0"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/artosh_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1a1"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/artosh_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1a2"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/artosh_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1a3"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/artosh_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1a4"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/artosh_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1a5"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/artosh_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1a6"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/artosh_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1a7"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/okein_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1a8"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/okein_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1a9"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/okein_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1aa"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/okein_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1ab"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/okein_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1ac"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/okein_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1ad"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/okein_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1ae"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/okein_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1af"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kainas_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1b0"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kainas_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1b1"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kainas_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1b2"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kainas_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1b3"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kainas_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1b4"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kainas_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1b5"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kainas_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1b6"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/kainas_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1b7"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/teto_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1b8"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/teto_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1b9"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/teto_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1ba"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/teto_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1bb"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/teto_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1bc"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/teto_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1bd"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/teto_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1be"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/teto_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1bf"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/holou_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1c0"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/holou_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1c1"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/holou_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1c2"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/holou_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1c3"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/holou_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1c4"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/holou_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1c5"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/holou_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1c6"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/holou_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1c7"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ivan_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1c8"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ivan_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1c9"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ivan_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1ca"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ivan_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1cb"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ivan_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1cc"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ivan_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1cd"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ivan_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1ce"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ivan_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1cf"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/nonna_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1d0"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/nonna_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1d1"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/nonna_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1d2"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/nonna_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1d3"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/nonna_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1d4"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/nonna_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1d5"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/nonna_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1d6"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/nonna_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1d7"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/miko_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1d8"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/miko_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1d9"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/miko_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1da"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/miko_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1db"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/miko_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1dc"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/miko_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1dd"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/miko_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1de"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/miko_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1df"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ghost_0_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1e0"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ghost_0_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1e1"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ghost_0_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1e2"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ghost_0_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1e3"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ghost_1_00.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1e4"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ghost_1_01.png",
+   "ascent": 2,
+   "height": 100,
+   "chars": [
+    "\ue1e5"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ghost_1_10.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1e6"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "ngnl:font/cards/ghost_1_11.png",
+   "ascent": -98,
+   "height": 100,
+   "chars": [
+    "\ue1e7"
+   ]
+  }
+ ]
+}

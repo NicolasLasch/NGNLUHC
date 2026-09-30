@@ -262,6 +262,28 @@ public class NGNLPlayer {
     }
 
     /**
+     * Make an ability come back sooner: only the given time remains on its cooldown
+     *
+     * @param abilityName Name of the ability
+     * @param cooldownSeconds Full cooldown of the ability in seconds
+     * @param remainingSeconds Seconds that should remain
+     */
+    public void reduceCooldownTo(String abilityName, int cooldownSeconds, int remainingSeconds) {
+        if (getRemainingCooldown(abilityName, cooldownSeconds) > remainingSeconds) {
+            abilityCooldowns.put(abilityName, System.currentTimeMillis() / 1000 - (cooldownSeconds - remainingSeconds));
+        }
+    }
+
+    /**
+     * Forget the cooldown of an ability
+     *
+     * @param abilityName Name of the ability
+     */
+    public void clearAbilityCooldown(String abilityName) {
+        abilityCooldowns.remove(abilityName);
+    }
+
+    /**
      * Get number of times an ability has been used
      *
      * @param abilityName Name of the ability

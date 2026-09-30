@@ -3,8 +3,8 @@ package be.thespattt.ngnl.role.solo;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.role.Role;
 import be.thespattt.ngnl.role.RoleType;
-import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -19,13 +19,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Miko: knows Riku, permanently has 12 hearts and, in the finale, owns a Mechanical Eye that
+ * rewinds nearby players by 10 seconds. If Ino dies, Izuna may join her camp.
+ */
 public class MikoRole extends Role {
 
+    /** Cooldown of the eye in seconds. */
     private static final int EYE_COOLDOWN = 20 * 60;
-    private final Map<UUID, Deque<Location>> snapshots = new HashMap<>();
-    private int snapshotTaskId = -1;
-    private long lastEyeUse = 0L;
+    /** Number of seconds of positions kept for every player. */
+    private static final int REWIND_SECONDS = 10;
+    /** Radius (blocks) of the rewind. */
+    private static final double REWIND_RADIUS = 25.0;
+    /** Hearts Miko has during the whole game. */
+    private static final double MIKO_HEARTS = 12.0;
 
+    private final Map<UUID, Deque<Location>> snapshots = new HashMap<>();
+
+    /**
+     * Constructor
+     *
+     * @param plugin   Plugin instance
+     * @param playerId UUID of the player
+     * @param roleType Role type (MIKO)
+     */
     public MikoRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
@@ -36,99 +53,94 @@ public class MikoRole extends Role {
         if (player == null) {
             return;
         }
-        player.setMaxHealth(24.0);
-        player.setHealth(24.0);
+        setMaxHearts(MIKO_HEARTS);
         UUID rikuId = plugin.getRoleManager().getPlayerByRole(RoleType.RIKU);
         Player riku = rikuId != null ? Bukkit.getPlayer(rikuId) : null;
         if (riku != null) {
-            MessageUtil.sendMessage(player, "&eRiku is: &a" + riku.getName());
+            MessageUtil.sendMessage(player, "&eRiku est : &a" + riku.getName());
         }
-        startSnapshots();
+        runRepeating(this::recordSnapshots, 20L, 20L);
     }
 
-    private void startSnapshots() {
-        if (snapshotTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(snapshotTaskId);
-        }
-        snapshotTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
-            for (Player online : Bukkit.getOnlinePlayers()) {
-                if (!plugin.getGameManager().isPlayerAlive(online.getUniqueId())) {
-                    continue;
-                }
-                Deque<Location> deque = snapshots.computeIfAbsent(online.getUniqueId(), ignored -> new ArrayDeque<>());
-                deque.addLast(online.getLocation().clone());
-                while (deque.size() > 10) {
-                    deque.removeFirst();
-                }
+    /**
+     * Remember the position of every alive player (last 10 seconds).
+     */
+    private void recordSnapshots() {
+        for (UUID aliveId : plugin.getGameManager().getGame().getAlivePlayers()) {
+            Player online = Bukkit.getPlayer(aliveId);
+            if (online == null) {
+                continue;
             }
-        }, 20L, 20L);
+            Deque<Location> deque = snapshots.computeIfAbsent(aliveId, id -> new ArrayDeque<>());
+            deque.addLast(online.getLocation().clone());
+            while (deque.size() > REWIND_SECONDS) {
+                deque.removeFirst();
+            }
+        }
     }
 
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-        lastEyeUse = 0L;
+        resetCooldown("mechanical_eye");
     }
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        ItemStack eye = new ItemBuilder(Material.CLOCK)
-                .name("&b&lMechanical Eye")
-                .lore("&7Rewinds nearby players by 10 seconds.", "&cCooldown: 20 minutes")
-                .glow(true)
-                .setTag("role_item", "MIKO")
-                .build();
-        player.getInventory().addItem(eye);
+        giveItem(player, buildRoleItem(Material.CLOCK, "&b&lŒil mécanique",
+                "&7Fait revenir les joueurs proches 10 secondes en arrière.", "",
+                "&eClic droit pour activer", "&cRecharge : 20 minutes"));
     }
 
     @Override
     public boolean onItemUse(ItemStack item) {
-        if (item != null && item.getType() == Material.CLOCK) {
-            return useMechanicalEye();
-        }
-        return false;
+        return item != null && item.getType() == Material.CLOCK && useMechanicalEye();
     }
 
+    /**
+     * Teleport every nearby player (Miko excepted) to where he was 10 seconds ago.
+     *
+     * @return True if the eye was used
+     */
     private boolean useMechanicalEye() {
         Player player = getPlayer();
-        if (player == null || !isArenaPhaseActive()) {
+        if (player == null || !isArenaPhaseActive() || !tryUseCooldown("mechanical_eye", EYE_COOLDOWN)) {
             return false;
         }
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastEyeUse < EYE_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cCooldown active.");
-            return false;
+        for (Player nearby : nearbyAlivePlayers(player.getLocation(), REWIND_RADIUS)) {
+            rewind(nearby);
         }
-        lastEyeUse = now;
-        for (Player nearby : Bukkit.getOnlinePlayers()) {
-            if (!nearby.getWorld().equals(player.getWorld()) || nearby.getLocation().distance(player.getLocation()) > 20.0) {
-                continue;
-            }
-            Deque<Location> deque = snapshots.get(nearby.getUniqueId());
-            if (deque == null || deque.isEmpty()) {
-                continue;
-            }
-            nearby.teleport(deque.getFirst());
-        }
-        MessageUtil.broadcast("&bMiko activated the Mechanical Eye.");
+        MessageUtil.broadcast("&bMiko a activé l'Œil mécanique !");
         return true;
+    }
+
+    /**
+     * Send a player back to his oldest remembered position.
+     *
+     * @param target Player to rewind
+     */
+    private void rewind(Player target) {
+        Deque<Location> deque = snapshots.get(target.getUniqueId());
+        if (deque != null && !deque.isEmpty()) {
+            target.teleport(deque.getFirst());
+            MessageUtil.sendMessage(target, "&bLe temps revient en arrière...");
+        }
     }
 
     @Override
     public List<String> getDescription() {
         return Arrays.asList(
                 "You are Miko.",
-                "Your goal is to win alone or with an alliance.",
-                "You know Riku from the start.",
-                "You permanently have 12 hearts."
+                "Your goal is to win alone or with an alliance (/alliance).",
+                "You know Riku from the start and permanently have 12 hearts."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "You receive the Mechanical Eye in finale.",
-                "It rewinds nearby players by 10 seconds every 20 minutes."
+                "Mechanical Eye: rewinds nearby players by 10 seconds (every 20 minutes).",
+                "If Ino dies, Izuna can join your camp: Haste II for both of you."
         );
     }
 

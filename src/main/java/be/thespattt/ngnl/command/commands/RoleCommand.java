@@ -64,8 +64,8 @@ public class RoleCommand implements CommandExecutor {
             return true;
         }
 
-        // Display role information
-        role.sendRoleInfo(player);
+        // Reopen the role card popup (picture if the resource pack is loaded, text otherwise)
+        plugin.getRoleCardManager().open(player, role, 0);
 
         return true;
     }

@@ -3,13 +3,9 @@ package be.thespattt.ngnl.event.listener;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.game.GameState;
 import be.thespattt.ngnl.player.NGNLPlayer;
-import be.thespattt.ngnl.role.duo.IzunaRole;
-import be.thespattt.ngnl.role.duo.ShiroRole;
-import be.thespattt.ngnl.role.duo.SoraRole;
-import be.thespattt.ngnl.role.solo.GhostRole;
+import be.thespattt.ngnl.role.CombatRestrictions;
 import be.thespattt.ngnl.role.solo.KainasRole;
 import be.thespattt.ngnl.role.solo.OkeinRole;
-import be.thespattt.ngnl.role.solo.TetoRole;
 import be.thespattt.ngnl.util.MessageUtil;
 
 import org.bukkit.Bukkit;
@@ -50,6 +46,10 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+
+        if (plugin.getConfig().getBoolean("resourcepack.send-on-join", true)) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getRoleCardManager().sendPack(player), 20L);
+        }
 
         // Check if game is running
         if (plugin.getGameManager().isGameRunning()) {
@@ -118,21 +118,57 @@ public class PlayerListener implements Listener {
         if (isMiniGameWorld(victim.getWorld()) || plugin.getMiniGameEngine().isPlayerInMiniGame(victim.getUniqueId())) {
             return;
         }
-
-        double finalHealth = victim.getHealth() - event.getFinalDamage();
-        if (finalHealth <= 0) {
-            UUID killerId = plugin.getCombatTracker().getLastDamager(victim.getUniqueId());
-            GameState gameState = plugin.getGameManager().getGameState();
-            if (killerId != null && gameState == GameState.MINING_PHASE) {
-                Player killer = Bukkit.getPlayer(killerId);
-                event.setCancelled(true);
-                victim.setHealth(victim.getMaxHealth());
-                if (killer != null){
-                    killer.setHealth(killer.getMaxHealth());
-                }
-                plugin.getMiniGameManager().startMiniGameDuel(killer, victim);
-            }
+        GameState state = plugin.getGameManager().getGameState();
+        boolean playing = state == GameState.MINING_PHASE || state == GameState.ARENA_PHASE;
+        if (!playing || !plugin.getGameManager().isPlayerAlive(victim.getUniqueId())) {
+            return;
         }
+        if (victim.getHealth() - event.getFinalDamage() > 0) {
+            return;
+        }
+        if (state == GameState.ARENA_PHASE) {
+            cancelIfRoleSurvives(event, victim);
+        } else {
+            handleLethalMiningDamage(event, victim);
+        }
+    }
+
+    /**
+     * Let the victim's role survive a lethal hit in the arena (Einzig's second life).
+     *
+     * @param event  Lethal damage event
+     * @param victim Player who would die
+     */
+    private void cancelIfRoleSurvives(EntityDamageEvent event, Player victim) {
+        NGNLPlayer data = plugin.getPlayerManager().getNGNLPlayer(victim.getUniqueId());
+        if (data != null && data.getRole() != null && data.getRole().tryCheatDeath()) {
+            event.setCancelled(true);
+        }
+    }
+
+    /**
+     * A lethal hit during the mining phase never kills: if somebody hit the victim recently the
+     * two fight a mini-game, otherwise (fall, lava, mobs...) the victim stays at 1 heart.
+     *
+     * @param event  Lethal damage event
+     * @param victim Player who would die
+     */
+    private void handleLethalMiningDamage(EntityDamageEvent event, Player victim) {
+        UUID killerId = plugin.getCombatTracker().getLastDamager(victim.getUniqueId());
+        Player killer = killerId != null ? Bukkit.getPlayer(killerId) : null;
+        event.setCancelled(true);
+
+        boolean duel = killer != null && !killer.equals(victim) && plugin.getGameManager().isPlayerAlive(killerId);
+        if (!duel) {
+            victim.setHealth(Math.min(victim.getMaxHealth(), 2.0));
+            MessageUtil.sendMessage(victim, "&eTu as frôlé la mort ! Seuls les mini-jeux peuvent t'éliminer : tu restes à 1 cœur.");
+            return;
+        }
+
+        plugin.getCombatTracker().clear(victim.getUniqueId());
+        victim.setHealth(victim.getMaxHealth());
+        killer.setHealth(killer.getMaxHealth());
+        plugin.getMiniGameManager().startMiniGameDuel(killer, victim);
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -155,19 +191,8 @@ public class PlayerListener implements Listener {
         UUID killerId = killer != null ? killer.getUniqueId() : null;
 
         plugin.getGameManager().handlePlayerElimination(player.getUniqueId(), killerId);
-
-        String deathMessage = "&c" + player.getName() + " has been eliminated!";
-        if (killer != null) {
-            deathMessage += " &7(Killed by " + killer.getName() + ")";
-        }
-
+        // Only the role of the dead player is revealed (announced by the game), never his name.
         event.setDeathMessage(null);
-        MessageUtil.broadcast(deathMessage);
-
-        if (killer == null && plugin.getGameManager().getGame().getLastMiniGameLostBy(player.getUniqueId()) != null) {
-            String miniGameName = plugin.getGameManager().getGame().getLastMiniGameLostBy(player.getUniqueId()).getDisplayName();
-            MessageUtil.broadcast("&7They were defeated in: &f" + miniGameName);
-        }
     }
 
     @EventHandler
@@ -206,6 +231,11 @@ public class PlayerListener implements Listener {
 
         Player player = (Player) event.getEntity();
 
+        if (be.thespattt.ngnl.role.duo.ShiRole.isProtectedByAnySafeZone(plugin, player.getLocation())) {
+            event.setCancelled(true);
+            return;
+        }
+
         NGNLPlayer damagedNGNL = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
         if (damagedNGNL != null && damagedNGNL.getRole() instanceof KainasRole) {
             switch (event.getCause()) {
@@ -217,6 +247,12 @@ public class PlayerListener implements Listener {
                 default:
                     break;
             }
+        }
+
+        if (event.getCause() == EntityDamageEvent.DamageCause.FALL && damagedNGNL != null
+                && damagedNGNL.getRole() instanceof CombatRestrictions restricted && restricted.isFallImmune()) {
+            event.setCancelled(true);
+            return;
         }
 
         if (event.getFinalDamage() > 0) {
@@ -282,27 +318,14 @@ public class PlayerListener implements Listener {
         Player attacker = (Player) event.getDamager();
 
         NGNLPlayer preCheckAttacker = plugin.getPlayerManager().getNGNLPlayer(attacker.getUniqueId());
-        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof IzunaRole izunaRole && izunaRole.isProtectedByShield()) {
+        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof CombatRestrictions restricted && restricted.isAttackBlocked()) {
             event.setDamage(0);
-            MessageUtil.sendMessage(attacker, "&cYou cannot attack while protected by the Hatsuse Shield.");
+            event.setCancelled(true);
+            MessageUtil.sendMessage(attacker, restricted.attackBlockedMessage());
             return;
         }
-        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof GhostRole ghostRole && ghostRole.isHidden()) {
-            event.setDamage(0);
-            MessageUtil.sendMessage(attacker, "&cYou cannot attack while hidden as 179 Ghost.");
-            return;
-        }
-        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof TetoRole tetoRole && tetoRole.isAttackLocked()) {
-            event.setDamage(0);
-            MessageUtil.sendMessage(attacker, "&cThe King's Piece prevents you from attacking right now.");
-            return;
-        }
-        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof SoraRole soraRole && soraRole.isDistancePenaltyActive()) {
-            event.setDamage(event.getDamage() * 0.75);
-        }
-        if (preCheckAttacker != null && preCheckAttacker.getRole() instanceof ShiroRole shiroRole && shiroRole.isDistancePenaltyActive()) {
-            event.setDamage(event.getDamage() * 0.75);
-        }
+        notifyCombatInvolvement(attacker);
+        notifyCombatInvolvement(victim);
 
         // Check if PvP is allowed
         boolean pvpEnabled = plugin.getConfigManager().getGameConfig().isForceEnablePvP();
@@ -394,6 +417,18 @@ public class PlayerListener implements Listener {
     }
 
     /**
+     * Tell the role of a player that he took part in a fight.
+     *
+     * @param player Player who dealt or took damage
+     */
+    private void notifyCombatInvolvement(Player player) {
+        NGNLPlayer data = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
+        if (data != null && data.getRole() instanceof CombatRestrictions restricted) {
+            restricted.onCombatInvolvement();
+        }
+    }
+
+    /**
      * Handle damage during mining phase
      *
      * @param event Entity damage event
@@ -406,43 +441,7 @@ public class PlayerListener implements Listener {
         NGNLPlayer ngnlPlayer = plugin.getPlayerManager().getNGNLPlayer(player.getUniqueId());
 
         if (ngnlPlayer != null && ngnlPlayer.getRole() != null) {
-            // Check faction-specific damage modifiers
-            switch (ngnlPlayer.getRole().getRoleType().getFaction()) {
-                case OLD_DEUS:
-                    // Old Deus have resistance to environmental damage
-                    if (event.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK &&
-                            event.getCause() != EntityDamageEvent.DamageCause.PROJECTILE) {
-                        // Reduce environmental damage by 30%
-                        event.setDamage(event.getDamage() * 0.7);
-                    }
-                    break;
-
-                // Add other faction-specific rules as needed
-            }
-
-            // Role-specific damage handling
-            // This would be better implemented in the role classes themselves
-            // but we'll add a simple example here
-            if (ngnlPlayer.getRole().getRoleType() == be.thespattt.ngnl.role.RoleType.OKEIN) {
-                startWaterDamageTask(ngnlPlayer.getPlayer());
-            }
         }
-    }
-
-    private void startWaterDamageTask(Player player) {
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            Block block = player.getLocation().getBlock();
-            Block blockAbove = player.getLocation().add(0, 1, 0).getBlock();
-
-            if (block.getType() == Material.WATER || blockAbove.getType() == Material.WATER) {
-                player.damage(1.5);
-            }
-
-            else if (player.getWorld().hasStorm() &&
-                    player.getLocation().getBlock().getLightFromSky() == 15) {
-                player.damage(1.5);
-            }
-        }, 0L, 20L);
     }
 
     /**

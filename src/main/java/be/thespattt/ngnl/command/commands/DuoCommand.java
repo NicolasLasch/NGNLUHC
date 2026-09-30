@@ -6,9 +6,8 @@ import be.thespattt.ngnl.player.NGNLPlayer;
 import be.thespattt.ngnl.role.Role;
 import be.thespattt.ngnl.role.RoleType;
 import be.thespattt.ngnl.role.duo.ShiroRole;
-import be.thespattt.ngnl.role.duo.FeelRole;
 import be.thespattt.ngnl.role.duo.IzunaRole;
-import be.thespattt.ngnl.role.duo.KuramiRole;
+import be.thespattt.ngnl.role.duo.KuramiFeelBase;
 import be.thespattt.ngnl.role.duo.NonnaRole;
 import be.thespattt.ngnl.util.MessageUtil;
 
@@ -212,12 +211,16 @@ public class DuoCommand implements CommandExecutor {
 
         be.thespattt.ngnl.role.duo.MakotoRole makotoRole = (be.thespattt.ngnl.role.duo.MakotoRole) role;
 
-        if (makotoRole.cancelDefeat()) {
-            plugin.getMiniGameStatsTracker().cancelLastLoss(player.getUniqueId());
-            MessageUtil.sendMessage(player, "&aDefeat cancelled successfully!");
-        } else {
-            MessageUtil.sendMessage(player, "&cFailed to cancel defeat!");
+        if (makotoRole.hasUsedDefeatCancellation()) {
+            MessageUtil.sendMessage(player, "&cYou have already used your defeat cancellation!");
+            return;
         }
+        if (!plugin.getMiniGameEngine().restoreLastLoss(player.getUniqueId())) {
+            MessageUtil.sendMessage(player, "&cNo recent mini-game defeat to cancel!");
+            return;
+        }
+        makotoRole.cancelDefeat();
+        MessageUtil.sendMessage(player, "&aDefeat cancelled: your hearts were restored!");
     }
 
     private void handleBonus(Player player, Role role) {
@@ -254,12 +257,8 @@ public class DuoCommand implements CommandExecutor {
     }
 
     private void handleTogether(Player player, Role role) {
-        if (role instanceof KuramiRole kuramiRole) {
-            kuramiRole.armJointMiniGame();
-            return;
-        }
-        if (role instanceof FeelRole feelRole) {
-            feelRole.armJointMiniGame();
+        if (role instanceof KuramiFeelBase linkedRole) {
+            linkedRole.armJointMiniGame();
             return;
         }
         MessageUtil.sendMessage(player, "&cOnly Kurami or Feel can use this command.");

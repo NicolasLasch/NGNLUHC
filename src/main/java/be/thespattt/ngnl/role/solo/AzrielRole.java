@@ -3,10 +3,12 @@ package be.thespattt.ngnl.role.solo;
 import be.thespattt.ngnl.NoGameNoLife;
 import be.thespattt.ngnl.role.Role;
 import be.thespattt.ngnl.role.RoleType;
-import be.thespattt.ngnl.util.ItemBuilder;
 import be.thespattt.ngnl.util.MessageUtil;
+
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -17,15 +19,32 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Azriel: detects Flugel movements within 50 blocks, copies a fragment of another Flugel's power
+ * once per episode and, in the finale, creates a zone where flying is disabled.
+ */
 public class AzrielRole extends Role {
 
-    private static final int NO_FLY_COOLDOWN = 20 * 60;
-    private long lastNoFlyUse = 0L;
-    private int flugelScanTaskId = -1;
-    private int copiedEpisode = -1;
-
+    /** Cooldown of the anti-flight zone in seconds. */
+    private static final int ZONE_COOLDOWN = 20 * 60;
+    /** Duration of the anti-flight zone in seconds. */
+    private static final int ZONE_SECONDS = 30;
+    /** Radius (blocks) of the anti-flight zone. */
+    private static final double ZONE_RADIUS = 20.0;
+    /** Radius (blocks) in which Flugel movements are detected. */
+    private static final double DETECTION_RADIUS = 50.0;
+    /** Flugel roles that can be detected or copied. */
     private static final Set<RoleType> FLUGEL_ROLES = Set.of(RoleType.JIBRIL, RoleType.AZRIEL);
 
+    private int copiedEpisode = -1;
+
+    /**
+     * Constructor
+     *
+     * @param plugin   Plugin instance
+     * @param playerId UUID of the player
+     * @param roleType Role type (AZRIEL)
+     */
     public AzrielRole(NoGameNoLife plugin, UUID playerId, RoleType roleType) {
         super(plugin, playerId, roleType);
     }
@@ -36,55 +55,48 @@ public class AzrielRole extends Role {
         if (player == null) {
             return;
         }
-        startFlugelScan();
-        ItemStack copy = new ItemBuilder(Material.PRISMARINE_CRYSTALS)
-                .name("&b&lFlugel Mimicry")
-                .lore("&7Once per episode, copy a nearby Flugel's power.")
-                .glow(true)
-                .setTag("role_item", "AZRIEL")
-                .build();
-        player.getInventory().addItem(copy);
+        runRepeating(this::detectFlugel, 20L, 20L * 15);
+        giveItem(player, buildRoleItem(Material.PRISMARINE_CRYSTALS, "&b&lMimétisme Flügel",
+                "&7Une fois par épisode, copie temporairement le pouvoir", "&7d'un autre Flügel proche."));
     }
 
-    private void startFlugelScan() {
-        if (flugelScanTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(flugelScanTaskId);
+    /**
+     * Warn Azriel when another Flugel is within 50 blocks.
+     */
+    private void detectFlugel() {
+        Player player = getPlayer();
+        if (player == null || !isAlive()) {
+            return;
         }
-        flugelScanTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
-            Player player = getPlayer();
-            if (player == null || !plugin.getGameManager().isPlayerAlive(playerId)) {
-                return;
+        for (Player other : nearbyAlivePlayers(player.getLocation(), DETECTION_RADIUS)) {
+            if (isFlugel(other)) {
+                MessageUtil.sendMessage(player, "&bMouvement de Flügel détecté près de &f" + other.getName());
             }
-            for (Player other : Bukkit.getOnlinePlayers()) {
-                if (other.getUniqueId().equals(playerId) || !other.getWorld().equals(player.getWorld())) {
-                    continue;
-                }
-                var ngnl = plugin.getPlayerManager().getNGNLPlayer(other.getUniqueId());
-                if (ngnl == null || ngnl.getRole() == null || !FLUGEL_ROLES.contains(ngnl.getRole().getRoleType())) {
-                    continue;
-                }
-                if (other.getLocation().distance(player.getLocation()) <= 50.0) {
-                    MessageUtil.sendMessage(player, "&bFlugel movement detected near &f" + other.getName());
-                }
-            }
-        }, 20L, 20L * 15);
+        }
+    }
+
+    /**
+     * Check whether a player has a Flugel role.
+     *
+     * @param other Player to check
+     * @return True if he is a Flugel
+     */
+    private boolean isFlugel(Player other) {
+        var data = plugin.getPlayerManager().getNGNLPlayer(other.getUniqueId());
+        return data != null && data.getRole() != null && FLUGEL_ROLES.contains(data.getRole().getRoleType());
     }
 
     @Override
     public void onArenaPhaseStart() {
         super.onArenaPhaseStart();
-        lastNoFlyUse = 0L;
+        resetCooldown("anti_flight");
     }
 
     @Override
     protected void giveArenaPhaseItems(Player player) {
-        ItemStack zone = new ItemBuilder(Material.BLAZE_ROD)
-                .name("&c&lAnti-Flight Zone")
-                .lore("&7Disables flight and gliding nearby for 30 seconds.", "&cCooldown: 20 minutes")
-                .glow(true)
-                .setTag("role_item", "AZRIEL")
-                .build();
-        player.getInventory().addItem(zone);
+        giveItem(player, buildRoleItem(Material.BLAZE_ROD, "&c&lZone anti-vol",
+                "&7Désactive le vol et la glisse autour de toi pendant 30 secondes.", "",
+                "&eClic droit pour activer", "&cRecharge : 20 minutes"));
     }
 
     @Override
@@ -95,12 +107,14 @@ public class AzrielRole extends Role {
         if (item.getType() == Material.PRISMARINE_CRYSTALS) {
             return useMimicry();
         }
-        if (item.getType() == Material.BLAZE_ROD) {
-            return useAntiFlightZone();
-        }
-        return false;
+        return item.getType() == Material.BLAZE_ROD && useAntiFlightZone();
     }
 
+    /**
+     * Copy the power of a nearby Flugel (Speed II and Regeneration) once per episode.
+     *
+     * @return True if a power was copied
+     */
     private boolean useMimicry() {
         Player player = getPlayer();
         if (player == null) {
@@ -108,64 +122,73 @@ public class AzrielRole extends Role {
         }
         int episode = plugin.getGameManager().getGame().getEpisodeManager().getCurrentEpisode();
         if (copiedEpisode == episode) {
-            MessageUtil.sendMessage(player, "&cYou already copied a Flugel this episode.");
+            MessageUtil.sendMessage(player, "&cTu as déjà copié un Flügel pendant cet épisode.");
+            return false;
+        }
+        Player model = nearbyAlivePlayers(player.getLocation(), DETECTION_RADIUS).stream()
+                .filter(this::isFlugel).findFirst().orElse(null);
+        if (model == null) {
+            MessageUtil.sendMessage(player, "&cAucun autre Flügel à proximité (50 blocs).");
             return false;
         }
         copiedEpisode = episode;
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60 * 20, 1, false, false));
         player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 15 * 20, 0, false, false));
-        MessageUtil.sendMessage(player, "&aYou copied a fragment of Flugel power.");
+        MessageUtil.sendMessage(player, "&aTu as copié un fragment du pouvoir de " + model.getName() + ".");
         return true;
     }
 
+    /**
+     * Create a fixed zone where flying and gliding are impossible for 30 seconds.
+     *
+     * @return True if the zone was created
+     */
     private boolean useAntiFlightZone() {
         Player player = getPlayer();
-        if (player == null || !isArenaPhaseActive()) {
+        if (player == null || !isArenaPhaseActive() || !tryUseCooldown("anti_flight", ZONE_COOLDOWN)) {
             return false;
         }
-        long now = System.currentTimeMillis() / 1000;
-        if (now - lastNoFlyUse < NO_FLY_COOLDOWN) {
-            MessageUtil.sendMessage(player, "&cAnti-flight zone cooldown active.");
-            return false;
-        }
-        lastNoFlyUse = now;
-        for (int i = 0; i < 30; i++) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                Player self = getPlayer();
-                if (self == null) {
-                    return;
-                }
-                for (Player other : Bukkit.getOnlinePlayers()) {
-                    if (!other.getWorld().equals(self.getWorld()) || other.getLocation().distance(self.getLocation()) > 20.0) {
-                        continue;
-                    }
-                    other.setAllowFlight(false);
-                    other.setFlying(false);
-                    if (other.isGliding()) {
-                        other.setGliding(false);
-                    }
-                }
-            }, i * 20L);
-        }
-        MessageUtil.broadcast("&cAzriel created a no-flight zone.");
+        Location center = player.getLocation().clone();
+        var task = runRepeating(() -> enforceNoFlight(center), 0L, 10L);
+        runLater(task::cancel, ZONE_SECONDS * 20L);
+        MessageUtil.broadcast("&cAzriel a créé une zone anti-vol !");
         return true;
+    }
+
+    /**
+     * Ground every flying or gliding player inside the zone.
+     *
+     * @param center Center of the zone
+     */
+    private void enforceNoFlight(Location center) {
+        center.getWorld().spawnParticle(Particle.CLOUD, center.clone().add(0, 1, 0), 20, ZONE_RADIUS / 2, 0.5, ZONE_RADIUS / 2, 0);
+        for (Player other : center.getWorld().getPlayers()) {
+            if (other.getLocation().distanceSquared(center) > ZONE_RADIUS * ZONE_RADIUS) {
+                continue;
+            }
+            other.setAllowFlight(false);
+            other.setFlying(false);
+            if (other.isGliding()) {
+                other.setGliding(false);
+            }
+        }
     }
 
     @Override
     public List<String> getDescription() {
         return Arrays.asList(
-                "You are Azriel.",
-                "Your goal is to win alone or with an alliance.",
-                "You detect nearby Flugel in a 50-block radius.",
-                "Once per episode, you can copy a fragment of Flugel power."
+                "You are Azriel, sister of Jibril.",
+                "Your goal is to win alone or with an alliance (/alliance).",
+                "You detect Flugel movements within 50 blocks.",
+                "Once per episode you can copy a fragment of another Flugel's power."
         );
     }
 
     @Override
     public List<String> getArenaPhaseDescription() {
         return Arrays.asList(
-                "You receive an anti-flight zone item in finale.",
-                "It disables flight and gliding nearby for 30 seconds."
+                "Anti-flight zone: disables flight and gliding in an area for 30 seconds",
+                "(every 20 minutes)."
         );
     }
 
