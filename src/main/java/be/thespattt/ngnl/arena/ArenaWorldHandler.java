@@ -1,6 +1,7 @@
 package be.thespattt.ngnl.arena;
 
 import be.thespattt.ngnl.NoGameNoLife;
+import be.thespattt.ngnl.game.world.MapInstaller;
 import be.thespattt.ngnl.util.MessageUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -16,6 +17,12 @@ public class ArenaWorldHandler {
     private final NoGameNoLife plugin;
     private World arenaWorld;
     private Location centerLocation;
+    /** Flat generator settings (JSON, required since 1.21): bedrock, stone, dirt, grass, plains. */
+    private static final String FLAT_ARENA_SETTINGS = "{\"biome\":\"minecraft:plains\",\"features\":false,\"lakes\":false,"
+            + "\"structure_overrides\":[],\"layers\":[{\"block\":\"minecraft:bedrock\",\"height\":1},"
+            + "{\"block\":\"minecraft:stone\",\"height\":10},{\"block\":\"minecraft:dirt\",\"height\":3},"
+            + "{\"block\":\"minecraft:grass_block\",\"height\":1}]}";
+
     private final List<Location> spawnLocations = new ArrayList<>();
     private final Random random = new Random();
     private boolean fallbackWorld = false;
@@ -33,7 +40,11 @@ public class ArenaWorldHandler {
         arenaWorld = Bukkit.getWorld(worldName);
 
         if (arenaWorld == null) {
-            arenaWorld = createOrLoadWorld(worldName);
+            try {
+                arenaWorld = createOrLoadWorld(worldName);
+            } catch (RuntimeException exception) {
+                MessageUtil.logError("Could not create or load the arena world '" + worldName + "'", exception);
+            }
         }
 
         if (arenaWorld != null) {
@@ -49,11 +60,11 @@ public class ArenaWorldHandler {
         MessageUtil.logInfo("Chargement du monde arène: " + worldName);
         File worldFolder = new File(Bukkit.getWorldContainer(), worldName);
 
-        if (worldFolder.exists() && worldFolder.isDirectory()) {
+        boolean installed = !worldFolder.exists() && new MapInstaller(plugin).installIfAvailable(worldName, worldFolder);
+        if (installed || (worldFolder.exists() && worldFolder.isDirectory())) {
             return loadCustomWorld(worldName);
-        } else {
-            return createFlatWorld(worldName, worldFolder);
         }
+        return createFlatWorld(worldName, worldFolder);
     }
 
     private World loadCustomWorld(String worldName) {
@@ -69,7 +80,7 @@ public class ArenaWorldHandler {
 
         WorldCreator creator = new WorldCreator(worldName);
         creator.type(org.bukkit.WorldType.FLAT);
-        creator.generatorSettings("3;minecraft:bedrock,10*minecraft:stone,3*minecraft:dirt,minecraft:grass_block;1");
+        creator.generatorSettings(FLAT_ARENA_SETTINGS);
         return creator.createWorld();
     }
 

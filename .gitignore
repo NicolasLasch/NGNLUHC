@@ -42,3 +42,7 @@ bin/
 .DS_Store
 /server
 /server/*
+# CI / local smoke test
+/jar/
+/smoke/
+/dist/

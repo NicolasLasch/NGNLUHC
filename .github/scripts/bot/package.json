@@ -1,0 +1,8 @@
+{
+  "name": "ngnl-bot-test",
+  "private": true,
+  "description": "Scripted bot used by the CI smoke test",
+  "dependencies": {
+    "mineflayer": "4.30.0"
+  }
+}

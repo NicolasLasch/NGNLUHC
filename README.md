@@ -5,9 +5,9 @@
 **A Minecraft UHC where bloodshed is forbidden and everything is decided by games.**
 29 roles · 14 mini-games · role cards with pictures · hidden items · a final *Love Fight* arena
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.21.4-62b47a) ![Server](https://img.shields.io/badge/Purpur%20%2F%20Paper-required-blueviolet) ![Java](https://img.shields.io/badge/Java-21-orange) ![Roles](https://img.shields.io/badge/roles-29-ff69b4)
+[![CI](https://github.com/NicolasLasch/NGNLUHC/actions/workflows/ci.yml/badge.svg)](https://github.com/NicolasLasch/NGNLUHC/actions/workflows/ci.yml) [![Release](https://img.shields.io/github/v/release/NicolasLasch/NGNLUHC?include_prereleases)](https://github.com/NicolasLasch/NGNLUHC/releases) ![Minecraft](https://img.shields.io/badge/Minecraft-1.21.4-62b47a) ![Server](https://img.shields.io/badge/Purpur%20%2F%20Paper-required-blueviolet) ![Java](https://img.shields.io/badge/Java-21-orange) ![Roles](https://img.shields.io/badge/roles-29-ff69b4)
 
-[Design document (French)](https://docs.google.com/document/d/1blBPdmT5l3AH29eRe4WNXCGbC-yFB59FCwmSEmxozhI/edit?usp=sharing) ·
+[**Download**](https://github.com/NicolasLasch/NGNLUHC/releases) · [Server setup](docs/SERVER_SETUP.md) · [Design document (French)](https://docs.google.com/document/d/1blBPdmT5l3AH29eRe4WNXCGbC-yFB59FCwmSEmxozhI/edit?usp=sharing) ·
 [Testing guide](docs/TESTING.md) · [Role reference](#-roles) · [Setup for a meetup](#-running-a-meetup--a-long-game)
 
 ![Role cards](docs/images/cards-gallery.png)
@@ -34,7 +34,7 @@
 
 ## 🚀 Quick start
 
-1. Build the jar (`./gradlew build`) or take it from the releases, and drop it in `plugins/` of a **Purpur / Paper 1.21.4** server (Java 21). No other plugin is required.
+1. Download from the [**Releases**](https://github.com/NicolasLasch/NGNLUHC/releases) page either `NoGameNoLifeUHC-server-<version>.zip` (a ready-to-run server: run `setup.sh`, accept the EULA, `start.sh`) or just `NoGameNoLifeUHC-<version>.jar` to drop in `plugins/` of a **Purpur / Paper 1.21.4** server (Java 21). No other plugin is required. Details: [docs/SERVER_SETUP.md](docs/SERVER_SETUP.md).
 2. Start the server once: the lobby, the mini-game world and the arena world are created automatically (the arena generates a small tower city if you do not provide a map — see [Worlds](#-worlds)).
 3. Decide how players get the **role card resource pack** (section [Role cards](#-role-cards--pictures)). Without it the cards are shown as plain text.
 4. Everybody joins, then as an operator: `/ngnl start`. That is all — the plugin handles the rest.
@@ -533,7 +533,7 @@ The game to play is drawn by a roulette; the PvP winner can re-roll it once, **S
 | `ngnl_waiting` | Lobby — a quartz platform is generated |
 | `ngnl_mining` | Qualification world, deleted and regenerated after each game (`destroy_worlds_after_game`), optional fixed seed |
 | `ngnl_minigame` | Void world hosting the mini-game rooms (mobs cleared at each start) |
-| `ngnl_arena_city` | Final arena. **Put your own map in this folder**, otherwise a city of towers is generated on the first start |
+| `ngnl_arena_city` | Final "Love Fight" arena: your **custom map** (zip it as `ngnl_arena_city.zip` in `maps/` of the repo, or in `plugins/NoGameNoLifeUHC/maps/` of the server — it is extracted automatically, see [maps/README.md](maps/README.md)). Without a map a city of towers is generated |
 
 ---
 
@@ -588,6 +588,16 @@ python3 tools/make_readme_images.py             # refreshes the pictures of this
 * Rebuild the jar afterwards: the pack is bundled in it.
 
 ---
+
+## 🤖 CI / releases
+
+| What | How |
+| --- | --- |
+| **On every push / PR** | GitHub Actions builds the plugin, runs the unit tests, regenerates the resource pack, then starts a **real Purpur 1.21.4 server** and plays a scripted game with a real client bot (join, resource pack, role cards, lethal hit, arena, all 29 roles). The built jar is attached to the run (*Actions → run → Artifacts*). |
+| **Release** | Push a tag `vX.Y.Z` (or run the *Release* workflow manually on any branch and give a version): tests, then a GitHub Release with the plugin jar, the ready-to-run server zip and the resource pack, plus a Maven package on GitHub Packages. |
+| **Use the Maven package** | `maven { url = uri("https://maven.pkg.github.com/NicolasLasch/NGNLUHC") }` then `implementation("be.thespattt.ngnl:no-game-no-life-uhc:<version>")` |
+
+Run the same checks locally: `./gradlew test`, and the smoke test with `bash .github/scripts/smoke-test.sh` (needs Java 21 and Node).
 
 ## 🔨 Building
 

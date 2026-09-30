@@ -1,6 +1,6 @@
 name: NoGameNoLifeUHC
 main: be.thespattt.ngnl.NoGameNoLife
-version: 1.0.0
+version: '${version}'
 api-version: 1.21
 author: TheSpatt
 description: A UHC plugin inspired by the anime No Game No Life

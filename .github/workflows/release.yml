@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags: [ "v*" ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the v (e.g. 1.0.0-beta1). Builds the CURRENT branch."
+        required: true
+      prerelease:
+        description: "Mark as pre-release"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Test, package and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute the version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing $VERSION"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build and test
+        run: ./gradlew build -Pversion=${{ steps.version.outputs.version }} --no-daemon --stacktrace
+
+      - name: Publish the Maven package (GitHub Packages)
+        run: ./gradlew publish -Pversion=${{ steps.version.outputs.version }} --no-daemon
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the ready-to-run server bundle
+        run: |
+          JAR=$(ls build/libs/NoGameNoLifeUHC-*.jar | grep -v sources | head -1)
+          bash tools/package_server.sh "$JAR" "${{ steps.version.outputs.version }}" dist
+          cp "$JAR" dist/
+          cp src/main/resources/resourcepack/NGNL-ResourcePack.zip dist/
+          ls -la dist
+
+      - name: Create the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: No Game No Life UHC ${{ steps.version.outputs.version }}
+          prerelease: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.prerelease == 'true' }}
+          generate_release_notes: true
+          body: |
+            ## Download
+            | File | For |
+            | --- | --- |
+            | `NoGameNoLifeUHC-${{ steps.version.outputs.version }}.jar` | The plugin alone (drop it in `plugins/` of a Purpur / Paper 1.21.4 server, Java 21) |
+            | `NoGameNoLifeUHC-server-${{ steps.version.outputs.version }}.zip` | A ready-to-run server folder: plugin, config, start scripts, arena map if provided. See `README-SERVER.md` inside |
+            | `NGNL-ResourcePack.zip` | The role card resource pack, to host yourself (`resourcepack.url`) |
+
+            Setup guide: [docs/SERVER_SETUP.md](https://github.com/${{ github.repository }}/blob/main/docs/SERVER_SETUP.md)
+          files: |
+            dist/NoGameNoLifeUHC-*.jar
+            dist/NoGameNoLifeUHC-server-*.zip
+            dist/NGNL-ResourcePack.zip
